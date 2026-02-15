@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HormoneLens - AI-Powered Metabolic Simulator for PCOS & Diabetes Management">
+    <title>HormoneLens - Predict Your Metabolic Future</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --secondary: #ec4899;
+            --secondary-dark: #db2777;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --gray-light: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            overflow-x: hidden;
+            background: var(--light);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 20px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 0.75rem 1.75rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8rem 0 6rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -250px;
+            right: -250px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translate(0, 0) scale(1);
+            }
+            33% { 
+                transform: translate(-50px, 100px) scale(1.1);
+            }
+            66% { 
+                transform: translate(50px, -50px) scale(0.9);
+            }
+        }
+
+        .hero .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            animation: floatShape 15s ease-in-out infinite;
+        }
+
+        .floating-shape:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .floating-shape:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            bottom: 20%;
+            right: 10%;
+            animation-delay: 5s;
+        }
+
+        .floating-shape:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            top: 60%;
+            left: 15%;
+            animation-delay: 10s;
+        }
+
+        @keyframes floatShape {
+            0%, 100% { 
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translateY(-30px) rotate(180deg);
+                opacity: 0.6;
+            }
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease-out;
+            font-weight: 800;
+            line-height: 1.2;
+            background: linear-gradient(to right, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+            margin-bottom: 3rem;
+        }
+
+        /* Live Demo Widget */
+        .demo-widget {
+            max-width: 700px;
+            margin: 3rem auto 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.8s ease-out 0.6s backwards;
+            position: relative;
+        }
+
+        .demo-widget h3 {
+            font-size: 1.35rem;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-weight: 700;
+        }
+
+        .demo-input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .demo-input {
+            flex: 1;
+            padding: 1.25rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 1.05rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .demo-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .demo-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+        }
+
+        .demo-button {
+            padding: 1.25rem 2.5rem;
+            background: white;
+            color: var(--primary);
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.05rem;
+            white-space: nowrap;
+        }
+
+        .demo-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(255, 255, 255, 0.4);
+        }
+
+        .demo-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Result Card - Floating on top */
+        .demo-result-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 9998;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .demo-result-overlay.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .demo-result {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            color: var(--dark);
+            z-index: 9999;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: slideUpScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .demo-result.show {
+            display: block;
+        }
+
+        @keyframes slideUpScale {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -40%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .result-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.25rem;
+            color: var(--gray);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .demo-scanning {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .demo-scanning.show {
+            display: block;
+        }
+
+        .scanning-animation {
+            width: 70px;
+            height: 70px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: white;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .risk-high {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #dc2626;
+        }
+
+        .risk-medium {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #d97706;
+        }
+
+        .risk-low {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #059669;
+        }
+
+        .demo-result h4 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            font-weight: 800;
+        }
+
+        .demo-result p {
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        /* Dummy Line Graph */
+        .result-graph {
+            background: var(--light);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin: 1.5rem 0;
+            position: relative;
+            height: 180px;
+        }
+
+        .graph-line {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 120px;
+        }
+
+        .graph-line svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .graph-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        .alternatives {
+            background: var(--light);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-top: 1.5rem;
+        }
+
+        .alternatives h5 {
+            font-size: 1.05rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .alternatives ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .alternatives li {
+            padding: 0.75rem 0;
+            color: var(--gray);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alternatives li::before {
+            content: '✓';
+            color: var(--success);
+            font-weight: bold;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 1.75rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .button-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Features Section - Bento Grid */
+        .features {
+            padding: 6rem 0;
+            background: var(--light);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.75rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            font-weight: 800;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--gray);
+            margin-bottom: 4rem;
+            font-size: 1.15rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        /* Bento Grid Layout */
+        .feature-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* Featured cards span 2 columns */
+        .feature-card.featured {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .feature-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .feature-card.featured:hover {
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.25);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--dark);
+        }
+
+        .feature-card p {
+            color: var(--gray);
+            line-height: 1.7;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 6rem 0;
+            background: white;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+            position: relative;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .step.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .step-number {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 35px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+            z-index: 1;
+        }
+
+        .step:last-child::before {
+            display: none;
+        }
+
+        .step h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .step p {
+            color: var(--gray);
+        }
+
+        /* Tech Stack - Pipeline Visualization */
+        .tech-stack {
+            padding: 6rem 0;
+            background: var(--dark);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tech-stack::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+        }
+
+        .tech-stack .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tech-stack .section-title,
+        .tech-stack .section-subtitle {
+            color: white;
+        }
+
+        /* Pipeline Layout */
+        .tech-pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 4rem;
+            flex-wrap: wrap;
+            padding: 2rem 0;
+        }
+
+        .pipeline-item {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 2rem 1.5rem;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            min-width: 160px;
+            flex: 0 1 auto;
+        }
+
+        .pipeline-item:hover {
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .pipeline-item i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+        }
+
+        .pipeline-item h4 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .pipeline-item p {
+            color: var(--gray-light);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        /* Arrow between items */
+        .pipeline-arrow {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 2rem;
+            flex-shrink: 0;
+            animation: pulse-arrow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-arrow {
+            0%, 100% { 
+                opacity: 0.3;
+                transform: translateX(0);
+            }
+            50% { 
+                opacity: 0.7;
+                transform: translateX(5px);
+            }
+        }
+
+        /* Mobile pipeline stacks vertically */
+        @media (max-width: 968px) {
+            .tech-pipeline {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .pipeline-arrow {
+                transform: rotate(90deg);
+            }
+
+            .pipeline-item {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+
+        /* Benefits */
+        .benefits {
+            padding: 6rem 0;
+            background: var(--light);
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .benefit-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            border-left: 4px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(135deg, #667eea, #764ba2);
+            background-origin: padding-box, border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+
+        .benefit-card.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .benefit-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+        }
+
+        .benefit-card h3 {
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .benefit-card p {
+            color: var(--gray);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveGrid 20s linear infinite;
+        }
+
+        @keyframes moveGrid {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .cta-section .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 0 1rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            padding: 2rem;
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu-overlay.active {
+            opacity: 1;
+        }
+
+        .mobile-menu-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+        }
+
+        .mobile-menu .nav-links {
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .mobile-menu .nav-links a {
+            font-size: 1.1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .hero {
+                padding: 5rem 0 4rem;
+                min-height: auto;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .mobile-menu-overlay {
+                display: block;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            /* Bento grid collapses to single column */
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-card.featured {
+                grid-column: span 1;
+            }
+
+            .steps,
+            .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-section h2 {
+                font-size: 1.75rem;
+            }
+
+            .demo-widget {
+                padding: 1.5rem;
+            }
+
+            .demo-input-group {
+                flex-direction: column;
+            }
+
+            .demo-result {
+                width: 95%;
+                padding: 2rem;
+            }
+
+            .step::before {
+                display: none;
+            }
+
+            .features,
+            .how-it-works,
+            .tech-stack,
+            .benefits,
+            .cta-section {
+                padding: 4rem 0;
+            }
+
+            .floating-shape {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .container {
+                padding: 0 15px;
+            }
+
+            .demo-button {
+                padding: 1rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="container">
+            <div class="logo">
+                <div class="logo-icon">H</div>
+                HormoneLens
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#tech">Technology</a></li>
+                <li><a href="#benefits">Benefits</a></li>
+            </ul>
+            <a href="#get-started" class="cta-button">Get Started</a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+    
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-menu-close" id="mobileMenuClose">✕</button>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#tech">Technology</a></li>
+            <li><a href="#benefits">Benefits</a></li>
+            <li><a href="#get-started" class="cta-button" style="display: inline-block; margin-top: 1rem;">Get Started</a></li>
+        </ul>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        
+        <div class="container">
+            <h1>Predict Your Metabolic Future, Before You Eat</h1>
+            <p>AI-powered metabolic simulator for PCOS & Diabetes management. Know your glucose and cortisol response before making food choices.</p>
+            <div class="hero-buttons">
+                <a href="#get-started" class="cta-button">Start Simulating</a>
+                <a href="#how-it-works" class="button-secondary">Learn More</a>
+            </div>
+
+            <!-- Live Demo Widget -->
+            <div class="demo-widget">
+                <h3>🔮 Try Live Simulator - Instant Prediction</h3>
+                <div class="demo-input-group">
+                    <input type="text" class="demo-input" id="demoInput" placeholder="e.g., 2 slices of pizza + high work stress">
+                    <button class="demo-button" id="demoButton">Analyze</button>
+                </div>
+                
+                <div class="demo-scanning" id="demoScanning">
+                    <div class="scanning-animation"></div>
+                    <p style="color: white; font-weight: 600;">Scanning metabolic impact...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Result Card Overlay -->
+    <div class="demo-result-overlay" id="demoResultOverlay"></div>
+    
+    <!-- Floating Result Card -->
+    <div class="demo-result" id="demoResult">
+        <button class="result-close" id="resultClose">✕</button>
+        <span class="risk-badge risk-high" id="riskBadge">⚠️ High Risk</span>
+        <h4 id="resultTitle">Glucose Spike Predicted</h4>
+        <p id="resultDescription">
+            Your input suggests a high glycemic load combined with stress-induced cortisol elevation. 
+            This combination may cause a significant glucose spike within 1-2 hours.
+        </p>
+        
+        <!-- Dummy Line Graph -->
+        <div class="result-graph">
+            <div class="graph-line">
+                <svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Grid lines -->
+                    <line x1="0" y1="100" x2="400" y2="100" stroke="#e2e8f0" stroke-width="1"/>
+                    <line x1="0" y1="75" x2="400" y2="75" stroke="#e2e8f0" stroke-width="1"/>
+                    <line x1="0" y1="50" x2="400" y2="50" stroke="#e2e8f0" stroke-width="1"/>
+                    <line x1="0" y1="25" x2="400" y2="25" stroke="#e2e8f0" stroke-width="1"/>
+                    
+                    <!-- Glucose line -->
+                    <path id="glucosePath" d="M 0 100 L 50 95 L 100 85 L 150 40 L 200 30 L 250 45 L 300 70 L 350 85 L 400 90" 
+                          fill="none" stroke="url(#gradient)" stroke-width="3" stroke-linecap="round"/>
+                    
+                    <!-- Gradient definition -->
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                            <stop offset="40%" style="stop-color:#f59e0b;stop-opacity:1" />
+                            <stop offset="60%" style="stop-color:#ef4444;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- Peak marker -->
+                    <circle cx="200" cy="30" r="5" fill="#ef4444"/>
+                    <text x="200" y="20" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="bold">Peak</text>
+                </svg>
+            </div>
+            <div class="graph-labels">
+                <span>0 min</span>
+                <span>30 min</span>
+                <span>60 min</span>
+                <span>90 min</span>
+                <span>120 min</span>
+            </div>
+        </div>
+
+        <div class="alternatives">
+            <h5>💡 Healthier Alternatives:</h5>
+            <ul id="alternativesList">
+                <li>Whole wheat roti with paneer and vegetables</li>
+                <li>Quinoa bowl with grilled chicken and salad</li>
+                <li>Brown rice with dal and curd</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Powerful Features for Better Health</h2>
+            <p class="section-subtitle">Everything you need to take control of your metabolic health</p>
+            
+            <div class="features-grid">
+                <div class="feature-card featured">
+                    <div class="feature-icon">🔮</div>
+                    <h3>Predictive Simulation</h3>
+                    <p>Input any meal or activity and get instant predictions of glucose and cortisol spikes (High/Medium/Low risk) before you act. Make informed decisions in real-time.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>Context-Aware AI</h3>
+                    <p>Our RAG-powered system retrieves your historical health logs to personalize predictions. The AI learns that "dairy causes bloating" for you specifically.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Safety Guardrails</h3>
+                    <p>AWS Bedrock Guardrails filter out unsafe medical advice automatically. Your safety is our priority with built-in content moderation.</p>
+                </div>
+
+                <div class="feature-card featured">
+                    <div class="feature-icon">📊</div>
+                    <h3>Metabolic Score</h3>
+                    <p>Daily dynamic score (0-100) based on sleep (30%), stress (30%), and diet (40%). Track your progress and identify patterns over time.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Real-Time Dashboard</h3>
+                    <p>Visualize potential glucose and cortisol spikes instantly with WebSocket-powered live updates. See results in under 3 seconds.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🍽️</div>
+                    <h3>Indian Food Database</h3>
+                    <p>Specialized knowledge of Indian meals - from dosa to biryani. Natural language input understands "2 parathas with curd" perfectly.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>Health Logging</h3>
+                    <p>Track meals, sleep, stress, activities, and symptoms. All data encrypted at rest with AES-256 for complete privacy.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h3>Smart Alternatives</h3>
+                    <p>Get 2-3 healthier alternatives when risk is high. AI suggests Indian-friendly options that match your dietary preferences.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Multi-Model Validation</h3>
+                    <p>High-risk predictions validated by multiple AI models for accuracy. Consensus-based decision making ensures reliability.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile Responsive</h3>
+                    <p>Access from any device - smartphone, tablet, or desktop. Optimized interface for on-the-go health decisions.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Data Privacy</h3>
+                    <p>Your health data stays yours. End-to-end encryption, secure authentication, and HIPAA-ready infrastructure on AWS.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Predictions in under 3 seconds. Optimized caching and smart prompt engineering ensure instant results.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Simple, fast, and intelligent</p>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Input Your Scenario</h3>
+                    <p>Type what you're planning to eat or do: "2 slices of pizza + high work stress"</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>AI Analyzes Context</h3>
+                    <p>System retrieves your health history and user profile for personalized analysis</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Multi-Model Prediction</h3>
+                    <p>Amazon Bedrock processes with multiple AI models, validated by guardrails</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Get Instant Results</h3>
+                    <p>See glucose/cortisol risk levels, explanations, and healthier alternatives in real-time</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <section id="tech" class="tech-stack">
+        <div class="container">
+            <h2 class="section-title">Built on Cutting-Edge Technology</h2>
+            <p class="section-subtitle">Powered by AWS AI for Bharat - Data Flow Pipeline</p>
+            
+            <div class="tech-pipeline">
+                <div class="pipeline-item">
+                    <i class="fas fa-user"></i>
+                    <h4>User Input</h4>
+                    <p>Natural language meal & activity data</p>
+                </div>
+
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-item">
+                    <i class="fab fa-laravel"></i>
+                    <h4>Laravel Backend</h4>
+                    <p>Secure API processing</p>
+                </div>
+
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-item">
+                    <i class="fas fa-brain"></i>
+                    <h4>AWS Bedrock</h4>
+                    <p>AI model inference</p>
+                </div>
+
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Guardrails</h4>
+                    <p>Safety validation</p>
+                </div>
+
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-item">
+                    <i class="fas fa-database"></i>
+                    <h4>ChromaDB</h4>
+                    <p>Vector context retrieval</p>
+                </div>
+
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-item">
+                    <i class="fas fa-bolt"></i>
+                    <h4>Reverb WebSocket</h4>
+                    <p>Real-time updates</p>
+                </div>
+
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-item">
+                    <i class="fas fa-chart-line"></i>
+                    <h4>Dashboard</h4>
+                    <p>Live predictions & insights</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits -->
+    <section id="benefits" class="benefits">
+        <div class="container">
+            <h2 class="section-title">Why Choose HormoneLens?</h2>
+            <p class="section-subtitle">Transform your health management journey</p>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <h3>🎯 Proactive, Not Reactive</h3>
+                    <p>Unlike traditional tracking apps, HormoneLens predicts before you act. Make informed decisions instead of logging regrets.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3>🇮🇳 Built for India</h3>
+                    <p>Understands Indian dietary patterns, regional foods, and cultural eating habits. From dosa to dal, we've got you covered.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3>👩‍⚕️ PCOS & Diabetes Focused</h3>
+                    <p>Specifically designed for managing PCOS and Type 2 Diabetes with hormone-aware predictions.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3>⚡ Instant Feedback</h3>
+                    <p>Get predictions in under 3 seconds. No waiting, no guessing - just instant, actionable insights.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3>🔬 Evidence-Based AI</h3>
+                    <p>Multi-model validation ensures accuracy. High-risk predictions cross-checked by multiple AI models.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3>📊 Track Your Progress</h3>
+                    <p>Daily metabolic scores and trend analysis help you see what's working and what needs adjustment.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3>🔒 Privacy First</h3>
+                    <p>Your health data is encrypted, secure, and never shared. Complete control over your information.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3>💰 Cost-Effective</h3>
+                    <p>Reduce expensive trial-and-error with food. Know what works before you spend money or calories.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <h3>🎓 Educational</h3>
+                    <p>Learn how different foods and stress affect your body. Build intuition for better long-term health.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="get-started" class="cta-section">
+        <div class="container">
+            <h2>Ready to Take Control of Your Metabolic Health?</h2>
+            <p>Join the AWS AI for Bharat Hackathon and experience the future of health management</p>
+            <a href="#" class="cta-button" style="background: white; color: var(--primary); font-size: 1.1rem; padding: 1rem 2rem;">Start Your Free Trial</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>HormoneLens</h3>
+                    <p>AI-powered metabolic simulator for PCOS & Diabetes management. Built for the AWS AI for Bharat Hackathon.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Product</h3>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#tech">Technology</a></li>
+                        <li><a href="#benefits">Benefits</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Reference</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Support</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 HormoneLens. Built for AWS AI for Bharat Hackathon. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    // Close mobile menu if open
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const mobileMenuClose = document.getElementById('mobileMenuClose');
+
+        function openMobileMenu() {
+            mobileMenu.classList.add('active');
+            mobileMenuOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('active');
+            mobileMenuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        mobileMenuBtn.addEventListener('click', openMobileMenu);
+        mobileMenuClose.addEventListener('click', closeMobileMenu);
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+
+        // Scroll-triggered animations using Intersection Observer
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, index * 100);
+                }
+            });
+        }, observerOptions);
+
+        // Observe feature cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Observe steps
+        document.querySelectorAll('.step').forEach(step => {
+            observer.observe(step);
+        });
+
+        // Observe benefit cards
+        document.querySelectorAll('.benefit-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Live Demo Widget Functionality
+        const demoInput = document.getElementById('demoInput');
+        const demoButton = document.getElementById('demoButton');
+        const demoScanning = document.getElementById('demoScanning');
+        const demoResult = document.getElementById('demoResult');
+        const demoResultOverlay = document.getElementById('demoResultOverlay');
+        const resultClose = document.getElementById('resultClose');
+
+        const demoScenarios = {
+            'pizza': {
+                risk: 'high',
+                title: 'High Glucose Spike Predicted',
+                description: 'Pizza has a high glycemic load with refined carbs and saturated fats. Combined with stress, this may cause a significant glucose spike (estimated 180-220 mg/dL) within 1-2 hours. The combination of simple carbohydrates and stress hormones creates a perfect storm for metabolic disruption.',
+                alternatives: [
+                    'Whole wheat thin crust pizza with extra vegetables',
+                    'Cauliflower crust pizza with lean protein toppings',
+                    'Whole wheat roti with paneer and vegetables instead'
+                ]
+            },
+            'biryani': {
+                risk: 'medium',
+                title: 'Moderate Glucose Response Expected',
+                description: 'Biryani contains basmati rice with moderate GI. The protein and fats from meat help slow glucose absorption. Expected spike: 140-170 mg/dL. The spices and protein content provide some metabolic benefits, but portion control is key.',
+                alternatives: [
+                    'Brown rice biryani with extra vegetables',
+                    'Cauliflower rice biryani (low-carb alternative)',
+                    'Smaller portion (1 cup) with raita and salad'
+                ]
+            },
+            'salad': {
+                risk: 'low',
+                title: 'Excellent Choice - Low Risk',
+                description: 'Salads are low in glycemic load with high fiber content. This meal will have minimal impact on glucose levels (estimated 100-120 mg/dL). The fiber and nutrients support stable blood sugar and provide sustained energy.',
+                alternatives: [
+                    'Add grilled chicken or paneer for protein balance',
+                    'Include nuts and seeds for healthy fats',
+                    'Pair with whole grain bread if more carbs needed'
+                ]
+            },
+            'paratha': {
+                risk: 'high',
+                title: 'High Carb Load Detected',
+                description: 'Parathas are typically made with refined flour and ghee, creating a high glycemic and caloric load. Expected glucose spike: 170-210 mg/dL. The combination of refined carbs and saturated fats can lead to prolonged elevated blood sugar.',
+                alternatives: [
+                    'Whole wheat roti with less oil/ghee',
+                    'Multigrain roti with vegetable stuffing',
+                    'Oats chilla (savory pancake) as a healthier option'
+                ]
+            },
+            'default': {
+                risk: 'medium',
+                title: 'Potential Metabolic Impact Detected',
+                description: 'Based on your input, there may be factors that could affect your glucose and cortisol levels. Consider the timing, portion size, and your current stress levels. Individual responses vary, so monitoring is recommended.',
+                alternatives: [
+                    'Choose whole grains over refined carbohydrates',
+                    'Add protein and healthy fats to slow absorption',
+                    'Practice stress management techniques before eating'
+                ]
+            }
+        };
+
+        demoButton.addEventListener('click', runDemo);
+        demoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                runDemo();
+            }
+        });
+
+        // Close result card
+        resultClose.addEventListener('click', closeResultCard);
+        demoResultOverlay.addEventListener('click', closeResultCard);
+
+        function closeResultCard() {
+            demoResult.classList.remove('show');
+            demoResultOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function runDemo() {
+            const input = demoInput.value.trim().toLowerCase();
+            if (!input) return;
+
+            // Disable button and show scanning
+            demoButton.disabled = true;
+            demoButton.textContent = 'Analyzing...';
+            demoScanning.classList.add('show');
+
+            // Simulate AI processing (1.5 seconds)
+            setTimeout(() => {
+                demoScanning.classList.remove('show');
+                
+                // Determine scenario
+                let scenario = demoScenarios.default;
+                if (input.includes('pizza')) scenario = demoScenarios.pizza;
+                else if (input.includes('biryani')) scenario = demoScenarios.biryani;
+                else if (input.includes('salad')) scenario = demoScenarios.salad;
+                else if (input.includes('paratha') || input.includes('roti')) scenario = demoScenarios.paratha;
+
+                // Update result
+                const riskBadge = document.getElementById('riskBadge');
+                const resultTitle = document.getElementById('resultTitle');
+                const resultDescription = document.getElementById('resultDescription');
+                const alternativesList = document.getElementById('alternativesList');
+
+                // Set risk badge
+                riskBadge.className = `risk-badge risk-${scenario.risk}`;
+                if (scenario.risk === 'high') {
+                    riskBadge.innerHTML = '⚠️ High Risk';
+                } else if (scenario.risk === 'medium') {
+                    riskBadge.innerHTML = '⚡ Medium Risk';
+                } else {
+                    riskBadge.innerHTML = '✅ Low Risk';
+                }
+
+                resultTitle.textContent = scenario.title;
+                resultDescription.textContent = scenario.description;
+
+                // Update alternatives
+                alternativesList.innerHTML = '';
+                scenario.alternatives.forEach(alt => {
+                    const li = document.createElement('li');
+                    li.textContent = alt;
+                    alternativesList.appendChild(li);
+                });
+
+                // Show result card with overlay
+                demoResultOverlay.classList.add('show');
+                demoResult.classList.add('show');
+                document.body.style.overflow = 'hidden';
+                
+                // Re-enable button
+                demoButton.disabled = false;
+                demoButton.textContent = 'Analyze';
+            }, 1500);
+        }
+
+        // Add some example inputs on page load
+        const exampleInputs = [
+            '2 slices of pizza + high work stress',
+            'chicken biryani with raita',
+            'green salad with grilled chicken',
+            '2 parathas with curd and pickle',
+            'masala dosa with sambar',
+            'brown rice with dal and vegetables'
+        ];
+
+        let currentExample = 0;
+        demoInput.placeholder = exampleInputs[currentExample];
+
+        setInterval(() => {
+            currentExample = (currentExample + 1) % exampleInputs.length;
+            if (!demoInput.value) {
+                demoInput.placeholder = exampleInputs[currentExample];
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
