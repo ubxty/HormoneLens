@@ -5,8 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DigitalTwinController;
-use App\Http\Controllers\DiseaseDiabetesController;
-use App\Http\Controllers\DiseasePcodController;
+use App\Http\Controllers\DiseaseController;
 use App\Http\Controllers\FoodImpactController;
 use App\Http\Controllers\HealthProfileController;
 use App\Http\Controllers\HistoryController;
@@ -47,12 +46,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/', [HealthProfileController::class, 'update']);
     });
 
-    // ── Disease Data ─────────────────────────────────
-    Route::prefix('disease')->group(function () {
-        Route::get('/diabetes', [DiseaseDiabetesController::class, 'show']);
-        Route::post('/diabetes', [DiseaseDiabetesController::class, 'store']);
-        Route::get('/pcod', [DiseasePcodController::class, 'show']);
-        Route::post('/pcod', [DiseasePcodController::class, 'store']);
+    // ── Disease Data (dynamic) ────────────────────────
+    Route::prefix('diseases')->group(function () {
+        Route::get('/',         [DiseaseController::class, 'index']);
+        Route::get('/my-data',  [DiseaseController::class, 'myData']);
+        Route::get('/{slug}',   [DiseaseController::class, 'show']);
+        Route::post('/{slug}',  [DiseaseController::class, 'store']);
     });
 
     // ── Digital Twin ─────────────────────────────────

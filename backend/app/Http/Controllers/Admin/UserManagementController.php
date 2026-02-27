@@ -52,7 +52,7 @@ class UserManagementController extends Controller
             ], 404);
         }
 
-        $user->load(['healthProfile', 'diseaseDiabetes', 'diseasePcod', 'activeDigitalTwin', 'simulations' => fn ($q) => $q->latest()->limit(10)]);
+        $user->load(['healthProfile', 'diseaseData.disease', 'activeDigitalTwin', 'simulations' => fn ($q) => $q->latest()->limit(10)]);
 
         return response()->json([
             'success' => true,

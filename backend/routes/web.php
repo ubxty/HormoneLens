@@ -18,8 +18,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 Route::middleware('auth')->group(function () {
     Route::get('/',               [PageController::class, 'dashboard'])->name('dashboard');
     Route::get('/health-profile', [PageController::class, 'healthProfile'])->name('health-profile');
-    Route::get('/disease/diabetes',[PageController::class, 'diabetes'])->name('disease.diabetes');
-    Route::get('/disease/pcod',   [PageController::class, 'pcod'])->name('disease.pcod');
+    Route::get('/disease/{slug}',  [PageController::class, 'disease'])->name('disease.show');
     Route::get('/digital-twin',   [PageController::class, 'digitalTwin'])->name('digital-twin');
     Route::get('/simulations',    [PageController::class, 'simulations'])->name('simulations');
     Route::get('/food-impact',    [PageController::class, 'foodImpact'])->name('food-impact');

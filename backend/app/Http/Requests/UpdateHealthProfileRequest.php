@@ -21,7 +21,7 @@ class UpdateHealthProfileRequest extends FormRequest
             'physical_activity' => ['sometimes', 'in:sedentary,moderate,active'],
             'eating_habits' => ['nullable', 'string', 'max:1000'],
             'water_intake' => ['sometimes', 'numeric', 'min:0', 'max:20'],
-            'disease_type' => ['sometimes', 'in:diabetes,pcod'],
+            'disease_type' => ['sometimes', 'string', 'max:100'],
         ];
     }
 }

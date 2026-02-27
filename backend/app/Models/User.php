@@ -39,14 +39,35 @@ class User extends Authenticatable
         return $this->hasOne(HealthProfile::class);
     }
 
-    public function diseaseDiabetes(): HasOne
+    // ── Dynamic disease data ─────────────────────────
+
+    public function diseaseData(): HasMany
     {
-        return $this->hasOne(DiseaseDiabetes::class);
+        return $this->hasMany(UserDiseaseData::class);
     }
 
-    public function diseasePcod(): HasOne
+    /**
+     * Get disease data for a specific disease by slug.
+     */
+    public function diseaseDataFor(string $slug): ?UserDiseaseData
     {
-        return $this->hasOne(DiseasePcod::class);
+        return $this->diseaseData()
+            ->whereHas('disease', fn ($q) => $q->where('slug', $slug))
+            ->with('disease')
+            ->first();
+    }
+
+    /**
+     * Get all disease data keyed by disease slug (for snapshots).
+     */
+    public function allDiseaseDataKeyed(): array
+    {
+        $this->loadMissing('diseaseData.disease');
+        $result = [];
+        foreach ($this->diseaseData as $data) {
+            $result[$data->disease->slug] = $data->toFlatArray();
+        }
+        return $result;
     }
 
     public function digitalTwins(): HasMany

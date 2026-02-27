@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\DiseaseType;
 use App\Enums\PhysicalActivity;
 use App\Enums\StressLevel;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +30,7 @@ class HealthProfile extends Model
             'water_intake' => 'decimal:2',
             'stress_level' => StressLevel::class,
             'physical_activity' => PhysicalActivity::class,
-            'disease_type' => DiseaseType::class,
+            'disease_type' => 'string',
         ];
     }
 

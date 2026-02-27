@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminUserSeeder::class,
+            DiseaseSeeder::class,
             DiabetesRagSeeder::class,
             PcodRagSeeder::class,
             LifestyleNutritionRagSeeder::class,

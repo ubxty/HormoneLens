@@ -60,12 +60,13 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Disease Type</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Primary Condition</label>
                 <select x-model="form.disease_type" required
                         class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
                     <option value="">Select...</option>
-                    <option value="diabetes">Diabetes</option>
-                    <option value="pcod">PCOD / PCOS</option>
+                    @foreach(\App\Models\Disease::active()->ordered()->get() as $d)
+                    <option value="{{ $d->slug }}">{{ $d->icon }} {{ $d->name }}</option>
+                    @endforeach
                 </select>
             </div>
 

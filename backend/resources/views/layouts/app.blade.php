@@ -45,12 +45,12 @@
                 👤 Health Profile</a>
 
             <p class="pt-3 pb-1 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Disease Data</p>
-            <a href="{{ route('disease.diabetes') }}"
-               class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ $cur==='disease.diabetes' ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
-                🩸 Diabetes</a>
-            <a href="{{ route('disease.pcod') }}"
-               class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ $cur==='disease.pcod' ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
-                🧬 PCOD</a>
+            @php $diseases = \App\Models\Disease::active()->ordered()->get(); @endphp
+            @foreach($diseases as $d)
+            <a href="{{ route('disease.show', $d->slug) }}"
+               class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ request()->is('disease/'.$d->slug) ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
+                {{ $d->icon }} {{ $d->name }}</a>
+            @endforeach
 
             <p class="pt-3 pb-1 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Analytics</p>
             <a href="{{ route('digital-twin') }}"

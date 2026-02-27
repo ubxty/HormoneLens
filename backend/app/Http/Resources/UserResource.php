@@ -16,8 +16,14 @@ class UserResource extends JsonResource
             'is_admin' => $this->is_admin,
             'created_at' => $this->created_at?->toIso8601String(),
             'health_profile' => $this->whenLoaded('healthProfile', fn () => new HealthProfileResource($this->healthProfile)),
-            'disease_diabetes' => $this->whenLoaded('diseaseDiabetes', fn () => new DiabetesResource($this->diseaseDiabetes)),
-            'disease_pcod' => $this->whenLoaded('diseasePcod', fn () => new PcodResource($this->diseasePcod)),
+            'disease_data' => $this->whenLoaded('diseaseData', function () {
+                return $this->diseaseData->map(fn ($ud) => [
+                    'disease_slug' => $ud->disease?->slug,
+                    'disease_name' => $ud->disease?->name,
+                    'field_values' => $ud->field_values,
+                    'updated_at' => $ud->updated_at?->toIso8601String(),
+                ]);
+            }),
             'active_digital_twin' => $this->whenLoaded('activeDigitalTwin', fn () => new DigitalTwinResource($this->activeDigitalTwin)),
             'simulations' => SimulationResource::collection($this->whenLoaded('simulations')),
         ];

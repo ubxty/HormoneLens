@@ -146,6 +146,7 @@ class SimulationService
 
     /**
      * Apply lifestyle modifier to snapshot data based on simulation type.
+     * Disease data keys are dynamic slugs — modifiers affect any disease that has the relevant field.
      */
     private function applyLifestyleModifier(array $snapshot, SimulationType $type, array $input): array
     {
@@ -153,16 +154,15 @@ class SimulationService
 
         switch ($type) {
             case SimulationType::MEAL:
-                // Simulating dietary change — adjust diet-related factors
                 $description = strtolower($input['description'] ?? '');
                 if (str_contains($description, 'reduce sugar') || str_contains($description, 'less sugar')) {
-                    // Positive change: improve sugar cravings
-                    if (isset($modified['diabetes']['sugar_cravings'])) {
-                        $modified['diabetes']['sugar_cravings'] = 'rare';
+                    // Positive change: improve sugar cravings across all diseases
+                    foreach ($modified as $key => &$data) {
+                        if ($key !== 'health_profile' && is_array($data) && isset($data['sugar_cravings'])) {
+                            $data['sugar_cravings'] = 'rare';
+                        }
                     }
-                    if (isset($modified['pcod']['sugar_cravings'])) {
-                        $modified['pcod']['sugar_cravings'] = 'rare';
-                    }
+                    unset($data);
                 }
                 if (str_contains($description, 'more vegetables') || str_contains($description, 'balanced diet')) {
                     $modified['health_profile']['eating_habits'] = 'balanced diet with vegetables and whole grains';
@@ -185,6 +185,7 @@ class SimulationService
 
     /**
      * Apply food-specific modifiers based on glycemic impact estimation.
+     * Works dynamically across all disease data in the snapshot.
      */
     private function applyFoodModifier(array $snapshot, string $foodItem, array $ragResult): array
     {
@@ -213,13 +214,34 @@ class SimulationService
             }
         }
 
-        if ($isHighGi && isset($modified['diabetes'])) {
-            $modified['diabetes']['avg_blood_sugar'] = min(350, ($modified['diabetes']['avg_blood_sugar'] ?? 120) + 40);
-            $modified['diabetes']['sugar_cravings'] = 'frequent';
-        } elseif ($isLowGi && isset($modified['diabetes'])) {
-            $modified['diabetes']['avg_blood_sugar'] = max(70, ($modified['diabetes']['avg_blood_sugar'] ?? 120) - 15);
-            $modified['diabetes']['sugar_cravings'] = 'rare';
+        // Apply blood sugar modifiers to any disease that has avg_blood_sugar
+        foreach ($modified as $key => &$data) {
+            if ($key === 'health_profile' || !is_array($data)) {
+                continue;
+            }
+
+            if (isset($data['avg_blood_sugar'])) {
+                if ($isHighGi) {
+                    $data['avg_blood_sugar'] = min(350, ($data['avg_blood_sugar'] ?? 120) + 40);
+                    $data['sugar_cravings'] = $data['sugar_cravings'] ?? 'frequent';
+                } elseif ($isLowGi) {
+                    $data['avg_blood_sugar'] = max(70, ($data['avg_blood_sugar'] ?? 120) - 15);
+                    if (isset($data['sugar_cravings'])) {
+                        $data['sugar_cravings'] = 'rare';
+                    }
+                }
+            }
+
+            // Also affect sugar cravings even for diseases without blood sugar
+            if (!isset($data['avg_blood_sugar']) && isset($data['sugar_cravings'])) {
+                if ($isHighGi) {
+                    $data['sugar_cravings'] = 'frequent';
+                } elseif ($isLowGi) {
+                    $data['sugar_cravings'] = 'rare';
+                }
+            }
         }
+        unset($data);
 
         return $modified;
     }

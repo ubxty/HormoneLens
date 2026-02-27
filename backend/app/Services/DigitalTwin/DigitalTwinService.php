@@ -19,32 +19,32 @@ class DigitalTwinService
      */
     public function generate(User $user): DigitalTwin
     {
-        $user->load(['healthProfile', 'diseaseDiabetes', 'diseasePcod']);
+        $user->load(['healthProfile', 'diseaseData.disease']);
 
         $hp = $user->healthProfile;
         if (!$hp) {
             throw new \RuntimeException('Health profile is required to generate a Digital Twin.');
         }
 
-        $diabetes = $user->diseaseDiabetes;
-        $pcod = $user->diseasePcod;
+        // Build disease data map keyed by slug: ['diabetes' => [...fields...], 'pcod' => [...], ...]
+        $diseaseDataMap = $user->allDiseaseDataKeyed();
 
         // Calculate all scores
-        $metabolic = $this->riskEngine->calculateMetabolicRisk($hp, $diabetes, $pcod);
-        $insulin = $this->riskEngine->calculateInsulinResistance($hp, $diabetes, $pcod);
-        $hormonal = $this->riskEngine->calculateHormonalImbalance($hp, $diabetes, $pcod);
+        $metabolic = $this->riskEngine->calculateMetabolicRisk($hp, $diseaseDataMap);
+        $insulin = $this->riskEngine->calculateInsulinResistance($hp, $diseaseDataMap);
+        $hormonal = $this->riskEngine->calculateHormonalImbalance($hp, $diseaseDataMap);
         $overall = $this->riskEngine->calculateOverallRisk($metabolic, $insulin, $hormonal);
         $sleepScore = $this->riskEngine->calculateSleepScore((float) $hp->avg_sleep_hours);
-        $stressScore = $this->riskEngine->calculateStressScore($hp->stress_level->value);
-        $dietScore = $this->riskEngine->calculateDietScore($hp, $diabetes, $pcod);
+        $stressVal = is_object($hp->stress_level) ? $hp->stress_level->value : ($hp->stress_level ?? 'medium');
+        $stressScore = $this->riskEngine->calculateStressScore($stressVal);
+        $dietScore = $this->riskEngine->calculateDietScore($hp, $diseaseDataMap);
         $riskCategory = $this->riskEngine->categorizeRisk($overall);
 
-        // Build snapshot
-        $snapshot = [
-            'health_profile' => $hp->toArray(),
-            'diabetes' => $diabetes?->toArray(),
-            'pcod' => $pcod?->toArray(),
-        ];
+        // Build snapshot: health_profile + each disease slug as key
+        $snapshot = ['health_profile' => $hp->toArray()];
+        foreach ($diseaseDataMap as $slug => $fieldValues) {
+            $snapshot[$slug] = $fieldValues;
+        }
 
         // Deactivate previous twins
         $this->repository->deactivateAll($user);

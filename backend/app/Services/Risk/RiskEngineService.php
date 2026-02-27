@@ -3,77 +3,49 @@
 namespace App\Services\Risk;
 
 use App\Enums\RiskCategory;
-use App\Models\DiseaseDiabetes;
-use App\Models\DiseasePcod;
+use App\Models\Disease;
+use App\Models\DiseaseField;
 use App\Models\HealthProfile;
 
 class RiskEngineService
 {
     /**
      * Calculate metabolic risk score (0–100). Higher = worse.
+     *
+     * @param HealthProfile $hp
+     * @param array<string, array> $diseaseDataMap  Keyed by disease slug, values are flat field arrays.
      */
-    public function calculateMetabolicRisk(
-        HealthProfile $hp,
-        ?DiseaseDiabetes $diabetes = null,
-        ?DiseasePcod $pcod = null
-    ): float {
+    public function calculateMetabolicRisk(HealthProfile $hp, array $diseaseDataMap = []): float
+    {
         $score = 50.0;
 
-        // Sleep factor
+        // ── Health-profile factors (always applied) ──
         if ($hp->avg_sleep_hours < 6) {
             $score += 15;
         } elseif ($hp->avg_sleep_hours < 7) {
             $score += 5;
         }
 
-        // Stress factor
-        $score += match ($hp->stress_level->value) {
+        $stressVal = is_object($hp->stress_level) ? $hp->stress_level->value : ($hp->stress_level ?? 'medium');
+        $score += match ($stressVal) {
             'high' => 20,
             'medium' => 10,
             default => 0,
         };
 
-        // Physical activity
-        $score += match ($hp->physical_activity->value) {
+        $activityVal = is_object($hp->physical_activity) ? $hp->physical_activity->value : ($hp->physical_activity ?? 'moderate');
+        $score += match ($activityVal) {
             'sedentary' => 15,
             'moderate' => 5,
             default => 0,
         };
 
-        // Water intake
         if ($hp->water_intake < 2) {
             $score += 5;
         }
 
-        // Diabetes-specific
-        if ($diabetes) {
-            if ($diabetes->avg_blood_sugar > 200) {
-                $score += 20;
-            } elseif ($diabetes->avg_blood_sugar > 140) {
-                $score += 10;
-            }
-            if ($diabetes->family_history) {
-                $score += 5;
-            }
-            if ($diabetes->sugar_cravings->value === 'frequent') {
-                $score += 5;
-            }
-        }
-
-        // PCOD-specific
-        if ($pcod) {
-            $score += match ($pcod->cycle_regularity->value) {
-                'missed' => 15,
-                'irregular' => 10,
-                default => 0,
-            };
-            if ($pcod->insulin_resistance_diagnosed) {
-                $score += 15;
-            }
-            if ($pcod->weight_gain_difficulty_losing) {
-                $score += 10;
-            }
-        }
+        // ── Dynamic disease factors (metabolic score) ──
+        $score += $this->computeDiseaseImpact($diseaseDataMap, 'metabolic');
 
         return $this->clamp($score);
     }
@@ -81,14 +53,11 @@ class RiskEngineService
     /**
      * Calculate insulin resistance score (0–100).
      */
-    public function calculateInsulinResistance(
-        HealthProfile $hp,
-        ?DiseaseDiabetes $diabetes = null,
-        ?DiseasePcod $pcod = null
-    ): float {
+    public function calculateInsulinResistance(HealthProfile $hp, array $diseaseDataMap = []): float
+    {
         $score = 30.0;
 
-        // BMI calculation (height in cm → m)
+        // BMI
         $heightM = $hp->height / 100;
         $bmi = $heightM > 0 ? $hp->weight / ($heightM * $heightM) : 25;
 
@@ -98,22 +67,13 @@ class RiskEngineService
             $score += 15;
         }
 
-        if ($diabetes && $diabetes->avg_blood_sugar > 140) {
-            $score += 20;
-        }
-
-        if ($pcod && $pcod->insulin_resistance_diagnosed) {
-            $score += 25;
-        }
-
-        if ($hp->physical_activity->value === 'sedentary') {
+        $activityVal = is_object($hp->physical_activity) ? $hp->physical_activity->value : ($hp->physical_activity ?? 'moderate');
+        if ($activityVal === 'sedentary') {
             $score += 10;
         }
 
-        $cravings = $diabetes?->sugar_cravings->value ?? $pcod?->sugar_cravings->value ?? null;
-        if ($cravings === 'frequent') {
-            $score += 10;
-        }
+        // ── Dynamic disease factors (insulin score) ──
+        $score += $this->computeDiseaseImpact($diseaseDataMap, 'insulin');
 
         return $this->clamp($score);
     }
@@ -121,47 +81,21 @@ class RiskEngineService
     /**
      * Calculate hormonal imbalance score (0–100).
      */
-    public function calculateHormonalImbalance(
-        HealthProfile $hp,
-        ?DiseaseDiabetes $diabetes = null,
-        ?DiseasePcod $pcod = null
-    ): float {
+    public function calculateHormonalImbalance(HealthProfile $hp, array $diseaseDataMap = []): float
+    {
         $score = 20.0;
 
-        if ($pcod) {
-            $symptoms = [
-                $pcod->acne_oily_skin,
-                $pcod->hair_thinning,
-                $pcod->excess_facial_body_hair,
-                $pcod->dark_skin_patches,
-                $pcod->mood_swings_anxiety,
-            ];
-            $score += collect($symptoms)->filter()->count() * 10;
-
-            if ($pcod->cycle_regularity->value === 'missed') {
-                $score += 15;
-            }
-            if ($pcod->sleep_disturbances->value === 'often') {
-                $score += 10;
-            }
-        }
-
-        if ($diabetes) {
-            if ($diabetes->energy_crashes_after_meals) {
-                $score += 10;
-            }
-            if ($diabetes->fatigue->value === 'often') {
-                $score += 10;
-            }
-        }
-
-        if ($hp->stress_level->value === 'high') {
+        $stressVal = is_object($hp->stress_level) ? $hp->stress_level->value : ($hp->stress_level ?? 'medium');
+        if ($stressVal === 'high') {
             $score += 15;
         }
 
         if ($hp->avg_sleep_hours < 6) {
             $score += 10;
         }
+
+        // ── Dynamic disease factors (hormonal score) ──
+        $score += $this->computeDiseaseImpact($diseaseDataMap, 'hormonal');
 
         return $this->clamp($score);
     }
@@ -207,28 +141,35 @@ class RiskEngineService
     /**
      * Calculate diet score based on available factors (0–100, higher = better).
      */
-    public function calculateDietScore(
-        HealthProfile $hp,
-        ?DiseaseDiabetes $diabetes = null,
-        ?DiseasePcod $pcod = null
-    ): float {
+    public function calculateDietScore(HealthProfile $hp, array $diseaseDataMap = []): float
+    {
         $score = 70.0;
-
-        $cravings = $diabetes?->sugar_cravings->value ?? $pcod?->sugar_cravings->value ?? 'rare';
-        $score -= match ($cravings) {
-            'frequent' => 25,
-            'occasional' => 10,
-            default => 0,
-        };
 
         if ($hp->water_intake < 2) {
             $score -= 10;
         }
 
-        if ($diabetes && $diabetes->avg_blood_sugar > 200) {
-            $score -= 20;
-        } elseif ($diabetes && $diabetes->avg_blood_sugar > 140) {
-            $score -= 10;
+        // Look for sugar_cravings across any disease data
+        foreach ($diseaseDataMap as $data) {
+            $cravings = $data['sugar_cravings'] ?? null;
+            if ($cravings) {
+                $score -= match ($cravings) {
+                    'frequent' => 25,
+                    'occasional' => 10,
+                    default => 0,
+                };
+                break; // Use first disease that has cravings
+            }
+        }
+
+        // Look for blood sugar values across disease data
+        $bloodSugar = $diseaseDataMap['diabetes']['avg_blood_sugar'] ?? null;
+        if ($bloodSugar !== null) {
+            if ($bloodSugar > 200) {
+                $score -= 20;
+            } elseif ($bloodSugar > 140) {
+                $score -= 10;
+            }
         }
 
         return $this->clamp($score);
@@ -244,21 +185,29 @@ class RiskEngineService
 
     /**
      * Recalculate all scores from a snapshot data array (used during simulations).
+     *
+     * Snapshot format: ['health_profile' => [...], 'diabetes' => [...], 'pcod' => [...], ...]
+     * Every key except 'health_profile' is treated as a disease slug with its field values.
      */
     public function recalculateFromSnapshot(array $data): array
     {
-        // Build temporary models from snapshot data
         $hp = new HealthProfile($data['health_profile'] ?? []);
-        $diabetes = isset($data['diabetes']) ? new DiseaseDiabetes($data['diabetes']) : null;
-        $pcod = isset($data['pcod']) ? new DiseasePcod($data['pcod']) : null;
 
-        $metabolic = $this->calculateMetabolicRisk($hp, $diabetes, $pcod);
-        $insulin = $this->calculateInsulinResistance($hp, $diabetes, $pcod);
-        $hormonal = $this->calculateHormonalImbalance($hp, $diabetes, $pcod);
+        // Build disease data map: everything except 'health_profile'
+        $diseaseDataMap = [];
+        foreach ($data as $key => $value) {
+            if ($key !== 'health_profile' && is_array($value)) {
+                $diseaseDataMap[$key] = $value;
+            }
+        }
+
+        $metabolic = $this->calculateMetabolicRisk($hp, $diseaseDataMap);
+        $insulin = $this->calculateInsulinResistance($hp, $diseaseDataMap);
+        $hormonal = $this->calculateHormonalImbalance($hp, $diseaseDataMap);
         $overall = $this->calculateOverallRisk($metabolic, $insulin, $hormonal);
         $sleepScore = $this->calculateSleepScore((float) ($data['health_profile']['avg_sleep_hours'] ?? 7));
         $stressScore = $this->calculateStressScore($data['health_profile']['stress_level'] ?? 'medium');
-        $dietScore = $this->calculateDietScore($hp, $diabetes, $pcod);
+        $dietScore = $this->calculateDietScore($hp, $diseaseDataMap);
 
         return [
             'metabolic_health_score' => round($metabolic, 2),
@@ -269,6 +218,73 @@ class RiskEngineService
             'overall_risk_score' => round($overall, 2),
             'risk_category' => $this->categorizeRisk($overall)->value,
         ];
+    }
+
+    // ── Private helpers ──────────────────────────────
+
+    /**
+     * Compute total risk impact for a specific score type from all disease data.
+     * Reads risk_config from disease_fields table dynamically.
+     */
+    private function computeDiseaseImpact(array $diseaseDataMap, string $scoreType): float
+    {
+        $totalImpact = 0.0;
+
+        foreach ($diseaseDataMap as $diseaseSlug => $fieldValues) {
+            if (!is_array($fieldValues)) {
+                continue;
+            }
+
+            $disease = Disease::where('slug', $diseaseSlug)->first();
+            if (!$disease) {
+                continue;
+            }
+
+            $fields = DiseaseField::where('disease_id', $disease->id)
+                ->whereNotNull('risk_config')
+                ->get();
+
+            foreach ($fields as $field) {
+                $config = $field->risk_config;
+                if (($config['score'] ?? null) !== $scoreType) {
+                    continue;
+                }
+
+                $userValue = $fieldValues[$field->slug] ?? null;
+                if ($userValue === null) {
+                    continue;
+                }
+
+                foreach ($config['rules'] ?? [] as $rule) {
+                    if ($this->evaluateRule($userValue, $rule)) {
+                        $totalImpact += (float) ($rule['impact'] ?? 0);
+                        break; // First matching rule wins per field
+                    }
+                }
+            }
+        }
+
+        return $totalImpact;
+    }
+
+    /**
+     * Evaluate a single risk rule against a user value.
+     */
+    private function evaluateRule(mixed $userValue, array $rule): bool
+    {
+        $operator = $rule['operator'] ?? '==';
+        $ruleValue = $rule['value'] ?? null;
+
+        return match ($operator) {
+            '==' => $userValue == $ruleValue,
+            '!=' => $userValue != $ruleValue,
+            '>' => is_numeric($userValue) && $userValue > $ruleValue,
+            '>=' => is_numeric($userValue) && $userValue >= $ruleValue,
+            '<' => is_numeric($userValue) && $userValue < $ruleValue,
+            '<=' => is_numeric($userValue) && $userValue <= $ruleValue,
+            'in' => is_array($ruleValue) && in_array($userValue, $ruleValue),
+            default => false,
+        };
     }
 
     private function clamp(float $value, float $min = 0, float $max = 100): float

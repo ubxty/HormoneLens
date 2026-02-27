@@ -21,7 +21,7 @@ class StoreHealthProfileRequest extends FormRequest
             'physical_activity' => ['required', 'in:sedentary,moderate,active'],
             'eating_habits' => ['nullable', 'string', 'max:1000'],
             'water_intake' => ['required', 'numeric', 'min:0', 'max:20'],
-            'disease_type' => ['required', 'in:diabetes,pcod'],
+            'disease_type' => ['required', 'string', 'max:100'],
         ];
     }
 }

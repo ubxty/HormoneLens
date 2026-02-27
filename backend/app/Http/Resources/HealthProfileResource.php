@@ -18,7 +18,7 @@ class HealthProfileResource extends JsonResource
             'physical_activity' => $this->physical_activity?->value,
             'eating_habits' => $this->eating_habits,
             'water_intake' => (float) $this->water_intake,
-            'disease_type' => $this->disease_type?->value,
+            'disease_type' => $this->disease_type,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
