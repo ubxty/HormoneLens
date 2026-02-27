@@ -5,6 +5,13 @@ use App\Http\Controllers\Web\PageController;
 use App\Http\Controllers\Web\Admin\PageController as AdminPageController;
 use Illuminate\Support\Facades\Route;
 
+// ─── Landing page (public) ───────────────────────────
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : view('landing');
+})->name('home');
+
 // ─── Auth (guest) ────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login',    [AuthController::class, 'showLogin'])->name('login');
@@ -16,7 +23,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 // ─── User pages (auth) ──────────────────────────────
 Route::middleware('auth')->group(function () {
-    Route::get('/',               [PageController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard',      [PageController::class, 'dashboard'])->name('dashboard');
     Route::get('/health-profile', [PageController::class, 'healthProfile'])->name('health-profile');
     Route::get('/disease/{slug}',  [PageController::class, 'disease'])->name('disease.show');
     Route::get('/digital-twin',   [PageController::class, 'digitalTwin'])->name('digital-twin');
