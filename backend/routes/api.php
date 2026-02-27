@@ -24,8 +24,10 @@ use Illuminate\Support\Facades\Route;
 | Public Routes
 |--------------------------------------------------------------------------
 */
-Route::post('/register', RegisterController::class);
-Route::post('/login', LoginController::class);
+Route::middleware('throttle:auth')->group(function () {
+    Route::post('/register', RegisterController::class);
+    Route::post('/login', LoginController::class);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -86,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ── RAG Knowledge Base ───────────────────────────
-    Route::post('/rag/query', RagController::class);
+    Route::middleware('throttle:rag')->post('/rag/query', RagController::class);
 
     /*
     |----------------------------------------------------------------------
@@ -107,5 +109,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/alerts/{id}', [AlertManagementController::class, 'show']);
 
         Route::get('/reports', ReportController::class);
+
+        // ── RAG Knowledge Base CRUD ──────────────────
+        Route::prefix('rag')->group(function () {
+            Route::get('/documents', [\App\Http\Controllers\Admin\RagManagementController::class, 'documents']);
+            Route::post('/documents', [\App\Http\Controllers\Admin\RagManagementController::class, 'storeDocument']);
+            Route::get('/documents/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'showDocument']);
+            Route::put('/documents/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'updateDocument']);
+            Route::delete('/documents/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'destroyDocument']);
+            Route::post('/nodes', [\App\Http\Controllers\Admin\RagManagementController::class, 'storeNode']);
+            Route::put('/nodes/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'updateNode']);
+            Route::delete('/nodes/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'destroyNode']);
+            Route::post('/pages', [\App\Http\Controllers\Admin\RagManagementController::class, 'storePage']);
+            Route::put('/pages/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'updatePage']);
+            Route::delete('/pages/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'destroyPage']);
+        });
     });
 });
