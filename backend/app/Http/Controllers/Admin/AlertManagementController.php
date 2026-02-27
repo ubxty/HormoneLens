@@ -18,7 +18,7 @@ class AlertManagementController extends Controller
      */
     public function index(Request $request)
     {
-        $filters = $request->only(['severity', 'type', 'user_id', 'date_from', 'date_to']);
+        $filters = $request->only(['severity', 'type', 'user_id', 'date_from', 'date_to', 'is_read', 'search']);
 
         $alerts = $this->alertRepo->paginateAll(
             filters: $filters,
@@ -33,6 +33,8 @@ class AlertManagementController extends Controller
                 'last_page' => $alerts->lastPage(),
                 'per_page' => $alerts->perPage(),
                 'total' => $alerts->total(),
+                'from' => $alerts->firstItem(),
+                'to' => $alerts->lastItem(),
             ],
         ]);
     }

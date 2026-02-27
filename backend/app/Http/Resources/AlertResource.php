@@ -11,6 +11,12 @@ class AlertResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
+            'user' => $this->whenLoaded('user', fn () => [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+            ]),
             'type' => $this->type?->value,
             'title' => $this->title,
             'message' => $this->message,

@@ -13,8 +13,8 @@ class RagAnswerResource extends JsonResource
             'answer' => $this['answer'],
             'reasoning_path' => $this['reasoning_path'],
             'source_nodes' => $this['source_nodes'],
-            'source_pages' => $this['source_pages'],
-            'confidence' => $this['confidence'] . '%',
+            'pages' => $this['source_pages'],
+            'confidence' => round($this['confidence'] / 100, 2),
         ];
     }
 }

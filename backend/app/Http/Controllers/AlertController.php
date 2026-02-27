@@ -65,7 +65,7 @@ class AlertController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => ['unread_count' => $count],
+            'data' => ['count' => $count],
         ]);
     }
 }

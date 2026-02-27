@@ -37,9 +37,10 @@ class ReportController extends Controller
             'period_end' => now()->toDateString(),
             'new_users' => $this->userRepo->newUsersCount($days),
             'total_simulations' => $this->simRepo->totalCount(),
-            'simulations_in_period' => $this->simRepo->weekCount(), // reuse — can later extend to period
+            'simulations_in_period' => $this->simRepo->weekCount(),
             'risk_distribution' => $this->twinRepo->riskDistribution(),
             'average_risk_score' => round($this->twinRepo->averageRiskScore(), 2),
+            'daily_risk_scores' => $this->twinRepo->dailyRiskScoresForPeriod($days),
             'daily_simulations' => $this->simRepo->dailyCountForPeriod($days),
             'daily_alerts_by_severity' => $this->alertRepo->dailySeverityCountForPeriod($days),
         ];

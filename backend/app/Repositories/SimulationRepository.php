@@ -36,6 +36,10 @@ class SimulationRepository
         if (!empty($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);
         }
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+        }
         if (!empty($filters['risk_category_after'])) {
             $query->where('risk_category_after', $filters['risk_category_after']);
         }
@@ -83,6 +87,9 @@ class SimulationRepository
             ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->groupByRaw('DATE(created_at)')
             ->orderBy('date')
-            ->pluck('count', 'date');
+            ->get()
+            ->map(fn ($row) => ['date' => $row->date, 'count' => $row->count])
+            ->values()
+            ->toArray();
     }
 }

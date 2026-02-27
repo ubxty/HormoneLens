@@ -41,7 +41,11 @@ class RagAnswerBuilder
 
         return [
             'answer' => $answer,
-            'source_pages' => $pages->pluck('id')->toArray(),
+            'source_pages' => $pages->map(fn(RagPage $p) => [
+                'id' => $p->id,
+                'page_number' => $p->page_number,
+                'content' => $p->content,
+            ])->values()->toArray(),
         ];
     }
 }

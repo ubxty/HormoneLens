@@ -54,6 +54,10 @@ class AlertRepository
         if (isset($filters['is_read'])) {
             $query->where('is_read', $filters['is_read']);
         }
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+        }
         if (!empty($filters['date_from'])) {
             $query->where('created_at', '>=', $filters['date_from']);
         }

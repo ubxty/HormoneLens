@@ -18,7 +18,7 @@ class SimulationLogController extends Controller
      */
     public function index(Request $request)
     {
-        $filters = $request->only(['type', 'user_id', 'date_from', 'date_to']);
+        $filters = $request->only(['type', 'user_id', 'date_from', 'date_to', 'search']);
 
         $simulations = $this->simRepo->paginateAll(
             filters: $filters,
@@ -33,6 +33,8 @@ class SimulationLogController extends Controller
                 'last_page' => $simulations->lastPage(),
                 'per_page' => $simulations->perPage(),
                 'total' => $simulations->total(),
+                'from' => $simulations->firstItem(),
+                'to' => $simulations->lastItem(),
             ],
         ]);
     }

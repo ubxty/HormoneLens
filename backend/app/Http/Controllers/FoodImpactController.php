@@ -26,7 +26,7 @@ class FoodImpactController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Food impact simulation completed.',
-            'data' => $result,
+            'data' => new SimulationResource($result),
         ], 201);
     }
 }

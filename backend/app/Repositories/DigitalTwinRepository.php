@@ -47,4 +47,16 @@ class DigitalTwinRepository
     {
         return (float) DigitalTwin::where('is_active', true)->avg('overall_risk_score') ?? 0;
     }
+
+    public function dailyRiskScoresForPeriod(int $days = 30): array
+    {
+        return DigitalTwin::where('created_at', '>=', now()->subDays($days))
+            ->selectRaw('DATE(created_at) as date, ROUND(AVG(overall_risk_score), 2) as avg_score')
+            ->groupByRaw('DATE(created_at)')
+            ->orderBy('date')
+            ->get()
+            ->map(fn ($row) => ['date' => $row->date, 'avg_score' => (float) $row->avg_score])
+            ->values()
+            ->toArray();
+    }
 }

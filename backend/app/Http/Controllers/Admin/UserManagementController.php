@@ -20,6 +20,8 @@ class UserManagementController extends Controller
     {
         $users = $this->userRepo->paginate(
             perPage: (int) $request->query('per_page', 20),
+            search: $request->query('search'),
+            isAdmin: $request->query('is_admin'),
         );
 
         return response()->json([
@@ -30,6 +32,8 @@ class UserManagementController extends Controller
                 'last_page' => $users->lastPage(),
                 'per_page' => $users->perPage(),
                 'total' => $users->total(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem(),
             ],
         ]);
     }
@@ -48,7 +52,7 @@ class UserManagementController extends Controller
             ], 404);
         }
 
-        $user->load(['healthProfile', 'diseaseDiabetes', 'diseasePcod', 'activeDigitalTwin']);
+        $user->load(['healthProfile', 'diseaseDiabetes', 'diseasePcod', 'activeDigitalTwin', 'simulations' => fn ($q) => $q->latest()->limit(10)]);
 
         return response()->json([
             'success' => true,

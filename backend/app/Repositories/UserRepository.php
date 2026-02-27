@@ -27,13 +27,27 @@ class UserRepository
         return $user->fresh();
     }
 
-    public function paginate(int $perPage = 15)
+    public function paginate(int $perPage = 15, ?string $search = null, ?string $isAdmin = null)
     {
-        return User::with('activeDigitalTwin')
-            ->withCount('simulations')
-            ->where('is_admin', false)
-            ->latest()
-            ->paginate($perPage);
+        $query = User::with('activeDigitalTwin')
+            ->withCount('simulations');
+
+        if ($isAdmin === null || $isAdmin === '') {
+            // Default: show all users
+        } elseif ($isAdmin === '1') {
+            $query->where('is_admin', true);
+        } else {
+            $query->where('is_admin', false);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->latest()->paginate($perPage);
     }
 
     public function totalCount(): int

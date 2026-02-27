@@ -11,6 +11,12 @@ class SimulationResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
+            'user' => $this->whenLoaded('user', fn () => [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+            ]),
             'type' => $this->type?->value,
             'input_data' => $this->input_data,
             'original_risk_score' => (float) $this->original_risk_score,
