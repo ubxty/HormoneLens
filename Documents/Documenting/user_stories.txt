@@ -1,0 +1,444 @@
+USER STORY
+I visited the website named HormoneLens, on my laptop.
+It had a clean healthcare theme with light colors.
+In the top right corner I saw two buttons name “Create Account” and “Login”, as I was a new user I clicked on the Create Account button, after that a registration form was opened on the screen and I had to fill my basic details like name, age, email and password.
+After that I was redirected to my personal dashboard, which had sections like personal information, lifestyle inputs, hormone risk overview and a simulation panel.
+At the center of the screen, I saw input form asking me to enter my daily habits and health details such as current weight, height, average sleep duration, stress level, daily physical activity, eating habits, water intake, and mainly from what disease I suffer- diabetes or PCOD.
+As I clicked diabetes, it asked me few additional questions like –
+    • My average blood sugar levels
+    • Family history of diabetes
+    • Frequency of fatigue or dizziness
+    • Any recent weight gain
+    • Cravings for sugary food
+I filled all the necessary details and clicked on the submit button which was at the end of the form.
+After submission, a message appeared on my screen saying, “Creating your digital twin….”
+Within few second, my digital twin was created. The whole experience was so easy and exciting. The digital twin showed me a health card on my dashboard, on which my health details were written such as-
+    • My current metabolic health status
+    • Insulin resistance level
+    • Stress impact on my hormones
+    • Sleep quality score
+    • Predicted hormonal imbalance risk
+On the right side of the dashboard, I saw a section called “Plan a lifestyle”. It had three buttons named Meal Planning, Sleep Improvement and Stress Management.
+I clicked on the Meal Planning button, then the system started running a simulation in the background, a loading animation appeared with the message, “Running What-if simulation based on your Digital Twin…”
+The system analysed how changes in my diet may affect my body …
+How will it affect my blood sugar levels, hormone balance, insulin sensitivity and metabolic health the whole dashboard was visually appealing, I felt a sense of calm … and after a few second my results appeared on my dashboard,  I received 
+    • A Metabolic Risk Score shown in color format (Low / Moderate / High)
+    • Health impact summary
+    • Possible future risks
+    • Personalized lifestyle suggestions
+I also received real-time alerts such as:
+    • “High carbohydrate intake may increase insulin resistance risk.”
+    • “Balanced diet can improve metabolic health.”
+After that I noticed another feature on the dashboard called “Check food impact on your health”, it allowed me to see how eating a particular item might affect my diabetes risk and my blood sugar levels. I saw a search box with the label, “Enter a food item to simulate its impact”, I wrote white rice in the input field and I clicked on Run Simulation button.
+A message appeared on the screen saying, “Analysing the impact of selected food on your metabolic health…”. The system started a What-If Simulation based on my Digital Twin and my diabetic condition. It analysed how consuming white rice may affect:
+    • Blood glucose levels
+    • Insulin resistance
+    • Energy levels
+    • Fat storage
+    • Hormonal balance
+After that I received an alert saying, “High glycemic food may cause a spike in your blood sugar level.” The system also showed:
+    • Increase in predicted blood sugar level
+    • Moderate risk of insulin resistance
+    • Possible fatigue after consumption
+    • Suggested portion control
+I was also given a healthier alternative suggestion like, “You may consider replacing white rice with brown rice or quinoa.”, which I really liked because now I don’t feel the burden of constantly thinking about what I should eat or avoid, as the system clearly shows how a particular food item may impact my blood sugar levels and overall health before I consume it. 
+Based on the simulation results and risk analysis provided by the system, I was able to understand how consuming certain food items could affect my blood sugar levels and insulin resistance. HormoneLens helped me predict the possible health impact of my daily food choices before actually consuming them. By viewing my Metabolic Risk Score and receiving real-time alerts, I could identify which lifestyle habits might increase my diabetes risk over time. The system also suggested healthier food alternatives and portion control, which helped me make better dietary decisions. Overall, HormoneLens allowed me to understand my current metabolic health condition, visualize the impact of my daily habits, analyse future risks through AI-based simulation, and take preventive action to manage my diabetes more effectively instead of reacting only after complications occur.
+
+LANDING-PAGE
+When I opened the HormoneLens website on my laptop, I was welcomed by a clean and modern healthcare-themed interface with a soft blue and green gradient background. At the top of the screen, I saw a navigation bar that included the HormoneLens logo on the left side and menu options such as Home, Features, and About Us placed next to it. On the top right corner of the navigation bar, I noticed two prominent buttons labeled Login and Create Account.
+In the center of the homepage, I saw a brief introduction describing the platform as an AI-based hormonal health system that helps users manage metabolic conditions like Diabetes and PCOD by analyzing lifestyle habits. Below this description, there were two call-to-action buttons labeled Get Started and Login. Clicking on the Get Started button redirected new users to the Signup page, while the Login button redirected existing users to the Login page.
+SIGNUP-PAGE
+After clicking on the Create Account button, I was redirected to the Signup page where I saw a registration form displayed at the center of the screen inside a card-like container. The form asked me to enter my personal details including my Full Name, Age, Email Address, and Password. Each input field had a placeholder text that guided me on what information to enter.
+Below these fields, I saw a Sign Up button which allowed me to submit the form after entering all my details. There was also a small text link below the button saying “Already have an account? Login” which could redirect existing users to the login page. After filling in my details, I clicked on the Sign Up button. A confirmation message appeared on the screen stating that my account had been successfully created, and I was automatically redirected to my personal dashboard.
+LOGIN-PAGE
+When I clicked on the Login button located on the top right corner of the homepage navigation bar. I was then redirected to the Login page where I saw a login form displayed at the center of the screen inside a rectangular card with rounded corners. At the top of this card, there were two tabs labeled Login and Register, with the Login tab already selected by default. Below the tab selection, I saw two input fields asking for-
+    • Email Address
+    • Password
+Each field had placeholder text indicating what information needed to be entered. On the right side of the Password input field, there was a small eye icon which allowed me to show or hide the password while typing. Below the password field, I noticed a small clickable text labeled, “Forgot Password?”
+This option was placed just above the main login button in case the user was unable to remember their password. At the bottom of the form, I saw a clearly visible Login button which I clicked after entering my registered email address and password. If I entered incorrect login credentials, an error message appeared below the input fields stating that the email or password was invalid. Once I entered the correct login details and clicked on the Login button, I was successfully authenticated and redirected to my personal dashboard.
+Below the Login button, I also noticed a small line of text saying-“Don’t have an account? Create Account”
+Clicking on the Create Account link would redirect a new user back to the Signup page.This entire login process was simple and allowed me to securely access my personalized HormoneLens dashboard.
+DASHBOARD LANDING PAGE (AFTER LOGIN)
+After successfully logging into my account, I was automatically redirected to my personal HormoneLens dashboard. The dashboard had a clean and well-structured layout that was divided into different sections to help me easily understand my health profile and explore the available features available to me.
+At the top of the screen, I could see a horizontal header bar displaying my name along with a small circular profile icon on the right side. Next to the profile icon, there was also a bell icon representing the Alerts section. When a new simulation result was generated, this bell icon displayed a small red notification badge indicating that a new alert had been triggered by the system based on my lifestyle input or simulation outcome.When I clicked on the profile icon, a dropdown menu appeared which included the following options:
+    • Settings
+    • Logout
+The Settings option allowed me to manage or update my personal and health-related information, while the Logout option enabled me to securely exit my account whenever needed.
+On the left side of the dashboard, there was a vertical navigation panel that included options such as:
+    • Dashboard
+    • My Health Profile
+    • Digital Twin
+    • Lifestyle Planner
+    • Food Impact Simulation
+    • Alerts
+    • History
+The main section of the dashboard displayed a welcome message along with a prompt asking me to complete my health profile in order to begin personalized analysis. Just below this message, I saw a button labeled Complete Health Profile which I clicked to proceed further.
+
+HEALTH PROFILE INPUT SCREEN
+After clicking on the Complete Health Profile button on the dashboard, I was redirected to the Health Profile Input page where a form appeared at the center of the screen inside a structured card layout. This form asked me to enter my daily health habits and lifestyle-related information so that the system could create a personalized representation of my body and hormonal health.
+The form included multiple input fields where I was required to provide details such as my current weight, height, average sleep duration, daily water intake, eating habits, and level of physical activity. For stress level, I was able to select from dropdown options such as Low, Medium, or High. Similarly, for physical activity, I could choose from options like Sedentary, Moderate, or Active using a dropdown menu.
+At the bottom of the form, I saw a section labeled Existing Disease, where I could select between Diabetes and PCOD using radio buttons. I selected the Diabetes option and then clicked on the Next button located at the bottom right corner of the form to proceed further.
+
+DISEASE-SPECIFIC INPUT SCREEN (DIABETES)
+After clicking on the Next button, the system displayed an additional form that asked me a few questions related specifically to my diabetic condition. This helped the platform collect more personalized and symptom-based information in order to generate more accurate simulation results later.
+I was asked to enter my average blood sugar level in mg/dL using a numeric input field. Below that, there was a toggle button asking whether I had a family history of diabetes, where I could select between Yes or No.
+The form also included dropdown options to indicate the frequency of symptoms that I experience in daily life such as:
+    • Frequent thirst
+    • Increased urination
+    • Persistent fatigue
+    • Blurred vision
+I could select from options such as Often, Occasionally, or Rarely for each of these symptoms.
+Additionally, I was asked whether I had experienced:
+    • Sudden or unexplained weight gain
+    • Increased hunger even after meals
+    • Slow healing of wounds or cuts
+For each of these, I could select Yes or No using toggle buttons.
+I was also required to indicate my sugar cravings using a dropdown menu with options such as Frequent, Occasional, or Rare.
+Lastly, I was asked whether I experience energy crashes or dizziness after meals, which could indicate fluctuations in blood sugar levels.
+After filling in all the required information, I clicked on the Submit Health Data button located at the bottom of the form.
+DISEASE-SPECIFIC INPUT SCREEN (PCOD)
+After selecting PCOD as my existing medical condition in the previous step and clicking on the Next button, the system redirected me to another form that asked me a few additional questions specifically related to my hormonal health and common symptoms associated with PCOD. This helped the platform collect more detailed information about my condition in order to generate a more accurate Digital Twin and lifestyle impact analysis.
+The form asked me to provide information about the regularity of my menstrual cycle, where I could select from options such as Regular, Irregular, or Missed cycles using radio buttons. I was also asked about the average length of my menstrual cycle in days through a numeric input field.
+In addition to this, the system asked whether I experience:
+    • Excess facial or body hair growth (hirsutism)
+    • Persistent acne or oily skin
+    • Hair thinning or hair loss from the scalp
+Each of these could be indicated using Yes or No toggle buttons.
+I was also required to specify whether I had experienced:
+    • Sudden or unexplained weight gain
+    • Difficulty in losing weight despite diet or exercise
+    • Dark patches of skin around the neck or underarms
+The form further asked me to indicate:
+    • Frequency of mood swings
+    • Levels of fatigue throughout the day
+    • Sleep disturbances
+I could select from dropdown options such as Often, Occasionally, or Rarely for each of these symptoms.
+Additionally, I was asked if I had ever been diagnosed with insulin resistance or had elevated blood sugar levels in the past, which could also be selected using Yes or No toggle buttons.
+After filling in all the necessary information related to my PCOD condition, I clicked on the Submit Health Data button located at the bottom of the form to proceed further with the Digital Twin creation process.
+
+DIGITAL TWIN CREATION SCREEN
+Immediately after clicking on the Submit Health Data button, I was redirected to a loading screen which appeared on my dashboard. At the center of the screen, I saw a progress indicator along with a message that said-“Creating your Digital Twin based on your health profile…”
+This screen indicated that the system was processing the information I had entered, such as my weight, height, sleep duration, stress level, physical activity, and condition-specific symptoms related to diabetes or PCOD.
+During this step, I also noticed that the rest of the dashboard was temporarily blurred in the background, which helped me focus on the ongoing Digital Twin creation process. The loading animation reassured me that my personalized health model was being generated based on my inputs.
+Within a few seconds, the progress indicator was completed and the message updated to-“Your Digital Twin has been successfully created.”
+I was then automatically redirected back to my dashboard where my customized Digital Twin was now visible.
+DIGITAL TWIN DASHBOARD VIEW
+On returning to the dashboard, I could now see my Digital Twin displayed in the main section of the screen as a visual human body model along with my personalized health indicators.
+The Digital Twin appeared as a customizable body representation that was visually adapted according to the health data I had entered earlier. For example, the body structure was adjusted based on my weight and height, giving me a more personalized view of my current physical state.
+Alongside the body model, I was able to see important health indicators such as:
+    • My current metabolic health status
+    • Insulin resistance level
+    • Sleep quality score
+    • Stress impact on my hormones
+    • Predicted hormonal imbalance risk
+These indicators helped me understand my internal health condition in a simplified and visual manner.
+Next to the Digital Twin card, I also noticed a View Detailed Twin button which allowed me to expand the health indicators into a more detailed view for deeper analysis of my metabolic condition.
+On the right side of this section, I noticed a panel titled Plan a Lifestyle Action, which included three action buttons:
+    • Meal Planning
+    • Sleep Improvement
+    • Stress Management
+Each of these buttons allowed me to simulate how a specific lifestyle change might affect my health condition based on my Digital Twin.
+
+LIFESTYLE PLANNER – MEAL PLANNING SCREEN
+
+After viewing my Digital Twin on the dashboard, I noticed a section on the right side titled Plan a Lifestyle Action which included three buttons: Meal Planning, Sleep Improvement, and Stress Management. I clicked on the Meal Planning button to understand how changes in my diet might affect my diabetic condition.
+As soon as I selected this option, a side panel opened asking me to specify the type of dietary change I wanted to simulate. I was presented with a text input box in which I could enter any change I wanted to make in my diet. For example, I entered Reduce sugar consumption by 30% and then clicked on the Run Simulation button provided at the bottom of the panel.
+Immediately after clicking the button:
+    • The Run Simulation button was temporarily disabled
+    • Its label changed to Simulating…
+    • The rest of the dashboard became slightly blurred in the background
+    • A loading animation appeared along with a real-time progress indicator
+A message was displayed on the screen stating-“Running What-If Simulation based on your Digital Twin…”
+During this process, the system analyzed how reducing sugar intake may affect:
+    • Post-meal blood sugar spikes
+    • Insulin sensitivity
+    • Energy stability throughout the day
+    • Fat storage in the abdominal region
+    • Long-term metabolic health
+
+
+LIFESTYLE PLANNER – SLEEP IMPROVEMENT SCREEN
+Next, I selected the Sleep Improvement button from the same Lifestyle Planner section to understand how improving my sleep schedule could influence my metabolic health.
+After clicking on this option, a configuration panel appeared asking me to specify the sleep-related change I wanted to simulate. I was presented with a text input box where I could enter the change I wanted to make in my sleep pattern. For example, I entered Increase sleep duration from 5 hours to 7 hours and clicked on the Run Simulation button.
+Immediately after clicking the button:
+    • The Run Simulation button was temporarily disabled
+    • Its label changed to Simulating…
+    • The rest of the dashboard became slightly blurred in the background
+    • A loading animation appeared along with a progress indicator
+A message was displayed on the screen stating-“Simulating the impact of improved sleep on your metabolic and hormonal health…”
+During this simulation, the system analyzed how improved sleep could influence:
+    • Blood glucose stability
+    • Insulin resistance
+    • Hormonal recovery
+    • Daytime fatigue
+    • Stress hormone levels
+
+LIFESTYLE PLANNER – STRESS MANAGEMENT SCREEN
+Similarly, I clicked on the Stress Management button to understand how reducing my stress levels might affect my overall health condition.
+After selecting this option, I was presented with a text input field where I could specify the stress-reduction activity I wanted to simulate. For example, I entered Practicing 20 minutes of meditation daily and clicked on the Run Simulation button.
+Immediately after clicking the button:
+    • The Run Simulation button was temporarily disabled
+    • Its label changed to Simulating…
+    • The background dashboard became slightly blurred
+    • A loading animation appeared with a real-time progress indicator
+A message was displayed on the screen stating-“Analyzing the impact of reduced stress levels on your hormonal health…”
+During this simulation, the system evaluated how managing stress may influence:
+    • Cortisol levels
+    • Blood sugar regulation
+    • Hormonal imbalance
+    • Emotional stability
+    • Sleep quality
+
+LIFESTYLE SIMULATION RESULT SCREEN
+After running any of the above simulations, the system displayed the predicted outcomes on my dashboard within a few seconds.
+I was able to see a Metabolic Risk Score displayed in the form of a semi-circular gauge meter which gradually filled with color after the simulation was completed, helping me visualize my predicted risk level as Low, Moderate, or High.
+In addition to this, the dashboard displayed:
+    • Predicted improvement in insulin sensitivity
+    • Reduction in future blood sugar fluctuations
+    • Improved hormonal balance
+    • Reduced fatigue risk
+For example, after reducing sugar intake, I was shown that my predicted post-meal glucose spike may reduce by a moderate level over time.
+After the simulation was completed, the bell icon in the top right corner of the dashboard header displayed a small red notification badge indicating that a new alert had been generated by the system.
+I also received real-time alerts such as:
+    • “High carbohydrate intake may increase insulin resistance risk.”
+    • “Improved sleep may enhance metabolic stability.”
+    • “Reduced stress levels may improve hormonal balance.”
+
+FOOD IMPACT SIMULATION SCREEN
+After reviewing the results from the Lifestyle Planner section, I noticed another feature on the dashboard titled Check Food Impact on Your Health.
+This section included a search box labeled-“Enter a food item to simulate its impact”
+I entered White Rice in the input field and clicked on the Run Simulation button placed next to the search bar.
+Immediately after clicking the Run Simulation button:
+The Run Simulation button was temporarily disabled
+Its label changed to Simulating…
+The rest of the dashboard became slightly blurred
+A loading animation appeared along with a real-time progress indicator
+A message appeared on the screen stating-"Analyzing the impact of selected food on your metabolic health…”
+FOOD SIMULATION PROCESS SCREEN
+During this step, the system started running a What-If Simulation based on my Digital Twin and the diabetic condition I had selected earlier while filling my health profile.
+The simulation analyzed how consuming white rice may affect various internal health parameters such as:
+    • Blood glucose levels
+    • Insulin resistance
+    • Energy levels throughout the day
+    • Fat storage patterns
+    • Hormonal balance
+For example, since white rice is considered a high glycemic index food, the system predicted how it may cause a sudden spike in my blood sugar levels after consumption.
+
+FOOD SIMULATION RESULT SCREEN
+The system then started a What-If Simulation based on my Digital Twin and diabetic condition. It analyzed how consuming white rice may affect:
+    • Blood glucose levels
+    • Insulin resistance
+    • Energy levels
+    • Fat storage
+    • Hormonal balance
+After a few seconds, the simulation results appeared on my dashboard.
+I received an alert message stating-“High glycemic food may cause a spike in your blood sugar level.”
+The system also showed:
+    • Increase in predicted blood sugar levels
+    • Moderate risk of insulin resistance
+    • Possible fatigue after consumption
+    • Suggested portion control
+After the simulation was completed, the bell icon in the top right corner of the dashboard header displayed a small red notification badge indicating that a new alert had been generated by the system.
+I was also given a healthier alternative suggestion like“You may consider replacing white rice with brown rice or quinoa.”
+
+FOOD RECOMMENDATION SCREEN
+Along with the risk analysis, the system also provided a healthier alternative suggestion such as-“You may consider replacing white rice with brown rice or quinoa.”
+It also recommended:
+    • Reducing portion size
+    • Combining carbohydrates with protein or fiber
+    • Monitoring post-meal sugar levels
+I found this feature particularly helpful because it reduced the constant burden of deciding whether I should eat something or not, as the system clearly showed how a particular food item may impact my blood sugar levels and overall health before I consume it.
+
+
+HISTORY SCREEN
+After running multiple simulations using the Lifestyle Planner and Food Impact features, I wanted to revisit my previous results in order to compare how different lifestyle changes and dietary choices may affect my health over time.
+For this, I clicked on the History option available in the left-side navigation panel of the dashboard.
+Once I selected this option, I was redirected to the History page where I could see a structured list of all the simulations that I had previously performed. Each simulation entry was displayed in the form of a card that included details such as the type of simulation conducted, the selected input, the date and time when the simulation was performed, and the predicted metabolic risk score.
+For example, I was able to view entries such as:
+    • Meal Planning Simulation – Reduced Sugar Intake
+    • Sleep Improvement Simulation – Increased Sleep Duration
+    • Food Impact Simulation – White Rice
+Each card also displayed the associated risk level (Low / Moderate / High) based on the results generated during the simulation.
+Next to each simulation entry, I noticed:
+    • A View Details button
+    • A Re-run Simulation button
+    • A Compare Results option
+The Re-run Simulation button allowed me to simulate the same lifestyle change again based on my updated health profile, while the Compare Results option enabled me to compare the new simulation outcome with my previous results over time.
+Upon clicking the View Details button for the Food Impact Simulation of White Rice, I was able to see the previously predicted impact such as:
+    • Increase in blood glucose levels
+    • Moderate insulin resistance risk
+    • Possible fatigue after consumption
+    • Suggested portion control
+This feature helped me keep track of my past lifestyle experiments and understand how different changes in my diet, sleep, or stress levels could influence my diabetes risk over time.
+Additionally, it allowed me to make more informed decisions by comparing previous simulation outcomes with my current health condition.
+
+
+ALERTS SCREEN (BELL ICON ACCESS)
+After reviewing my previous simulation results in the History section, I noticed a bell icon located in the top right corner of the dashboard header, next to my profile icon.
+To check if there were any real-time notifications generated by the system based on my lifestyle inputs or simulation outcomes, I clicked on the bell icon.
+As soon as I clicked on it, a dropdown panel appeared just below the bell icon displaying a list of recent alerts related to my health profile and simulation results.
+Each alert was presented in the form of a small notification card which included:
+    • A short description of the health risk
+    • The possible cause
+    • Suggested preventive action
+    • Timestamp indicating when the alert was generated
+For example, I received alerts such as:
+    • “High carbohydrate intake may increase insulin resistance risk.”
+    • “Poor sleep patterns may affect blood sugar stability.”
+    • “High glycemic food consumption may cause post-meal sugar spikes.”
+    • “Chronic stress may contribute to hormonal imbalance.”
+Some alerts were generated after running Lifestyle Planner simulations, while others were triggered based on the Food Impact Simulation results.
+At the bottom of the dropdown panel, I also saw a View All Alerts button which allowed me to open the complete Alerts page for a more detailed view of all past notifications.
+This feature helped me stay informed about potential health risks in real-time and allowed me to take preventive action before making any lifestyle decisions that could negatively impact my diabetes management.
+
+PROFILE DROPDOWN (TOP RIGHT CORNER)
+
+After accessing my dashboard, I noticed a small circular profile icon located in the top right corner of the header section, next to the bell icon for alerts.
+To explore account-related options, I clicked on the profile icon.
+As soon as I clicked on it, a dropdown menu appeared just below the profile icon displaying the following options-
+    • Settings
+    • Logout
+
+SETTINGS SCREEN
+To manage my account details, I clicked on the Settings option from the dropdown menu.
+After clicking on it, I was redirected to the Settings page where I could view and update my personal information as well as my previously entered health profile details.
+This page included editable fields such as:
+    • Name
+    • Age
+    • Email Address
+    • Current Weight
+    • Height
+    • Average Sleep Duration
+    • Stress Level
+    • Physical Activity
+    • Existing Disease (Diabetes / PCOD)
+Each field had an edit option that allowed me to make changes whenever needed.
+At the bottom of the page, I saw a Save Changes button which allowed me to update my information in the system after making the necessary edits.
+There was also a Cancel button placed next to it which allowed me to discard any changes made and return to the dashboard without updating my profile.
+This feature allowed me to keep my health information up-to-date, ensuring that future simulations would be based on accurate and current data.
+LOGOUT FLOW
+To securely exit my account, I again clicked on the profile icon located at the top right corner of the dashboard header. From the dropdown menu that appeared, I selected the Logout option. After clicking on Logout, I was successfully signed out of my account and redirected back to the HormoneLens homepage. This ensured that my personal health data remained secure and could not be accessed without logging in again.
+
+ADMIN DASHBOARD
+
+ADMIN DASHBOARD LANDING PAGE (AFTER LOGIN)
+After successfully logging into the admin panel using my admin credentials, I was automatically redirected to the HormoneLens Admin Dashboard. The dashboard had a clean and structured layout designed to help monitor user activity, system performance, and health risk trends generated through simulations.
+At the top of the screen, I saw a horizontal header bar displaying the HormoneLens Admin Panel title on the left side. On the right side of this header, there was a bell icon which allowed me to view real-time alerts generated by the system. When a high-risk prediction or critical simulation result was generated for any user, this bell icon displayed a small red notification badge indicating that a new alert had been triggered by the system.
+Next to the bell icon, I noticed a profile icon representing the admin account. When I clicked on the profile icon, a dropdown menu appeared displaying the following options:
+    • Settings
+    • Logout
+The Settings option allowed me to manage my admin account preferences, while the Logout option enabled me to securely exit the admin panel.
+On the left side of the screen, there was a vertical sidebar navigation panel which included the following options:
+    • Dashboard
+    • User Monitoring
+    • Risk Analysis
+    • Simulation Logs
+    • Reports
+The main section of the dashboard displayed an overview of the system in the form of summary cards which provided quick insights into user engagement and health risk predictions.
+These cards showed information such as:
+    • Total number of registered users
+    • Total users diagnosed with Diabetes
+    • Total users diagnosed with PCOD
+    • Number of users with High Metabolic Risk
+    • Total simulations performed by users
+    • Active alerts generated by the system
+    • 
+This overview helped me quickly understand the overall system activity and identify users who may be at higher metabolic risk based on recent simulation outcomes.
+
+USER MONITORING PANEL
+To monitor the activity and health data of registered users on the platform, I clicked on the User Monitoring option available in the left-side sidebar navigation panel of the Admin Dashboard.
+After selecting this option, I was redirected to the User Monitoring page where I could see a structured list of all the users who had registered on the HormoneLens platform. The information was displayed in the form of a table, with each row representing an individual user.
+The table included important details such as:
+    • User ID
+    • Name
+    • Age
+    • Selected Disease (Diabetes / PCOD)
+    • Latest Metabolic Risk Score
+    • Last Simulation Performed
+    • Date of Last Activity
+Next to each user entry, I noticed a View Profile button which allowed me to access a detailed view of the user’s health information and simulation history.
+Upon clicking the View Profile button for a particular user, I was able to see:
+    • The health inputs provided by the user
+    • Their Digital Twin summary
+    • Recent lifestyle simulations performed
+    • Latest predicted metabolic risk score
+    • Any alerts generated based on their activity
+This feature allowed me to monitor individual user profiles and identify those who may require preventive intervention based on their predicted health risks.
+
+RISK ANALYSIS PANEL
+To understand the overall health risk trends among users on the platform, I clicked on the Risk Analysis option available in the left-side sidebar navigation panel of the Admin Dashboard.
+After selecting this option, I was redirected to the Risk Analysis page where I could view a visual summary of the predicted metabolic risk levels across all registered users. This section helped me identify how many users were currently at low, moderate, or high risk based on the simulations performed through the system.
+The main section of the page displayed an interactive graphical representation of user distribution across different risk categories such as:
+    • Low Risk
+    • Moderate Risk
+    • High Risk
+I was also able to apply filters based on selected disease type (Diabetes / PCOD) and time range in order to analyze how predicted risk levels were changing among users over time.
+This allowed me to quickly assess the proportion of users who may be more vulnerable to metabolic complications due to their lifestyle habits or dietary choices.
+Below the graphical summary, I could also see a detailed list of users categorized based on their latest predicted risk score. For each user, the following information was displayed:
+    • User ID
+    • Selected Disease (Diabetes / PCOD)
+    • Current Metabolic Risk Score
+    • Risk Category
+    • Date of Last Simulation
+This helped me monitor which users were consistently falling under the high-risk category and may benefit from preventive lifestyle recommendations.
+
+SIMULATION LOGS PANEL
+To track how users were interacting with the simulation features of the HormoneLens platform, I clicked on the Simulation Logs option available in the left-side sidebar navigation panel of the Admin Dashboard.
+After selecting this option, I was redirected to the Simulation Logs page where I could see a detailed record of all the simulations performed by users on the platform. The information was displayed in a structured tabular format, with each entry representing a specific simulation conducted by a user.
+Each simulation log included important details such as:
+    • User ID
+    • Type of Simulation (Meal Planning / Sleep Improvement / Stress Management / Food Impact)
+    • Selected Input (e.g., White Rice, Reduced Sugar Intake, Increased Sleep Duration)
+    • Predicted Metabolic Risk Score
+    • Date and Time of Simulation
+This allowed me to understand what kind of lifestyle changes or dietary simulations users were experimenting with and how frequently they were interacting with the platform.
+Additionally, I could identify patterns such as repeated food impact simulations involving high glycemic foods or frequent stress-related simulations, which might indicate a user’s concern about specific health factors.
+This panel helped in monitoring overall platform usage and ensured that the simulation engine was functioning as expected.
+
+REPORTS PANEL
+To analyze long-term trends and monitor how users’ predicted health risks were changing over time, I clicked on the Reports option available in the left-side sidebar navigation panel of the Admin Dashboard.
+After selecting this option, I was redirected to the Reports page where I could view summarized data related to user simulations and metabolic risk predictions over a period of time. The Reports section allowed me to track changes in users’ predicted risk levels based on the lifestyle simulations they had performed. This helped in understanding whether users were moving towards improved metabolic health or showing signs of increased risk due to certain lifestyle patterns.
+On this page, I was able to view information such as:
+    • Changes in metabolic risk scores over time
+    • Frequency of simulations performed by users
+    • Distribution of users across Low, Moderate, and High Risk categories
+    • Lifestyle factors that contributed most to risk improvement or deterioration
+I could also identify trends such as users whose risk levels had consistently remained high despite multiple simulations, or those whose predicted risk had improved after adopting healthier dietary or sleep-related lifestyle changes.
+This section helped in evaluating the effectiveness of the platform in promoting preventive health management and allowed me to monitor overall user progress based on simulation outcomes.
+ADMIN ALERTS PANEL
+To monitor system-generated notifications related to users who may be at higher metabolic risk, I clicked on the bell icon located in the top right corner of the Admin Dashboard header. A dropdown notification panel appeared displaying recent alerts generated by the system based on user simulations and predicted health outcomes. I could also access the complete Alerts page by clicking on the Alerts option available in the left-side sidebar navigation panel.
+After selecting this option, I was redirected to the Alerts page where I could view a list of real-time alerts generated by the system based on user simulations and predicted health outcomes.
+Each alert was displayed in the form of a notification card that included:
+    • User ID
+    • Selected Disease (Diabetes / PCOD)
+    • Predicted Risk Score
+    • Type of Alert Generated
+    • Suggested Preventive Action
+    • Timestamp indicating when the alert was triggered
+For example, I was able to see alerts such as:
+    • A user showing consistently high metabolic risk after multiple meal simulations
+    • Increased insulin resistance risk due to high carbohydrate intake
+    • Predicted hormonal imbalance due to poor sleep patterns
+    • Elevated stress levels contributing to metabolic instability
+These alerts were generated whenever the system detected potential health risks during lifestyle or food impact simulations.
+This panel allowed me to identify users who may require preventive intervention and ensured that timely recommendations could be provided based on their predicted health risk levels.
+
+ADMIN SETTINGS SCREEN
+To manage my admin account details and system preferences, I clicked on the profile icon located in the top right corner of the Admin Dashboard header.
+As soon as I clicked on the profile icon, a dropdown menu appeared displaying the following options:
+    • Settings
+    • Logout
+To access my account settings, I selected the Settings option from the dropdown menu.
+After clicking on Settings, I was redirected to the Admin Settings page where I could view and update my account-related information. This page included editable fields such as:
+    • Admin Name
+    • Email Address
+    • Contact Information
+Each field had an edit option which allowed me to make changes whenever required.
+At the bottom of the page, I saw a Save Changes button which allowed me to update my information after making the necessary edits. Next to it, there was also a Cancel button which allowed me to discard any changes and return to the Admin Dashboard without saving them.
+This feature ensured that I could keep my admin account information up-to-date and maintain proper access control within the system.
+
+ADMIN LOGOUT FLOW
+To securely exit the Admin Dashboard, I again clicked on the profile icon located in the top right corner of the header section.
+From the dropdown menu that appeared, I selected the Logout option.
+After clicking on Logout, I was successfully signed out of the Admin Panel and redirected back to the Admin Login page.
+This ensured that the system remained secure and that administrative access was only available through proper authentication.
