@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\Enums\RiskCategory;
 use App\Enums\SimulationType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Simulation extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'user_id',
         'digital_twin_id',

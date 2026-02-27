@@ -20,10 +20,17 @@ class SimulationController extends Controller
      */
     public function run(RunSimulationRequest $request)
     {
-        $simulation = $this->simulationService->simulateLifestyleChange(
-            $request->user(),
-            $request->validated(),
-        );
+        try {
+            $simulation = $this->simulationService->simulateLifestyleChange(
+                $request->user(),
+                $request->validated(),
+            );
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
 
         $simulation->load('alerts');
 
@@ -59,9 +66,16 @@ class SimulationController extends Controller
     /**
      * Show a single simulation (must belong to auth user).
      */
-    public function show(Request $request, int $id)
+    public function show(Request $request, mixed $id)
     {
-        $simulation = $this->simulationRepo->findById($id);
+        if (!is_numeric($id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Simulation not found.',
+            ], 404);
+        }
+
+        $simulation = $this->simulationRepo->findById((int) $id);
 
         if (!$simulation || $simulation->user_id !== $request->user()->id) {
             return response()->json([
