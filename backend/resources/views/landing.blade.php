@@ -198,6 +198,260 @@
             -webkit-backdrop-filter: blur(6px);
             border: 1px solid rgba(255,255,255,0.35);
         }
+
+        /* ═══ Hero badge pulsing dot — target only the dot inside badge */
+        .dot-pulse {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 9999px;
+            position: relative;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .dot-pulse::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            background: #22c55e;
+            animation: pulseDot 1.6s infinite;
+        }
+        @keyframes pulseDot {
+            0% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            70% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* ═══ Disease cards — scroll entrance ═══ */
+        .disease-card {
+            opacity: 0;
+            transform: translateY(40px) scale(0.97);
+            transition:
+                opacity 0.6s ease-out,
+                transform 0.6s ease-out,
+                box-shadow 0.25s ease,
+                border-color 0.25s ease;
+        }
+        .disease-card.dc-visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .disease-card:hover {
+            transform: translateY(-6px) scale(1);
+            box-shadow: 0 12px 40px rgba(124,58,237,0.12);
+            border-color: rgba(124,58,237,0.3) !important;
+        }
+        .disease-card:hover .dc-icon {
+            transform: scale(1.05);
+        }
+        .dc-icon {
+            display: inline-block;
+            transition: transform 0.25s ease;
+        }
+
+        /* ═══ Expandable fields ═══ */
+        .extra-fields {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+        }
+        .extra-fields.ef-open {
+            max-height: 300px;
+            opacity: 1;
+        }
+        .expand-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #7c3aed;
+            background: rgba(124,58,237,0.06);
+            border: 1px solid rgba(124,58,237,0.15);
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+        .expand-btn:hover {
+            background: rgba(124,58,237,0.12);
+            border-color: rgba(124,58,237,0.3);
+        }
+
+        /* ═══ Onboarding banner ═══ */
+        .onboard-banner {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .onboard-banner.ob-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .activation-frame {
+            position: relative;
+            display: inline-block;
+        }
+        @keyframes moveLight {
+            0%   { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        .activation-frame::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: calc(100% + 20px);
+            height: calc(100% + 20px);
+            border-radius: 16px;
+            border: 2px solid rgba(124,58,237,0.2);
+            background: linear-gradient(90deg, transparent, rgba(124,58,237,0.5), transparent);
+            background-size: 200% 200%;
+            animation: moveLight 3s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes obGlowPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.4); }
+            50%      { box-shadow: 0 0 0 10px rgba(124,58,237,0); }
+        }
+        .ob-cta-btn {
+            position: relative;
+            z-index: 1;
+            display: block;
+            background: linear-gradient(135deg, #7C3AED, #A78BFA);
+            border-radius: 14px;
+            padding: 16px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            animation: obGlowPulse 2s ease-in-out infinite;
+        }
+        .ob-cta-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 20px rgba(124,58,237,0.25);
+        }
+        @keyframes obDotPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50%      { opacity: 1;   transform: scale(1.3); }
+        }
+        .ob-status-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: obDotPulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        .ob-progress-track {
+            width: 100%;
+            height: 3px;
+            border-radius: 2px;
+            background: rgba(124,58,237,0.1);
+            overflow: hidden;
+        }
+        @keyframes obProgressFill {
+            0%   { width: 0%; }
+            100% { width: 100%; }
+        }
+        .ob-progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #7C3AED, #A78BFA);
+            width: 0%;
+            animation: obProgressFill 4s linear infinite;
+        }
+
+        /* ═══ Simulation loop (How It Works) ═══ */
+        .sim-loop-wrap {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .sim-loop-wrap.sl-visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .sim-loop-container {
+            position: relative;
+            width: 540px;
+            height: 540px;
+            margin: 0 auto;
+        }
+        /* Cardinal positions — cards centered on a 190px-radius circle (center 270,270) */
+        .sim-step-node {
+            position: absolute;
+            width: 128px;
+            text-align: center;
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid rgba(124,58,237,0.12);
+            padding: 14px 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+            z-index: 2;
+        }
+        .sim-step-node:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 24px rgba(124,58,237,0.15);
+            border-color: rgba(124,58,237,0.4);
+        }
+        .sim-step-top    { top:  12px;         left: 206px; }
+        .sim-step-right  { top:  206px;        right: 12px; }
+        .sim-step-bottom { bottom: 12px;       left: 206px; }
+        .sim-step-left   { top:  206px;        left:  12px; }
+        .sim-center-node {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 3;
+            width: 130px;
+        }
+        /* Mobile fallback */
+        @media (max-width: 600px) {
+            .sim-loop-container { width: 100%; height: auto; min-height: 0; }
+            .sim-step-node  { position: static; width: 100%; margin-bottom: 12px; }
+            .sim-step-top, .sim-step-right, .sim-step-bottom, .sim-step-left { position: static; }
+            .sim-center-node { position: static; transform: none; width: 100%; margin-bottom: 12px; }
+            .sim-svg-layer  { display: none; }
+        }
+        @keyframes obParticleDrift {
+            0%   { transform: translateX(0)   translateY(0)   scale(1);   opacity: 0.12; }
+            50%  { opacity: 0.18; }
+            100% { transform: translateX(160px) translateY(-40px) scale(1.1); opacity: 0.12; }
+        }
+        .ob-particle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(55px);
+            pointer-events: none;
+        }
+        .ob-particle-1 {
+            width: 260px; height: 260px;
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            top: -60px; left: -40px;
+            animation: obParticleDrift 8s ease-in-out infinite;
+        }
+        .ob-particle-2 {
+            width: 180px; height: 180px;
+            background: linear-gradient(135deg, #6366f1, #c084fc);
+            bottom: -40px; right: 5%;
+            animation: obParticleDrift 11s ease-in-out 2s infinite reverse;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-800 antialiased">
@@ -248,7 +502,7 @@
             <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-brand-50 text-brand-700 mb-6 border border-brand-100">
                 🧬 AI-Powered Metabolic Simulation Engine
             </span>
-            <h1 class="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem] font-extrabold leading-[1.12] tracking-tight">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl leading-tight font-extrabold tracking-tight">
                 Simulate the <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-purple-600 to-fuchsia-500">Hormonal Impact</span>
                 of Your Lifestyle Before It Affects Your Health
             </h1>
@@ -358,7 +612,7 @@
 
             {{-- Bottom-left: AI Model Running badge --}}
             <div class="badge-glass absolute -bottom-2.5 -left-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md text-xs font-semibold text-gray-600" style="z-index:14;">
-                <span class="status-dot inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0"></span>
+                <span class="dot-pulse"></span>
                 AI Model Running
             </div>
         </div>
@@ -422,118 +676,230 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.3 });
 
     els.forEach(el => observer.observe(el));
+
+    /* ── Disease card scroll entrance ── */
+    const diseaseCards = document.querySelectorAll('.disease-card');
+    const dcObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const el    = entry.target;
+            const delay = parseInt(el.dataset.dcDelay || '0', 10);
+            setTimeout(() => el.classList.add('dc-visible'), delay);
+            dcObserver.unobserve(el);
+        });
+    }, { threshold: 0.12 });
+    diseaseCards.forEach(el => dcObserver.observe(el));
+
+    /* ── Expand / collapse extra fields ── */
+    document.querySelectorAll('.expand-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const extra = btn.previousElementSibling;
+            const open  = extra.classList.toggle('ef-open');
+            btn.textContent = open ? 'Show Less ▲' : btn.dataset.label;
+        });
+    });
+
+    /* ── Onboarding banner entrance ── */
+    const obBanner = document.getElementById('onboardBanner');
+    if (obBanner) {
+        const obObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('ob-visible');
+                obObserver.unobserve(entry.target);
+            });
+        }, { threshold: 0.15 });
+        obObserver.observe(obBanner);
+    }
+
+    /* ── Sim loop circle entrance ── */
+    const simLoopWrap = document.getElementById('simLoopWrap');
+    if (simLoopWrap) {
+        const slObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('sl-visible');
+                slObserver.unobserve(entry.target);
+            });
+        }, { threshold: 0.15 });
+        slObserver.observe(simLoopWrap);
+    }
 });
 </script>
 
-{{-- ═══════════ AI SIMULATION WORKFLOW ═══════════ --}}
+{{-- ═══════════ CAPABILITIES ═══════════ --}}
 <section id="features" class="py-20 bg-gray-50 overflow-hidden">
     <div class="max-w-7xl mx-auto px-6">
 
         {{-- Section header --}}
         <div class="text-center max-w-2xl mx-auto mb-14 fade-up">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-4 border border-violet-100">
-                ⚙️ Simulation Pipeline
+                🧠 AI-Powered Health Intelligence
             </span>
-            <h2 class="text-3xl font-bold text-gray-900">AI Hormone Simulation Workflow</h2>
-            <p class="mt-3 text-gray-500">From lifestyle input to predictive metabolic risk analysis — powered by AI hormone modeling.</p>
+            <h2 class="text-3xl font-bold text-gray-900">Core Simulation Capabilities of HormoneLens</h2>
+            <p class="mt-3 text-gray-500">Advanced AI-driven metabolic modeling designed to predict lifestyle-induced hormonal and diabetes risk outcomes.</p>
         </div>
 
-        {{-- Flow connector (top of grid) --}}
-        <div class="flow-connector mb-8 mx-auto max-w-4xl"></div>
-
-        {{-- Workflow cards --}}
+        {{-- Capability cards --}}
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-            {{-- Step 1 --}}
             <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="0">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl" style="background:rgba(124,58,237,0.08);">🛎️</div>
-                    <span class="text-[10px] font-bold tracking-widest text-violet-500 uppercase">Step 01</span>
-                </div>
-                <h3 class="font-semibold text-gray-800 mb-2">Lifestyle Data Intake</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Captures sleep, diet, physical activity, and stress patterns to build personalized metabolic input.</p>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🛎️</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Lifestyle Data Integration</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Aggregates sleep patterns, dietary inputs, physical activity, and stress indicators for personalized simulation modeling.</p>
             </div>
 
-            {{-- Step 2 --}}
             <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="100">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl" style="background:rgba(124,58,237,0.08);">🧬</div>
-                    <span class="text-[10px] font-bold tracking-widest text-violet-500 uppercase">Step 02</span>
-                </div>
-                <h3 class="font-semibold text-gray-800 mb-2">Metabolic State Modeling</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Creates a digital twin of insulin sensitivity, glucose metabolism, and hormone balance.</p>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🧬</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Metabolic Digital Twin</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Constructs a real-time physiological model of insulin sensitivity and glucose metabolism.</p>
             </div>
 
-            {{-- Step 3 --}}
             <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="200">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl" style="background:rgba(124,58,237,0.08);">📈</div>
-                    <span class="text-[10px] font-bold tracking-widest text-violet-500 uppercase">Step 03</span>
-                </div>
-                <h3 class="font-semibold text-gray-800 mb-2">Lifestyle Impact Projection</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Simulates how daily behavior changes influence hormonal and metabolic pathways.</p>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">📈</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Behavioral Impact Simulation</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Evaluates how daily lifestyle changes influence endocrine and metabolic health parameters.</p>
             </div>
 
-            {{-- Step 4 --}}
             <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="300">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl" style="background:rgba(124,58,237,0.08);">🔬</div>
-                    <span class="text-[10px] font-bold tracking-widest text-violet-500 uppercase">Step 04</span>
-                </div>
-                <h3 class="font-semibold text-gray-800 mb-2">PCOS &amp; Diabetes Risk Forecast</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Predicts changes in insulin resistance, androgen levels, and Type 2 Diabetes probability.</p>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🔬</div>
+                <h3 class="font-semibold text-gray-800 mb-2">PCOS &amp; Diabetes Risk Analysis</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Forecasts insulin resistance progression and Type 2 Diabetes probability through hormonal response mapping.</p>
             </div>
 
-            {{-- Step 5 --}}
             <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="400">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl" style="background:rgba(124,58,237,0.08);">🧠</div>
-                    <span class="text-[10px] font-bold tracking-widest text-violet-500 uppercase">Step 05</span>
-                </div>
-                <h3 class="font-semibold text-gray-800 mb-2">AI Risk Interpretation Engine</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Maps predicted hormonal responses to clinically relevant risk levels.</p>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🧠</div>
+                <h3 class="font-semibold text-gray-800 mb-2">AI Risk Assessment Engine</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Translates simulated metabolic outcomes into clinically relevant health risk levels.</p>
             </div>
 
-            {{-- Step 6 --}}
             <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="500">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl" style="background:rgba(124,58,237,0.08);">🔔</div>
-                    <span class="text-[10px] font-bold tracking-widest text-violet-500 uppercase">Step 06</span>
-                </div>
-                <h3 class="font-semibold text-gray-800 mb-2">Real-Time Alert System</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Generates alerts when simulated metabolic scores enter risk zones.</p>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🔔</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Adaptive Health Alerts</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Delivers predictive alerts when simulated health indicators enter elevated risk zones.</p>
             </div>
 
         </div>
-
-        {{-- Flow connector (bottom of grid) --}}
-        <div class="flow-connector mt-8 mx-auto max-w-4xl"></div>
-
     </div>
 </section>
+
+{{-- ═══════════ ONBOARDING BANNER ═══════════ --}}
+<div class="max-w-7xl mx-auto px-6">
+    <div id="onboardBanner" class="onboard-banner relative overflow-hidden rounded-[20px] border px-10 py-10 sm:px-16 sm:py-12 my-16"
+         style="background:linear-gradient(to right,rgba(124,58,237,0.08),rgba(59,130,246,0.08)); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-color:rgba(255,255,255,0.25);">
+
+        {{-- Floating particles --}}
+        <div class="ob-particle ob-particle-1"></div>
+        <div class="ob-particle ob-particle-2"></div>
+
+        {{-- Content --}}
+        <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+
+            {{-- Left: copy --}}
+            <div class="flex-1 text-center lg:text-left">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-4 border border-violet-100">
+                    🧬 AI Hormone Simulation
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 leading-snug">
+                    Activate Your Personalized<br class="hidden sm:block"> Hormone Simulation
+                </h2>
+                <p class="text-gray-500 text-sm leading-relaxed max-w-lg">
+                    Create your HormoneLens account to simulate how lifestyle patterns impact your risk of PCOS, Insulin Resistance, and Type 2 Diabetes.
+                </p>
+            </div>
+
+            {{-- Right: CTA --}}
+            <div class="flex flex-col items-center gap-3 flex-shrink-0">
+
+                {{-- Activation frame wrapper --}}
+                <div class="activation-frame">
+                    <a href="{{ route('register') }}" class="ob-cta-btn">
+                        Create Simulation Profile
+                    </a>
+                </div>
+
+                {{-- Status chip --}}
+                <div class="flex items-center gap-1.5">
+                    <span class="ob-status-dot"></span>
+                    <span class="text-xs font-medium text-gray-500">Create Your Personalized Simulation</span>
+                </div>
+
+                {{-- Micro progress bar --}}
+                <div class="ob-progress-track" style="min-width:180px;">
+                    <div class="ob-progress-fill"></div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
 
 {{-- ═══════════ DISEASES ═══════════ --}}
 <section id="conditions" class="py-20">
     <div class="max-w-7xl mx-auto px-6">
         <div class="text-center max-w-2xl mx-auto mb-14 fade-up">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-4 border border-violet-100">
+                🔬 Clinical Risk Parameter Mapping
+            </span>
             <h2 class="text-3xl font-bold">Dynamic Health Condition Tracking</h2>
             <p class="mt-3 text-gray-500">Extensible to any number of conditions — each with custom fields, validation rules, and risk scoring.</p>
         </div>
 
+        @php
+        $clinicalData = [
+            'Type-2 Diabetes' => [
+                'summary' => ['Average Blood Sugar (mg/dL)', 'Family History of Diabetes', 'Frequent Urination', 'Excessive Thirst'],
+                'extra'   => ['HbA1c Level', 'Fasting Plasma Glucose', 'Postprandial Glucose', 'BMI', 'Insulin Sensitivity Index', 'Daily Carbohydrate Intake', 'Waist–Hip Ratio', 'Blood Pressure', 'Lipid Profile', 'Family History'],
+            ],
+            'PCOD / PCOS' => [
+                'summary' => ['Menstrual Cycle Regularity', 'Average Cycle Length (days)', 'Excess Facial/Body Hair (Hirsutism)', 'Acne / Oily Skin'],
+                'extra'   => ['Menstrual Irregularity', 'Hirsutism Score', 'Serum Testosterone', 'LH/FSH Ratio', 'Ovulation Frequency', 'Weight Gain Pattern', 'Insulin Resistance', 'Acne Severity', 'Sleep Duration', 'Hair Loss'],
+            ],
+            'Thyroid Disorders' => [
+                'summary' => ['TSH Level (mIU/L)', 'T4 Level (µg/dL)', 'Type of Thyroid Condition', 'Currently on Thyroid Medication'],
+                'extra'   => ['TSH Level', 'Free T3', 'Free T4', 'Thyroid Antibodies', 'Medication Status', 'Fatigue Level', 'Cold Sensitivity', 'Heart Rate', 'Weight Fluctuation', 'Metabolic Rate'],
+            ],
+            'Metabolic Syndrome' => [
+                'summary' => ['Waist Circumference (cm)', 'Fasting Blood Sugar (mg/dL)', 'Systolic Blood Pressure (mmHg)', 'Diastolic Blood Pressure (mmHg)'],
+                'extra'   => ['Waist Circumference', 'HDL Cholesterol', 'LDL Cholesterol', 'Triglycerides', 'Blood Pressure', 'Fasting Glucose', 'Insulin Level', 'BMI', 'Sleep Duration', 'Dietary Fat Intake'],
+            ],
+        ];
+        @endphp
+
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            @foreach(\App\Models\Disease::active()->ordered()->with('fields')->get() as $d)
-            <div class="bg-white rounded-xl border border-gray-100 p-6 text-center hover:shadow-lg hover:border-brand-200 transition-all duration-300">
-                <div class="text-4xl mb-3">{{ $d->icon }}</div>
+            @foreach(\App\Models\Disease::active()->ordered()->with('fields')->get() as $i => $d)
+            @php
+                $key     = $d->name;
+                $clinical = $clinicalData[$key] ?? null;
+                $summary  = $clinical ? $clinical['summary'] : $d->fields->take(4)->pluck('label')->toArray();
+                $extra    = $clinical ? $clinical['extra']   : [];
+                $delay    = $loop->index * 100;
+                $btnLabel = '+' . count($extra) . ' more ▼';
+            @endphp
+            <div class="disease-card bg-white rounded-xl border border-gray-100 p-6 text-center" data-dc-delay="{{ $delay }}">
+                <div class="dc-icon text-4xl mb-3">{{ $d->icon }}</div>
                 <h3 class="font-semibold text-gray-800 mb-1">{{ $d->name }}</h3>
                 <p class="text-xs text-gray-400 mb-3">{{ $d->fields->count() }} tracked fields</p>
-                <div class="flex flex-wrap justify-center gap-1">
-                    @foreach($d->fields->take(4) as $field)
-                    <span class="px-2 py-0.5 bg-gray-100 text-[10px] text-gray-500 rounded-full">{{ $field->label }}</span>
+
+                {{-- Summary fields (always visible) --}}
+                <div class="flex flex-wrap justify-center gap-1 mb-1">
+                    @foreach($summary as $label)
+                    <span class="px-2 py-0.5 bg-gray-100 text-[10px] text-gray-500 rounded-full">{{ $label }}</span>
                     @endforeach
-                    @if($d->fields->count() > 4)
-                    <span class="px-2 py-0.5 bg-brand-50 text-[10px] text-brand-600 rounded-full">+{{ $d->fields->count() - 4 }} more</span>
-                    @endif
                 </div>
+
+                @if(count($extra) > 0)
+                {{-- Extra fields (expandable) --}}
+                <div class="extra-fields">
+                    <div class="flex flex-wrap justify-center gap-1 pt-2">
+                        @foreach($extra as $label)
+                        <span class="px-2 py-0.5 bg-violet-50 text-[10px] text-violet-600 rounded-full border border-violet-100">{{ $label }}</span>
+                        @endforeach
+                    </div>
+                </div>
+                <button class="expand-btn" data-label="{{ $btnLabel }}">{{ $btnLabel }}</button>
+                @endif
             </div>
             @endforeach
         </div>
@@ -543,91 +909,114 @@ document.addEventListener('DOMContentLoaded', () => {
 {{-- ═══════════ HOW IT WORKS ═══════════ --}}
 <section id="how" class="py-20 bg-gray-50">
     <div class="max-w-5xl mx-auto px-6">
-        <div class="text-center max-w-2xl mx-auto mb-14 fade-up">
-            <h2 class="text-3xl font-bold">How It Works</h2>
-            <p class="mt-3 text-gray-500">Four simple steps to a complete metabolic health picture.</p>
-        </div>
-
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            @php
-            $steps = [
-                ['num' => '01', 'title' => 'Create Profile', 'desc' => 'Enter weight, height, sleep, stress, activity, water intake & primary condition.', 'color' => 'brand'],
-                ['num' => '02', 'title' => 'Add Disease Data', 'desc' => 'Fill in disease-specific fields — blood sugar, symptoms, hormonal indicators & more.', 'color' => 'purple'],
-                ['num' => '03', 'title' => 'Generate Twin', 'desc' => 'Your digital twin crunches the numbers into 6 health scores with a risk category.', 'color' => 'emerald'],
-                ['num' => '04', 'title' => 'Simulate & Learn', 'desc' => 'Run what-if scenarios on food, sleep & stress. Ask the AI knowledge base any health question.', 'color' => 'amber'],
-            ];
-            @endphp
-
-            @foreach($steps as $s)
-            <div class="text-center fade-up fade-up-d{{ $loop->iteration }}">
-                <div class="w-14 h-14 mx-auto flex items-center justify-center bg-{{ $s['color'] }}-100 text-{{ $s['color'] }}-600 rounded-2xl text-lg font-extrabold mb-4">
-                    {{ $s['num'] }}
-                </div>
-                <h3 class="font-semibold text-gray-800 mb-2">{{ $s['title'] }}</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">{{ $s['desc'] }}</p>
-            </div>
-            @endforeach
-        </div>
-    </div>
-</section>
-
-{{-- ═══════════ TECH STACK ═══════════ --}}
-<section class="py-20">
-    <div class="max-w-5xl mx-auto px-6">
         <div class="text-center max-w-2xl mx-auto mb-10 fade-up">
-            <h2 class="text-3xl font-bold">Built With</h2>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-4 border border-violet-100">
+                ♻️ Continuous AI Simulation Cycle
+            </span>
+            <h2 class="text-3xl font-bold">How It Works</h2>
+            <p class="mt-3 text-gray-500">See Your Health Before You Live It!</p>
         </div>
-        <div class="flex flex-wrap items-center justify-center gap-8 text-gray-400">
-            <div class="text-center">
-                <p class="text-2xl font-bold text-red-500">Laravel 12</p>
-                <p class="text-xs mt-1">Backend API</p>
-            </div>
-            <div class="text-center">
-                <p class="text-2xl font-bold text-cyan-500">Tailwind</p>
-                <p class="text-xs mt-1">Styling</p>
-            </div>
-            <div class="text-center">
-                <p class="text-2xl font-bold text-blue-500">Alpine.js</p>
-                <p class="text-xs mt-1">Reactivity</p>
-            </div>
-            <div class="text-center">
-                <p class="text-2xl font-bold text-amber-500">Sanctum</p>
-                <p class="text-xs mt-1">Auth</p>
-            </div>
-            <div class="text-center">
-                <p class="text-2xl font-bold text-emerald-500">MySQL</p>
-                <p class="text-xs mt-1">Database</p>
-            </div>
-            <div class="text-center">
-                <p class="text-2xl font-bold text-purple-500">RAG</p>
-                <p class="text-xs mt-1">AI Search</p>
-            </div>
-        </div>
-    </div>
-</section>
 
-{{-- ═══════════ CTA ═══════════ --}}
-<section class="py-20">
-    <div class="max-w-4xl mx-auto px-6">
-        <div class="bg-gradient-to-br from-brand-600 to-purple-700 rounded-3xl p-10 sm:p-14 text-center text-white shadow-2xl">
-            <h2 class="text-3xl sm:text-4xl font-bold mb-4">Ready to explore your metabolic health?</h2>
-            <p class="text-brand-200 max-w-lg mx-auto mb-8">Create an account in seconds, fill in your health data, and let your Digital Twin reveal personalized insights.</p>
-            <div class="flex flex-wrap items-center justify-center gap-4">
-                <a href="{{ route('register') }}"
-                   class="px-7 py-3 bg-white text-brand-600 font-semibold rounded-xl hover:bg-brand-50 transition shadow-lg text-sm">
-                    Create Free Account
-                </a>
-                <a href="{{ route('login') }}"
-                   class="px-7 py-3 border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition text-sm">
-                    Log In
-                </a>
+        <div id="simLoopWrap" class="sim-loop-wrap">
+
+            {{-- Desktop circular layout --}}
+            <div class="sim-loop-container hidden sm:block">
+
+                {{-- SVG ring + animated dot --}}
+                <svg class="sim-svg-layer" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:1;" viewBox="0 0 540 540" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%"   stop-color="#7C3AED" stop-opacity="0.2"/>
+                            <stop offset="50%"  stop-color="#A78BFA" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="#6366f1" stop-opacity="0.2"/>
+                        </linearGradient>
+                        <filter id="dotGlow">
+                            <feGaussianBlur stdDeviation="3" result="blur"/>
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+
+                    {{-- Faint circular ring --}}
+                    <circle cx="270" cy="270" r="190"
+                        fill="none"
+                        stroke="url(#ringGrad)"
+                        stroke-width="1.5"
+                        stroke-dasharray="8 6"/>
+
+                    {{-- Animated glowing dot --}}
+                    <path id="simLoopPath" d="M 270,80 A 190,190 0 0,1 460,270 A 190,190 0 0,1 270,460 A 190,190 0 0,1 80,270 A 190,190 0 0,1 270,80 Z" fill="none"/>
+                    <circle r="7" fill="#7C3AED" filter="url(#dotGlow)" opacity="0.9">
+                        <animateMotion dur="5s" repeatCount="indefinite">
+                            <mpath href="#simLoopPath"/>
+                        </animateMotion>
+                    </circle>
+                    {{-- Soft trail dot --}}
+                    <circle r="4" fill="#A78BFA" opacity="0.45">
+                        <animateMotion dur="5s" repeatCount="indefinite" begin="0.15s">
+                            <mpath href="#simLoopPath"/>
+                        </animateMotion>
+                    </circle>
+                </svg>
+
+                {{-- Top: Create Profile --}}
+                <div class="sim-step-node sim-step-top">
+                    <div class="w-9 h-9 mx-auto flex items-center justify-center rounded-xl bg-violet-50 text-violet-700 font-extrabold text-sm mb-2">01</div>
+                    <h3 class="font-semibold text-gray-800 text-xs leading-snug mb-1">Create Profile</h3>
+                    <p class="text-[10px] text-gray-400 leading-relaxed">Weight, sleep, stress &amp; activity.</p>
+                </div>
+
+                {{-- Right: Add Disease Data --}}
+                <div class="sim-step-node sim-step-right">
+                    <div class="w-9 h-9 mx-auto flex items-center justify-center rounded-xl bg-purple-50 text-purple-600 font-extrabold text-sm mb-2">02</div>
+                    <h3 class="font-semibold text-gray-800 text-xs leading-snug mb-1">Add Disease Data</h3>
+                    <p class="text-[10px] text-gray-400 leading-relaxed">Blood sugar, hormones &amp; symptoms.</p>
+                </div>
+
+                {{-- Bottom: Generate Digital Twin --}}
+                <div class="sim-step-node sim-step-bottom">
+                    <div class="w-9 h-9 mx-auto flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 font-extrabold text-sm mb-2">03</div>
+                    <h3 class="font-semibold text-gray-800 text-xs leading-snug mb-1">Generate Digital Twin</h3>
+                    <p class="text-[10px] text-gray-400 leading-relaxed">6 health scores with risk category.</p>
+                </div>
+
+                {{-- Left: Simulate Lifestyle Impact --}}
+                <div class="sim-step-node sim-step-left">
+                    <div class="w-9 h-9 mx-auto flex items-center justify-center rounded-xl bg-amber-50 text-amber-600 font-extrabold text-sm mb-2">04</div>
+                    <h3 class="font-semibold text-gray-800 text-xs leading-snug mb-1">Simulate Lifestyle Impact</h3>
+                    <p class="text-[10px] text-gray-400 leading-relaxed">What-if food, sleep &amp; stress scenarios.</p>
+                </div>
+
+                {{-- Center: Engine label --}}
+                <div class="sim-center-node">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-2" style="background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(99,102,241,0.1));border:1.5px solid rgba(124,58,237,0.2);">
+                        <span class="text-2xl">🧬</span>
+                    </div>
+                    <p class="text-[10px] font-bold text-violet-700 uppercase tracking-widest leading-tight">Hormone<br>Simulation<br>Engine</p>
+                </div>
+
             </div>
-            <div class="mt-6 pt-6 border-t border-white/20">
-                <p class="text-sm text-brand-200">Quick setup for developers:</p>
-                <code class="inline-block mt-2 px-4 py-2 bg-black/20 rounded-lg text-sm font-mono text-brand-100">
-                    php artisan hormone:install
-                </code>
+
+            {{-- Mobile fallback: vertical list --}}
+            <div class="sm:hidden flex flex-col gap-4">
+                @php
+                $mSteps = [
+                    ['num'=>'01','title'=>'Create Profile',           'desc'=>'Weight, sleep, stress & activity.','color'=>'violet'],
+                    ['num'=>'02','title'=>'Add Disease Data',         'desc'=>'Blood sugar, hormones & symptoms.','color'=>'purple'],
+                    ['num'=>'03','title'=>'Generate Digital Twin',    'desc'=>'6 health scores with risk category.','color'=>'emerald'],
+                    ['num'=>'04','title'=>'Simulate Lifestyle Impact','desc'=>'What-if food, sleep & stress scenarios.','color'=>'amber'],
+                ];
+                @endphp
+                @foreach($mSteps as $ms)
+                <div class="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4">
+                    <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-{{ $ms['color'] }}-50 text-{{ $ms['color'] }}-600 font-extrabold text-sm">{{ $ms['num'] }}</div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 text-sm">{{ $ms['title'] }}</h3>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ $ms['desc'] }}</p>
+                    </div>
+                </div>
+                @endforeach
             </div>
+
         </div>
     </div>
 </section>
