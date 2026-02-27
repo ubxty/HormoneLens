@@ -140,7 +140,7 @@ const api = {
         try {
             const r = await fetch('/api' + url, opts);
             const json = await r.json();
-            if (r.status === 401) { window.location.href = '/login'; return json; }
+            if (r.status === 401 && !window.__authRedirecting) { window.__authRedirecting = true; window.location.href = '/login'; }
             return { ok: r.ok, status: r.status, ...json };
         } catch (e) {
             return { ok: false, success: false, message: 'Network error' };
