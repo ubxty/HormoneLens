@@ -1,0 +1,516 @@
+You are a Senior Laravel 11 Architect and System Designer.
+
+We are building a complete API-first Laravel 11 backend system called:
+
+HormoneLens
+
+This is a hackathon prototype but must be production-architected.
+
+We are using:
+
+Laravel 12
+
+Sanctum (API authentication)
+
+MySQL
+
+Queue (database driver)
+
+Seeder-based fake knowledge base
+
+Service-based architecture
+
+Repository pattern
+
+Form Requests
+
+API Resources
+
+Clean modular code
+
+REST APIs for Flutter app
+
+We have 128K context window.
+Your job is to build this system in structured multi-module batches.
+
+⚠️ CRITICAL OUTPUT RULES
+
+DO NOT generate everything at once.
+
+First generate COMPLETE SYSTEM ARCHITECTURE PLAN.
+
+Then STOP.
+
+Wait for instruction: “Generate Module X”.
+
+Generate modules one-by-one.
+
+Keep explanations minimal.
+
+Focus on code + structure.
+
+Do not repeat the user story.
+
+Follow feature-based modular structure.
+
+Use clean dependency injection.
+
+🎯 PROJECT GOAL
+
+Build backend APIs for:
+
+User side:
+
+Auth (Register / Login / Logout)
+
+Health Profile
+
+Disease-specific inputs (Diabetes / PCOD)
+
+Digital Twin generation
+
+Lifestyle simulation (Meal / Sleep / Stress)
+
+Food Impact simulation
+
+Risk scoring engine
+
+Alerts engine
+
+History tracking
+
+Lightweight PageIndex-inspired RAG engine
+
+Admin side:
+
+User monitoring
+
+Risk distribution analysis
+
+Simulation logs
+
+Alerts management
+
+Reports summary
+
+Everything must be API-ready for Flutter.
+
+🏗 SYSTEM MODULE STRUCTURE
+
+Create these modules:
+
+MODULE 1 – Auth & User Management
+MODULE 2 – Health Profile & Disease Inputs
+MODULE 3 – Digital Twin Engine
+MODULE 4 – Risk Engine
+MODULE 5 – Simulation Engine
+MODULE 6 – Alerts System
+MODULE 7 – History Tracking
+MODULE 8 – Admin APIs
+MODULE 9 – Lightweight PageIndex RAG Engine
+MODULE 10 – RAG Seeder & Future Upgrade Layer
+
+🧠 LIGHTWEIGHT PAGEINDEX-INSPIRED RAG ENGINE
+
+We are NOT using vectors.
+
+We are building:
+
+Hierarchical Tree Navigation Engine.
+
+RAG DATABASE STRUCTURE
+
+Create migrations:
+
+rag_documents
+
+id
+
+title
+
+description
+
+rag_nodes
+
+id
+
+document_id
+
+parent_id (nullable)
+
+title
+
+summary
+
+keywords (comma separated)
+
+depth
+
+rag_pages
+
+id
+
+node_id
+
+page_number
+
+content
+
+rag_query_logs
+
+id
+
+user_id
+
+question
+
+reasoning_path (json)
+
+selected_nodes (json)
+
+confidence
+
+created_at
+
+RAG ARCHITECTURE
+
+Create services:
+
+App\Services\Rag\
+
+RagSearchService
+
+RagTraversalEngine
+
+RagScoringService
+
+RagAnswerBuilder
+
+RagConfidenceService
+
+Create interfaces:
+
+App\Contracts\
+
+RagSearchInterface
+
+RagTraversalInterface
+
+So later we can replace with real embedding-based RAG.
+
+RAG FLOW
+
+Tokenize question
+
+Score root nodes by keyword match
+
+Pick highest scoring node
+
+Traverse down tree
+
+Stop when no child scores higher
+
+Fetch related pages
+
+Build structured answer
+
+Return:
+
+answer
+
+reasoning_path
+
+source_pages
+
+confidence
+
+NODE SCORING STRATEGY
+
+Score based on:
+
+Keyword matches
+
+Depth weighting
+
+Disease context (Diabetes / PCOD)
+
+Keep deterministic.
+
+CONFIDENCE SCORE
+
+Formula:
+
+Base 60
+
+(10 × depth reached)
+
+(5 × keyword matches)
+Max 95
+
+RAG RESPONSE FORMAT
+
+Return:
+
+{
+"answer": "...",
+"reasoning_path": [],
+"source_nodes": [],
+"source_pages": [],
+"confidence": "92%"
+}
+
+🌱 RAG SEEDERS
+
+Create seeders for:
+
+Diabetes Metabolic Health Guide
+
+PCOD Hormonal Guide
+
+Lifestyle & Nutrition Guide
+
+Each must include:
+
+5 root nodes
+
+3 subnodes per root
+
+3 pages per node
+
+Structured fake medical content
+
+Realistic but synthetic text
+
+Total pages: 50+
+
+Seeder must be modular and clean.
+
+🔮 FUTURE REAL RAG SUPPORT
+
+Design system so we can later:
+
+Add embeddings
+
+Add vector DB
+
+Add document upload
+
+Add async document processing
+
+Add chunking service
+
+Swap RagSearchService implementation
+
+Keep contracts clean.
+
+🧬 DIGITAL TWIN ENGINE
+
+Create:
+
+DigitalTwinService
+
+Input:
+
+Health profile
+
+Disease data
+
+Output:
+
+Metabolic health score
+
+Insulin resistance score
+
+Sleep score
+
+Stress score
+
+Risk category
+
+Use weighted formula system.
+
+Keep logic modular.
+
+📊 RISK ENGINE
+
+Create:
+
+RiskEngineService
+
+Methods:
+
+calculateMetabolicRisk()
+
+calculateInsulinResistance()
+
+calculateHormonalImbalance()
+
+categorizeRisk()
+
+Return numeric + category.
+
+🧪 SIMULATION ENGINE
+
+SimulationService:
+
+simulateLifestyleChange()
+simulateFoodImpact()
+
+Flow:
+
+Clone digital twin data
+
+Apply modifier
+
+Recalculate risk
+
+Generate alerts
+
+Store simulation
+
+Call RAG for explanation
+
+Return structured simulation result.
+
+🔔 ALERT SYSTEM
+
+AlertService:
+
+Trigger if:
+
+Risk > threshold
+
+High glycemic food
+
+Sleep < 6h
+
+Stress high
+
+Repeated high risk
+
+Store alerts per user.
+
+📚 HISTORY MODULE
+
+Store:
+
+Simulation type
+
+Input
+
+Risk score
+
+Timestamp
+
+Compare functionality
+
+👨‍⚕️ ADMIN MODULE
+
+Endpoints for:
+
+Dashboard summary
+
+User list
+
+Risk distribution
+
+Simulation logs
+
+Alerts overview
+
+Reports aggregation
+
+All API-based.
+
+🗃 DATABASE TABLES REQUIRED
+
+users
+health_profiles
+disease_diabetes
+disease_pcod
+digital_twins
+simulations
+alerts
+rag_documents
+rag_nodes
+rag_pages
+rag_query_logs
+
+Proper foreign keys required.
+
+🌐 API ROUTE STRUCTURE
+
+/api/auth/*
+/api/profile/*
+/api/digital-twin/*
+/api/simulations/*
+/api/food/*
+/api/alerts/*
+/api/history/*
+/api/admin/*
+/api/rag/*
+
+All protected by Sanctum except login/register.
+
+📦 FOLDER STRUCTURE
+
+app/
+├── Contracts/
+├── Services/
+│ ├── DigitalTwin/
+│ ├── Risk/
+│ ├── Simulation/
+│ ├── Alerts/
+│ └── Rag/
+├── Repositories/
+├── Http/
+│ ├── Controllers/
+│ ├── Requests/
+│ └── Resources/
+└── Models/
+
+⚙️ GENERATION STRATEGY
+
+Because of large context:
+
+Step 1:
+Generate COMPLETE SYSTEM ARCHITECTURE PLAN.
+
+Step 2:
+Wait.
+
+Step 3:
+Generate modules in batches of 2.
+
+Step 4:
+Continue until full system done.
+
+Keep token usage efficient.
+
+Do not repeat user story.
+
+Focus on implementation.
+
+🚀 FIRST TASK
+
+Now generate:
+
+COMPLETE SYSTEM ARCHITECTURE PLAN including:
+
+Folder structure
+
+Database relationships
+
+Service contracts
+
+Data flow (text diagram)
+
+RAG traversal logic explanation
+
+Simulation engine flow
+
+Risk formula outline
+
+Admin aggregation logic
+
+After generating architecture, STOP and wait.
