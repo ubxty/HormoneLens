@@ -53,7 +53,6 @@
                     </div>
                     <h1 class="text-lg font-bold text-white">⚡ Health Simulations</h1>
                 </div>
-                <p class="text-white/60 text-xs hidden sm:block max-w-[220px]">Predict how meals, sleep & stress affect your metabolic health.</p>
             </div>
         </div>
 

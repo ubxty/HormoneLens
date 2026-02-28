@@ -292,7 +292,6 @@
                     </div>
                     <h1 class="text-lg font-bold text-white">🧬 Lifestyle Configuration</h1>
                 </div>
-                <p class="text-white/60 text-xs hidden sm:block">Configure your baseline metabolic data for AI predictions.</p>
             </div>
         </div>
 

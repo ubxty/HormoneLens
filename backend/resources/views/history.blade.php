@@ -49,7 +49,6 @@
                     <span class="text-white/70 text-[11px] font-medium tracking-wide uppercase">History Log</span>
                 </div>
                 <h1 class="text-lg font-bold text-white">📊 Simulation History</h1>
-                <p class="text-white/60 text-xs mt-0.5">Review past simulations and rerun them.</p>
             </div>
         </div>
 

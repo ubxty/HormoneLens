@@ -51,7 +51,6 @@
                     </div>
                     <h1 class="text-lg font-bold text-white">🍽️ Food Impact Analyzer</h1>
                 </div>
-                <p class="text-white/60 text-xs hidden sm:block max-w-[200px]">See how specific foods affect your metabolic health.</p>
             </div>
         </div>
 

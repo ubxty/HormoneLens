@@ -51,7 +51,6 @@
                     <span class="text-white/70 text-[11px] font-medium tracking-wide uppercase">RAG Engine</span>
                 </div>
                 <h1 class="text-lg font-bold text-white">📚 Knowledge Base</h1>
-                <p class="text-white/60 text-xs mt-0.5">Ask health questions powered by our RAG engine.</p>
             </div>
         </div>
 
