@@ -11,10 +11,10 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@hormonelens.com'],
+            ['email' => 'admin@hormone.ai'],
             [
                 'name' => 'HormoneLens Admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('admin123'),
                 'is_admin' => true,
             ],
         );
