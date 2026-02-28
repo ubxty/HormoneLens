@@ -4,104 +4,115 @@
 @section('content')
 <div x-data="ragDocument()" x-init="init()">
 
-    <a href="{{ route('admin.rag') }}" class="inline-flex items-center text-sm text-gray-500 hover:text-brand-600 mb-4">← Back to Documents</a>
+    <a href="{{ route('admin.rag') }}" class="inline-flex items-center gap-1 text-xs font-bold text-purple-500 hover:text-purple-700 mb-4 transition adm-a adm-d0" data-adm>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Back to Documents
+    </a>
 
-    <div x-show="loading" class="text-center py-16"><div class="animate-spin w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full mx-auto"></div></div>
+    <div x-show="loading" class="text-center py-16">
+        <div class="inline-block w-8 h-8 border-[3px] border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+    </div>
 
     <div x-show="!loading && doc">
         {{-- Document header --}}
-        <div class="bg-white rounded-xl shadow-sm border p-5 mb-6">
+        <div class="adm-card relative p-5 mb-5 adm-a adm-d0" data-adm>
             <div class="flex items-start justify-between">
-                <div x-show="!editingDoc">
-                    <h2 class="text-xl font-bold text-gray-800" x-text="doc?.title"></h2>
-                    <p class="text-sm text-gray-500 mt-1" x-text="doc?.description || 'No description'"></p>
+                <div x-show="!editingDoc" class="min-w-0">
+                    <h2 class="text-lg font-bold text-gray-800" x-text="doc?.title"></h2>
+                    <p class="text-xs text-gray-400 mt-1" x-text="doc?.description || 'No description'"></p>
                 </div>
                 <div x-show="editingDoc" class="flex-1 space-y-2 mr-4">
-                    <input type="text" x-model="docEdit.title" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                    <textarea x-model="docEdit.description" rows="2" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
+                    <input type="text" x-model="docEdit.title" class="adm-input w-full">
+                    <textarea x-model="docEdit.description" rows="2" class="adm-input w-full"></textarea>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 shrink-0">
                     <button x-show="!editingDoc" @click="editingDoc=true; docEdit={title:doc.title, description:doc.description}"
-                            class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg">✏️ Edit</button>
-                    <button x-show="editingDoc" @click="saveDoc()" class="px-3 py-1.5 text-xs bg-brand-600 text-white rounded-lg hover:bg-brand-700">Save</button>
-                    <button x-show="editingDoc" @click="editingDoc=false" class="px-3 py-1.5 text-xs border text-gray-600 rounded-lg hover:bg-gray-50">Cancel</button>
+                            class="adm-badge bg-white/60 hover:bg-white/80 text-gray-600 cursor-pointer transition">&#9999;&#65039; Edit</button>
+                    <button x-show="editingDoc" @click="saveDoc()" class="adm-btn text-xs">Save</button>
+                    <button x-show="editingDoc" @click="editingDoc=false" class="adm-badge bg-white/60 hover:bg-white/80 text-gray-600 cursor-pointer transition">Cancel</button>
                 </div>
             </div>
         </div>
 
         {{-- Add root node --}}
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-800">Knowledge Tree</h3>
-            <button @click="addNode(null)" class="px-3 py-1.5 text-xs bg-brand-600 text-white rounded-lg hover:bg-brand-700">+ Root Node</button>
+        <div class="flex items-center justify-between mb-4 adm-a adm-d1" data-adm>
+            <h3 class="text-xs font-bold text-gray-700 flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-400/20 to-pink-400/20 flex items-center justify-center text-xs">&#127795;</div>
+                Knowledge Tree
+            </h3>
+            <button @click="addNode(null)" class="adm-btn text-xs">+ Root Node</button>
+        </div>
+
+        {{-- Empty state --}}
+        <div x-show="(doc?.nodes||[]).length === 0" class="adm-card relative p-10 text-center">
+            <p class="text-xs text-gray-400">No nodes yet. Add a root node to start building the knowledge tree.</p>
         </div>
 
         {{-- Node tree --}}
-        <div x-show="(doc?.nodes||[]).length === 0" class="bg-white rounded-xl border p-8 text-center text-gray-400 text-sm">
-            No nodes yet. Add a root node to start building the knowledge tree.
-        </div>
-
         <div class="space-y-2">
             <template x-for="node in doc?.nodes || []" :key="node.id">
                 <div>
                     <div x-data="{ collapsed: true }" class="ml-0">
                         {{-- Node item --}}
-                        <div class="bg-white rounded-lg shadow-sm border p-3 flex items-center gap-2 hover:bg-gray-50 transition">
-                            <button @click="collapsed = !collapsed" class="text-gray-400 hover:text-gray-600 w-5 text-center">
-                                <span x-text="collapsed ? '▶' : '▼'" class="text-xs"></span>
+                        <div class="adm-card relative p-3 flex items-center gap-2 hover:bg-white/60 transition cursor-pointer" @click="collapsed = !collapsed">
+                            <button class="text-gray-400 hover:text-gray-600 w-5 text-center">
+                                <span x-text="collapsed ? '&#9654;' : '&#9660;'" class="text-[10px]"></span>
                             </button>
+                            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-400/20 to-pink-400/20 flex items-center justify-center text-xs shrink-0">&#128302;</div>
                             <div class="flex-1 min-w-0">
-                                <span class="font-medium text-gray-700 text-sm" x-text="node.title"></span>
-                                <span class="text-xs text-gray-400 ml-2" x-text="'[' + (node.keywords||[]).join(', ') + ']'"></span>
+                                <span class="font-bold text-gray-700 text-xs" x-text="node.title"></span>
+                                <span class="text-[10px] text-gray-400 ml-2" x-text="'[' + (node.keywords||[]).join(', ') + ']'"></span>
                             </div>
-                            <span class="text-xs text-gray-400" x-text="(node.pages||[]).length + 'p / ' + (node.children||[]).length + 'c'"></span>
-                            <button @click="addNode(node.id)" class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded" title="Add child node">+ Child</button>
-                            <button @click="addPage(node.id)" class="text-xs px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded" title="Add page">+ Page</button>
-                            <button @click="editNode(node)" class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">✏️</button>
-                            <button @click="deleteNode(node)" class="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded">🗑️</button>
+                            <span class="adm-badge bg-white/60 text-gray-400" x-text="(node.pages||[]).length + 'p / ' + (node.children||[]).length + 'c'"></span>
+                            <button @click.stop="addNode(node.id)" class="adm-badge bg-purple-100/60 text-purple-700 hover:bg-purple-200/60 cursor-pointer transition" title="Add child">+ Child</button>
+                            <button @click.stop="addPage(node.id)" class="adm-badge bg-blue-100/60 text-blue-700 hover:bg-blue-200/60 cursor-pointer transition" title="Add page">+ Page</button>
+                            <button @click.stop="editNode(node)" class="adm-badge bg-white/60 text-gray-500 hover:bg-white/80 cursor-pointer transition">&#9999;&#65039;</button>
+                            <button @click.stop="deleteNode(node)" class="adm-badge bg-red-50/60 text-red-500 hover:bg-red-100/60 cursor-pointer transition">&#128465;</button>
                         </div>
 
                         {{-- Expanded content --}}
-                        <div x-show="!collapsed" class="ml-6 mt-1 space-y-1">
+                        <div x-show="!collapsed" x-transition class="ml-6 mt-1 space-y-1">
                             {{-- Pages --}}
                             <template x-for="pg in node.pages || []" :key="pg.id">
-                                <div class="bg-gray-50 rounded-lg p-3 flex items-start gap-2 text-sm border">
-                                    <span class="text-gray-400 mt-0.5">📄</span>
+                                <div class="bg-white/40 backdrop-blur-sm rounded-xl border border-white/50 p-3 flex items-start gap-2 text-xs">
+                                    <span class="text-gray-400 mt-0.5">&#128196;</span>
                                     <div class="flex-1 min-w-0">
-                                        <p class="font-medium text-gray-700" x-text="'Page #' + pg.page_number"></p>
-                                        <p class="text-xs text-gray-500 line-clamp-2 mt-0.5" x-text="pg.content"></p>
+                                        <p class="font-bold text-gray-700" x-text="'Page #' + pg.page_number"></p>
+                                        <p class="text-[10px] text-gray-400 line-clamp-2 mt-0.5" x-text="pg.content"></p>
                                     </div>
-                                    <button @click="editPage(pg)" class="text-xs px-2 py-1 bg-white border hover:bg-gray-100 rounded shrink-0">✏️</button>
-                                    <button @click="deletePage(pg)" class="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded shrink-0">🗑️</button>
+                                    <button @click="editPage(pg)" class="adm-badge bg-white/60 text-gray-500 hover:bg-white/80 cursor-pointer transition shrink-0">&#9999;&#65039;</button>
+                                    <button @click="deletePage(pg)" class="adm-badge bg-red-50/60 text-red-500 hover:bg-red-100/60 cursor-pointer transition shrink-0">&#128465;</button>
                                 </div>
                             </template>
 
-                            {{-- Children (recursive display via nested alpine) --}}
+                            {{-- Children --}}
                             <template x-for="child in node.children || []" :key="child.id">
                                 <div>
                                     <div x-data="{ coll: true }">
-                                        <div class="bg-white rounded-lg shadow-sm border p-3 flex items-center gap-2 hover:bg-gray-50 transition">
-                                            <button @click="coll = !coll" class="text-gray-400 hover:text-gray-600 w-5 text-center">
-                                                <span x-text="coll ? '▶' : '▼'" class="text-xs"></span>
+                                        <div class="adm-card relative p-3 flex items-center gap-2 hover:bg-white/60 transition cursor-pointer" @click="coll = !coll">
+                                            <button class="text-gray-400 hover:text-gray-600 w-5 text-center">
+                                                <span x-text="coll ? '&#9654;' : '&#9660;'" class="text-[10px]"></span>
                                             </button>
+                                            <div class="w-6 h-6 rounded bg-gradient-to-br from-blue-400/20 to-purple-400/20 flex items-center justify-center text-[10px] shrink-0">&#128160;</div>
                                             <div class="flex-1 min-w-0">
-                                                <span class="font-medium text-gray-700 text-sm" x-text="child.title"></span>
-                                                <span class="text-xs text-gray-400 ml-2" x-text="'[' + (child.keywords||[]).join(', ') + ']'"></span>
+                                                <span class="font-bold text-gray-700 text-xs" x-text="child.title"></span>
+                                                <span class="text-[10px] text-gray-400 ml-2" x-text="'[' + (child.keywords||[]).join(', ') + ']'"></span>
                                             </div>
-                                            <span class="text-xs text-gray-400" x-text="(child.pages||[]).length + 'p'"></span>
-                                            <button @click="addPage(child.id)" class="text-xs px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded">+ Page</button>
-                                            <button @click="editNode(child)" class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">✏️</button>
-                                            <button @click="deleteNode(child)" class="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded">🗑️</button>
+                                            <span class="adm-badge bg-white/60 text-gray-400" x-text="(child.pages||[]).length + 'p'"></span>
+                                            <button @click.stop="addPage(child.id)" class="adm-badge bg-blue-100/60 text-blue-700 hover:bg-blue-200/60 cursor-pointer transition">+ Page</button>
+                                            <button @click.stop="editNode(child)" class="adm-badge bg-white/60 text-gray-500 hover:bg-white/80 cursor-pointer transition">&#9999;&#65039;</button>
+                                            <button @click.stop="deleteNode(child)" class="adm-badge bg-red-50/60 text-red-500 hover:bg-red-100/60 cursor-pointer transition">&#128465;</button>
                                         </div>
-                                        <div x-show="!coll" class="ml-6 mt-1 space-y-1">
+                                        <div x-show="!coll" x-transition class="ml-6 mt-1 space-y-1">
                                             <template x-for="pg2 in child.pages || []" :key="pg2.id">
-                                                <div class="bg-gray-50 rounded-lg p-3 flex items-start gap-2 text-sm border">
-                                                    <span class="text-gray-400 mt-0.5">📄</span>
+                                                <div class="bg-white/40 backdrop-blur-sm rounded-xl border border-white/50 p-3 flex items-start gap-2 text-xs">
+                                                    <span class="text-gray-400 mt-0.5">&#128196;</span>
                                                     <div class="flex-1 min-w-0">
-                                                        <p class="font-medium text-gray-700" x-text="'Page #' + pg2.page_number"></p>
-                                                        <p class="text-xs text-gray-500 line-clamp-2 mt-0.5" x-text="pg2.content"></p>
+                                                        <p class="font-bold text-gray-700" x-text="'Page #' + pg2.page_number"></p>
+                                                        <p class="text-[10px] text-gray-400 line-clamp-2 mt-0.5" x-text="pg2.content"></p>
                                                     </div>
-                                                    <button @click="editPage(pg2)" class="text-xs px-2 py-1 bg-white border hover:bg-gray-100 rounded shrink-0">✏️</button>
-                                                    <button @click="deletePage(pg2)" class="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded shrink-0">🗑️</button>
+                                                    <button @click="editPage(pg2)" class="adm-badge bg-white/60 text-gray-500 hover:bg-white/80 cursor-pointer transition shrink-0">&#9999;&#65039;</button>
+                                                    <button @click="deletePage(pg2)" class="adm-badge bg-red-50/60 text-red-500 hover:bg-red-100/60 cursor-pointer transition shrink-0">&#128465;</button>
                                                 </div>
                                             </template>
                                         </div>
@@ -116,43 +127,48 @@
     </div>
 
     {{-- Modal: Edit/Add Node --}}
-    <div x-show="modal==='node'" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" x-transition>
-        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4" @click.away="modal=null">
-            <h3 class="font-semibold text-gray-800 mb-4" x-text="modalData.id ? 'Edit Node' : 'Add Node'"></h3>
+    <div x-show="modal==='node'" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" x-transition>
+        <div class="adm-card relative p-6 w-full max-w-md mx-4 shadow-2xl" @click.away="modal=null">
+            <h3 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-400/20 to-pink-400/20 flex items-center justify-center text-xs">&#128302;</div>
+                <span x-text="modalData.id ? 'Edit Node' : 'Add Node'"></span>
+            </h3>
             <form @submit.prevent="saveNode()" class="space-y-3">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                    <input type="text" x-model="modalData.title" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Title</label>
+                    <input type="text" x-model="modalData.title" required class="adm-input w-full">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Keywords (comma-separated)</label>
-                    <input type="text" x-model="modalData.keywordsStr" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none"
-                           placeholder="e.g. insulin, blood sugar, glucose">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Keywords (comma-separated)</label>
+                    <input type="text" x-model="modalData.keywordsStr" class="adm-input w-full" placeholder="e.g. insulin, blood sugar, glucose">
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="px-4 py-2 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-700">Save</button>
-                    <button type="button" @click="modal=null" class="px-4 py-2 border text-gray-600 text-sm rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="adm-btn">Save</button>
+                    <button type="button" @click="modal=null" class="adm-badge bg-white/60 hover:bg-white/80 text-gray-600 cursor-pointer transition px-4 py-2">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
     {{-- Modal: Edit/Add Page --}}
-    <div x-show="modal==='page'" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" x-transition>
-        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg mx-4" @click.away="modal=null">
-            <h3 class="font-semibold text-gray-800 mb-4" x-text="modalData.id ? 'Edit Page' : 'Add Page'"></h3>
+    <div x-show="modal==='page'" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" x-transition>
+        <div class="adm-card relative p-6 w-full max-w-lg mx-4 shadow-2xl" @click.away="modal=null">
+            <h3 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-400/20 to-purple-400/20 flex items-center justify-center text-xs">&#128196;</div>
+                <span x-text="modalData.id ? 'Edit Page' : 'Add Page'"></span>
+            </h3>
             <form @submit.prevent="savePage()" class="space-y-3">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Page Number</label>
-                    <input type="number" x-model="modalData.page_number" min="1" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Page Number</label>
+                    <input type="number" x-model="modalData.page_number" min="1" required class="adm-input w-full">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                    <textarea x-model="modalData.content" rows="8" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Content</label>
+                    <textarea x-model="modalData.content" rows="8" required class="adm-input w-full"></textarea>
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="px-4 py-2 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-700">Save</button>
-                    <button type="button" @click="modal=null" class="px-4 py-2 border text-gray-600 text-sm rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="adm-btn">Save</button>
+                    <button type="button" @click="modal=null" class="adm-badge bg-white/60 hover:bg-white/80 text-gray-600 cursor-pointer transition px-4 py-2">Cancel</button>
                 </div>
             </form>
         </div>
@@ -173,45 +189,46 @@ function ragDocument() {
         async reload() {
             this.loading = true;
             const r = await api.get('/admin/rag/documents/' + docId);
-            if(r.success) this.doc = r.data;
+            if (r.success) this.doc = r.data;
             this.loading = false;
+            this.$nextTick(() => admAnimate());
         },
         async saveDoc() {
             const r = await api.put('/admin/rag/documents/' + docId, this.docEdit);
-            if(r.success){ this.doc.title = this.docEdit.title; this.doc.description = this.docEdit.description; this.editingDoc = false; toast('Document updated'); }
-            else toast(r.message||'Failed','error');
+            if (r.success) { this.doc.title = this.docEdit.title; this.doc.description = this.docEdit.description; this.editingDoc = false; toast('Document updated'); }
+            else toast(r.message || 'Failed', 'error');
         },
 
-        // ── Nodes ──
+        // -- Nodes --
         addNode(parentId) {
-            this.modalData = { title:'', keywordsStr:'', parent_id: parentId, document_id: docId };
+            this.modalData = { title: '', keywordsStr: '', parent_id: parentId, document_id: docId };
             this.modal = 'node';
         },
         editNode(n) {
-            this.modalData = { id: n.id, title: n.title, keywordsStr: (n.keywords||[]).join(', ') };
+            this.modalData = { id: n.id, title: n.title, keywordsStr: (n.keywords || []).join(', ') };
             this.modal = 'node';
         },
         async saveNode() {
-            const kw = this.modalData.keywordsStr ? this.modalData.keywordsStr.split(',').map(s=>s.trim()).filter(Boolean) : [];
-            if(this.modalData.id) {
+            const kw = this.modalData.keywordsStr ? this.modalData.keywordsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+            if (this.modalData.id) {
                 const r = await api.put('/admin/rag/nodes/' + this.modalData.id, { title: this.modalData.title, keywords: kw });
-                if(r.success){ toast('Node updated'); await this.reload(); } else toast(r.message||'Failed','error');
+                if (r.success) { toast('Node updated'); await this.reload(); } else toast(r.message || 'Failed', 'error');
             } else {
                 const payload = { title: this.modalData.title, keywords: kw, document_id: this.modalData.document_id, parent_id: this.modalData.parent_id };
                 const r = await api.post('/admin/rag/nodes', payload);
-                if(r.success){ toast('Node created'); await this.reload(); } else toast(r.message||'Failed','error');
+                if (r.success) { toast('Node created'); await this.reload(); } else toast(r.message || 'Failed', 'error');
             }
             this.modal = null;
         },
         async deleteNode(n) {
-            if(!confirm('Delete node "'+n.title+'" and all its children/pages?')) return;
+            if (!confirm('Delete node "' + n.title + '" and all its children/pages?')) return;
             const r = await api.delete('/admin/rag/nodes/' + n.id);
-            if(r.success){ toast('Node deleted'); await this.reload(); } else toast(r.message||'Failed','error');
+            if (r.success) { toast('Node deleted'); await this.reload(); } else toast(r.message || 'Failed', 'error');
         },
 
-        // ── Pages ──
+        // -- Pages --
         addPage(nodeId) {
-            this.modalData = { content:'', page_number:'', node_id: nodeId };
+            this.modalData = { content: '', page_number: '', node_id: nodeId };
             this.modal = 'page';
         },
         editPage(p) {
@@ -220,20 +237,20 @@ function ragDocument() {
         },
         async savePage() {
             const payload = { content: this.modalData.content, page_number: parseInt(this.modalData.page_number) };
-            if(this.modalData.id) {
+            if (this.modalData.id) {
                 const r = await api.put('/admin/rag/pages/' + this.modalData.id, payload);
-                if(r.success){ toast('Page updated'); await this.reload(); } else toast(r.message||'Failed','error');
+                if (r.success) { toast('Page updated'); await this.reload(); } else toast(r.message || 'Failed', 'error');
             } else {
                 payload.node_id = this.modalData.node_id;
                 const r = await api.post('/admin/rag/pages', payload);
-                if(r.success){ toast('Page created'); await this.reload(); } else toast(r.message||'Failed','error');
+                if (r.success) { toast('Page created'); await this.reload(); } else toast(r.message || 'Failed', 'error');
             }
             this.modal = null;
         },
         async deletePage(p) {
-            if(!confirm('Delete page #'+p.page_number+'?')) return;
+            if (!confirm('Delete page #' + p.page_number + '?')) return;
             const r = await api.delete('/admin/rag/pages/' + p.id);
-            if(r.success){ toast('Page deleted'); await this.reload(); } else toast(r.message||'Failed','error');
+            if (r.success) { toast('Page deleted'); await this.reload(); } else toast(r.message || 'Failed', 'error');
         }
     };
 }

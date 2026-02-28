@@ -9,6 +9,7 @@ class PageController extends Controller
     public function dashboard()     { return view('admin.dashboard'); }
     public function users()         { return view('admin.users.index'); }
     public function userShow($id)   { return view('admin.users.show', compact('id')); }
+    public function riskAnalysis()  { return view('admin.risk-analysis'); }
     public function simulations()   { return view('admin.simulations'); }
     public function alerts()        { return view('admin.alerts'); }
     public function reports()       { return view('admin.reports'); }

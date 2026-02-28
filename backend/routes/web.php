@@ -39,6 +39,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/',                   [AdminPageController::class, 'dashboard'])->name('dashboard');
     Route::get('/users',              [AdminPageController::class, 'users'])->name('users');
     Route::get('/users/{id}',         [AdminPageController::class, 'userShow'])->name('users.show');
+    Route::get('/risk-analysis',      [AdminPageController::class, 'riskAnalysis'])->name('risk-analysis');
     Route::get('/simulations',        [AdminPageController::class, 'simulations'])->name('simulations');
     Route::get('/alerts',             [AdminPageController::class, 'alerts'])->name('alerts');
     Route::get('/reports',            [AdminPageController::class, 'reports'])->name('reports');
