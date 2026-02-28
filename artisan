@@ -1,0 +1,5 @@
+#!/usr/bin/env php
+<?php
+// Proxy to the real artisan in backend/ so commands can be run from repo root
+
+require __DIR__ . '/backend/artisan';
