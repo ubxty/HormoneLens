@@ -6,79 +6,102 @@
 
     {{-- Filters --}}
     <div class="flex flex-col sm:flex-row gap-3 mb-5 adm-a adm-d0" data-adm>
-        <select x-model="typeFilter" @change="page=1; load()" class="adm-input w-auto min-w-[140px]">
-            <option value="">All Types</option><option value="meal">🍽️ Meal</option><option value="sleep">😴 Sleep</option><option value="stress">😰 Stress</option>
+        <select x-model="typeFilter" @change="page=1;load()" class="adm-input w-auto min-w-[160px]">
+            <option value="">All Types</option>
+            <option value="lifestyle_change">Lifestyle Change</option>
+            <option value="medication_change">Medication Change</option>
+            <option value="diet_change">Diet Change</option>
+            <option value="exercise_change">Exercise Change</option>
+            <option value="food_impact">Food Impact</option>
         </select>
         <div class="flex-1 relative">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" x-model="userSearch" @input.debounce.400ms="page=1; load()"
-                   class="adm-input w-full pl-10" placeholder="Filter by user name or email…">
+            <input type="text" x-model.debounce.400ms="search" @input="page=1;load()" placeholder="Search by user name&#8230;" class="adm-input w-full pl-10">
         </div>
     </div>
 
+    {{-- Loading --}}
     <div x-show="loading" class="text-center py-16">
         <div class="inline-block w-8 h-8 border-[3px] border-purple-400 border-t-transparent rounded-full animate-spin"></div>
     </div>
 
-    <div x-show="!loading" class="adm-card overflow-hidden adm-a adm-d1" data-adm>
+    {{-- Simulation Table --}}
+    <div x-show="!loading" class="adm-card relative p-0 overflow-hidden adm-a adm-d1" data-adm>
         <div class="overflow-x-auto">
-            <table class="adm-table w-full text-sm">
+            <table class="adm-table w-full">
                 <thead>
                     <tr>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">User</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Type</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Description</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Before</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">After</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Change</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="pl-5">User</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th class="text-center">Before</th>
+                        <th class="text-center">After</th>
+                        <th class="text-center">Change</th>
+                        <th>Date</th>
+                        <th class="w-10"></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="s in sims" :key="s.id">
-                        <tr class="border-b border-white/40 last:border-0 hover:bg-white/30 cursor-pointer transition" @click="expanded = expanded === s.id ? null : s.id">
-                            <td class="px-4 py-3 text-xs font-bold text-gray-700" x-text="s.user?.name || 'User #' + s.user_id"></td>
-                            <td class="px-4 py-3">
-                                <span class="adm-badge capitalize" :class="s.type==='meal'?'bg-orange-100 text-orange-700':s.type==='sleep'?'bg-blue-100 text-blue-700':'bg-amber-100 text-amber-700'" x-text="s.type"></span>
-                            </td>
-                            <td class="px-4 py-3 max-w-[180px] truncate text-xs text-gray-500" x-text="s.input_data?.description || '—'"></td>
-                            <td class="px-4 py-3 text-xs font-bold text-gray-600" x-text="s.original_risk_score?.toFixed(2)"></td>
-                            <td class="px-4 py-3 text-xs font-bold text-gray-600" x-text="s.simulated_risk_score?.toFixed(2)"></td>
-                            <td class="px-4 py-3 text-xs font-bold" :class="s.risk_change > 0 ? 'text-red-500' : 'text-emerald-500'"
-                                x-text="(s.risk_change > 0 ? '+' : '') + s.risk_change?.toFixed(2)"></td>
-                            <td class="px-4 py-3 text-xs text-gray-400 whitespace-nowrap" x-text="new Date(s.created_at).toLocaleDateString()"></td>
-                        </tr>
-                        {{-- Expanded detail --}}
-                        <tr x-show="expanded === s.id" x-transition class="bg-white/20">
-                            <td colspan="7" class="px-6 py-4">
-                                <div class="grid sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Category Shift</p>
-                                        <div class="flex items-center gap-2">
-                                            <span class="adm-badge capitalize" :class="catC(s.risk_category_before)" x-text="s.risk_category_before"></span>
-                                            <span class="text-gray-300">→</span>
-                                            <span class="adm-badge capitalize" :class="catC(s.risk_category_after)" x-text="s.risk_category_after"></span>
-                                        </div>
-                                    </div>
-                                    <div x-show="s.rag_explanation">
-                                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">💡 RAG Explanation</p>
-                                        <p class="text-xs text-gray-600 leading-relaxed" x-text="s.rag_explanation"></p>
-                                    </div>
+                    <template x-for="(s, idx) in sims" :key="s.id">
+                        <tr class="group cursor-pointer" @click="s._open = !s._open">
+                            <td class="pl-5">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[9px] font-bold shrink-0"
+                                         x-text="(s.user?.name||'?').charAt(0).toUpperCase()"></div>
+                                    <span class="text-xs font-semibold text-gray-700 truncate max-w-[100px]" x-text="s.user?.name || 'Unknown'"></span>
                                 </div>
+                            </td>
+                            <td><span class="adm-badge bg-purple-50 text-purple-600 capitalize" x-text="(s.type||'').replace('_',' ')"></span></td>
+                            <td class="text-xs text-gray-500 max-w-[160px] truncate" x-text="s.input_data?.description || '&#8212;'"></td>
+                            <td class="text-center text-xs font-bold text-gray-600" x-text="s.original_risk_score ?? '&#8212;'"></td>
+                            <td class="text-center text-xs font-bold text-gray-600" x-text="s.simulated_risk_score ?? '&#8212;'"></td>
+                            <td class="text-center">
+                                <span class="text-xs font-bold" :class="parseFloat(s.risk_change) > 0 ? 'text-red-500' : parseFloat(s.risk_change) < 0 ? 'text-emerald-500' : 'text-gray-400'"
+                                      x-text="s.risk_change != null ? ((parseFloat(s.risk_change) > 0 ? '+' : '') + s.risk_change) : '&#8212;'"></span>
+                            </td>
+                            <td class="text-xs text-gray-400" x-text="new Date(s.created_at).toLocaleDateString()"></td>
+                            <td class="text-center">
+                                <span class="text-gray-400 text-[10px] transition-transform inline-block" :class="s._open ? 'rotate-90' : ''">&#9654;</span>
                             </td>
                         </tr>
                     </template>
                 </tbody>
             </table>
         </div>
-        <div x-show="sims.length === 0 && !loading" class="p-10 text-center text-xs text-gray-400">No simulations found.</div>
 
-        <div x-show="meta.last_page > 1" class="flex items-center justify-between px-4 py-3 border-t border-white/40 bg-white/20">
-            <p class="text-[10px] font-bold text-gray-400" x-text="'Page ' + page + ' of ' + meta.last_page"></p>
-            <div class="flex gap-1">
-                <button @click="page--; load()" :disabled="page<=1" class="adm-badge bg-white/60 hover:bg-white/80 text-gray-600 disabled:opacity-30 cursor-pointer transition">← Prev</button>
-                <button @click="page++; load()" :disabled="page>=meta.last_page" class="adm-badge bg-white/60 hover:bg-white/80 text-gray-600 disabled:opacity-30 cursor-pointer transition">Next →</button>
+        {{-- Expanded Detail (shown via separate render) --}}
+        <template x-for="s in sims.filter(s => s._open)" :key="'detail-' + s.id">
+            <div class="mx-4 mb-3 bg-gradient-to-r from-purple-50/60 to-pink-50/60 backdrop-blur-sm rounded-xl border border-purple-100/40 p-4 text-xs space-y-2" x-transition>
+                <div class="flex gap-4">
+                    <div>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Risk Before</span>
+                        <p class="font-bold text-gray-700" x-text="s.risk_category_before || '&#8212;'"></p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Risk After</span>
+                        <p class="font-bold" :class="catC(s.risk_category_after)" x-text="s.risk_category_after || '&#8212;'"></p>
+                    </div>
+                </div>
+                <div x-show="s.rag_explanation">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">AI Explanation</span>
+                    <p class="text-gray-600 leading-relaxed mt-0.5" x-text="s.rag_explanation"></p>
+                </div>
             </div>
+        </template>
+
+        {{-- Empty State --}}
+        <div x-show="sims.length === 0 && !loading" class="p-10 text-center">
+            <div class="text-4xl mb-2">&#9889;</div>
+            <p class="text-xs text-gray-400">No simulations found.</p>
+        </div>
+    </div>
+
+    {{-- Pagination --}}
+    <div x-show="meta.last_page > 1" class="flex items-center justify-between mt-4 adm-a adm-d2" data-adm>
+        <p class="text-[10px] text-gray-400">Page <span x-text="meta.current_page"></span> of <span x-text="meta.last_page"></span></p>
+        <div class="flex gap-2">
+            <button @click="page--;load()" :disabled="page<=1" class="adm-btn text-xs disabled:opacity-30">&larr; Prev</button>
+            <button @click="page++;load()" :disabled="page>=meta.last_page" class="adm-btn text-xs disabled:opacity-30">Next &rarr;</button>
         </div>
     </div>
 </div>
@@ -88,19 +111,27 @@
 <script>
 function adminSims() {
     return {
-        loading: true, sims: [], page: 1, meta: {}, typeFilter: '', userSearch: '', expanded: null,
-        catC(c) { return c==='high'?'bg-red-100 text-red-700':c==='medium'?'bg-amber-100 text-amber-700':'bg-emerald-100 text-emerald-700'; },
+        loading: true, sims: [], meta: {}, page: 1, typeFilter: '', search: '',
         async load() {
             this.loading = true;
             let url = '/admin/simulations?page=' + this.page;
-            if(this.typeFilter) url += '&type=' + this.typeFilter;
-            if(this.userSearch) url += '&search=' + encodeURIComponent(this.userSearch);
+            if (this.typeFilter) url += '&type=' + this.typeFilter;
+            if (this.search) url += '&search=' + encodeURIComponent(this.search);
             const r = await api.get(url);
-            if(r.success) { this.sims = r.data || []; this.meta = r.meta || {}; }
+            if (r.success) { this.sims = (r.data || []).map(s => ({...s, _open: false})); this.meta = r.meta || {}; }
             this.loading = false;
             this.$nextTick(() => admAnimate());
         },
-        async init() { await this.load(); }
+        async init() { await this.load(); },
+        catC(c) {
+            if (!c) return 'text-gray-500';
+            c = c.toLowerCase();
+            if (c === 'low') return 'text-emerald-600';
+            if (c === 'moderate') return 'text-amber-600';
+            if (c === 'high') return 'text-red-500';
+            if (c === 'critical') return 'text-red-800';
+            return 'text-gray-500';
+        }
     };
 }
 </script>
