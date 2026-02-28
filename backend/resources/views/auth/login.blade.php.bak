@@ -87,7 +87,22 @@
             animation: welcomeFloat 6s ease-in-out infinite;
         }
 
-        /* pulse-ring removed */
+        /* ── Pulse ring behind silhouette ── */
+        @keyframes pulseRing {
+            0%   { transform: translate(-50%,-50%) scale(1);   opacity: 0.25; }
+            50%  { transform: translate(-50%,-50%) scale(1.1); opacity: 0.10; }
+            100% { transform: translate(-50%,-50%) scale(1);   opacity: 0.25; }
+        }
+        .pulse-ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(124,58,237,0.35) 0%, transparent 70%);
+            animation: pulseRing 4s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
 
         /* ── Mini floating up-down particles ── */
         @keyframes floatUpDown {
@@ -183,85 +198,32 @@
             animation: floatTag 8s ease-in-out var(--tf-delay,0s) infinite;
         }
 
-        /* ── Avatar: HormoneLens simulation figure (men.svg) ── */
-
-        /* Wrapper: centres the avatar and acts as hover/click target */
-        #avatar-wrap {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 130px;
-            z-index: 2;
-            cursor: pointer;
-        }
-
-        /* Base body layer */
-        #avatar-svg-body {
-            width: 130px;
-            height: auto;
-            display: block;
+        /* ── Body figure ── */
+        #body-figure {
+            position: absolute; top: 50%; left: 50%;
+            transform: translateX(-50%) translateY(-50%);
+            width: 135px; height: auto; z-index: 2;
             pointer-events: none;
+            animation: figBreath 4s ease-in-out infinite;
         }
-        #avatar-svg-body svg {
-            width: 130px;
-            height: auto;
-            display: block;
+        @keyframes figBreath {
+            0%,100% { transform: translateX(-50%) translateY(-50%) scaleY(1); }
+            50%      { transform: translateX(-50%) translateY(-50%) scaleY(1.014); }
         }
-
-        /* ── SVG gradient theming via CSS fill override ──
-           Gradient: #5f6fff → #c24dff → #ff6ec7
-           Defined in a hidden <svg><defs> block above the avatar in the HTML.
-           fill: url(#hlThemeGrad) !important overrides every presentation-
-           attribute fill on the imported SVG paths.                          */
-        #avatar-svg-body svg path[fill="#FEFEFE"],
-        #avatar-arm-layer svg path[fill="#FEFEFE"] {
-            display: none !important;          /* hide white background rect */
+        @keyframes armWave {
+            0%   { transform: rotate(0deg);   }
+            18%  { transform: rotate(-90deg); }
+            34%  { transform: rotate(-72deg); }
+            50%  { transform: rotate(-90deg); }
+            66%  { transform: rotate(-72deg); }
+            82%  { transform: rotate(-28deg); }
+            100% { transform: rotate(0deg);   }
         }
-        #avatar-svg-body svg path,
-        #avatar-svg-body svg rect,
-        #avatar-svg-body svg ellipse,
-        #avatar-svg-body svg circle,
-        #avatar-svg-body svg line,
-        #avatar-arm-layer svg path,
-        #avatar-arm-layer svg rect,
-        #avatar-arm-layer svg ellipse,
-        #avatar-arm-layer svg circle,
-        #avatar-arm-layer svg line {
-            fill:   url(#hlThemeGrad) !important;
-            stroke: none !important;
+        #bfig-rarm.waving {
+            transform-box: fill-box;
+            transform-origin: top center;
+            animation: armWave 1.8s cubic-bezier(.4,0,.2,1) forwards;
         }
-
-        /* ── Right-arm wave overlay ──
-           Same SVG, clipped to the figure's right arm area (viewer's left),
-           absolutely overlaid on the body layer.
-           SVG is 467 × 350; figure centred at x ≈ 241.
-           Right arm column: x [175-215]/467 ≈ [37%-46%]  y [55-220]/350 ≈ [16%-63%]  */
-        #avatar-arm-layer {
-            position:        absolute;
-            top: 0; left: 0;
-            width:           130px;
-            pointer-events:  none;
-            /* shoulder pivot of figure's right arm */
-            transform-origin: 41% 16%;
-        }
-        #avatar-arm-layer svg {
-            width:       130px;
-            height:      auto;
-            display:     block;
-            clip-path:   polygon(35% 14%, 48% 14%, 50% 64%, 33% 64%);
-        }
-
-        /* ── Wave keyframe: 10°–15° shoulder rotation, one smooth cycle ── */
-        @keyframes hlRightArmWave {
-            0%   { transform: rotate(0deg);    }
-            28%  { transform: rotate(-13deg);  }
-            68%  { transform: rotate(10deg);   }
-            100% { transform: rotate(0deg);    }
-        }
-        #avatar-arm-layer.waving {
-            animation: hlRightArmWave 0.8s ease-in-out forwards;
-        }
-
         /* ── Cloud blobs ── */
         @keyframes cloudFloat {
             0%   { transform: translateY(0px); }
@@ -387,34 +349,59 @@
         {{-- AI body scan lines overlay --}}
         <div class="scan-lines"></div>
 
-        {{-- ── Hidden gradient defs: referenced by CSS `fill: url(#hlThemeGrad)` ── --}}
-        <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+        {{-- Pulse ring behind silhouette --}}
+        <div class="pulse-ring"></div>
+
+        {{-- Body figure — clean human silhouette, forearm waves on hover/click --}}
+        <svg id="body-figure" viewBox="0 0 100 295" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <linearGradient id="hlThemeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%"   stop-color="#5f6fff"/>
-                    <stop offset="50%"  stop-color="#c24dff"/>
-                    <stop offset="100%" stop-color="#ff6ec7"/>
+                <linearGradient id="mGrad" x1="50" y1="0" x2="50" y2="295" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%"   stop-color="#5b21b6" stop-opacity="0.92"/>
+                    <stop offset="45%"  stop-color="#7c3aed" stop-opacity="0.88"/>
+                    <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.78"/>
                 </linearGradient>
             </defs>
+            {{-- Head --}}
+            <circle cx="50" cy="12" r="12" fill="url(#mGrad)"/>
+            {{-- Neck --}}
+            <path d="M45 24 L55 24 L54 38 L46 38 Z" fill="url(#mGrad)"/>
+            {{-- Torso + Hips --}}
+            <path d="M46 38 L54 38
+                      C63 38 81 43 87 55 C90 61 86 69 83 73
+                      C79 77 70 82 68 122 L66 152 C65 158 67 164 71 169
+                      L75 176 L25 176 L29 169 C33 164 35 158 34 152
+                      L32 122 C30 82 21 77 17 73 C14 69 10 61 13 55
+                      C19 43 37 38 46 38 Z"
+                  fill="url(#mGrad)"/>
+            {{-- Left Leg --}}
+            <path d="M25 176 C18 202 16 234 18 260 L18 290
+                      C17 294 15 295 16 295 L44 295
+                      C45 293 45 290 45 285 L45 260 C46 234 46 202 43 176 Z"
+                  fill="url(#mGrad)"/>
+            {{-- Right Leg --}}
+            <path d="M57 176 C53 202 53 234 55 260 L55 285
+                      C55 290 56 293 57 295 L84 295
+                      C85 295 83 292 82 290 L82 260 C84 234 84 202 75 176 Z"
+                  fill="url(#mGrad)"/>
+            {{-- Left Arm (static) --}}
+            <g id="bfig-larm">
+                <path d="M10 61 C4 78 2 112 3 138 C2 158 5 176 7 188
+                          C9 196 13 200 18 200 C23 200 26 196 27 188
+                          C28 176 27 158 27 136 C26 110 24 78 22 65
+                          C20 58 16 55 14 56 Z"
+                      fill="url(#mGrad)"/>
+            </g>
+            {{-- Right Upper Arm (static) --}}
+            <path d="M80 57 C78 68 76 106 77 128 C79 132 93 132 95 128
+                      C96 106 94 68 90 57 C88 53 84 52 82 53 Z"
+                  fill="url(#mGrad)"/>
+            {{-- Right Forearm + Hand (waves on hover / click) --}}
+            <g id="bfig-rarm">
+                <path d="M75 128 C74 148 73 168 75 182 C77 193 82 199 87 199
+                          C92 199 95 193 97 182 C98 168 98 148 95 128 Z"
+                      fill="url(#mGrad)"/>
+            </g>
         </svg>
-
-        {{-- ── Avatar: men.svg with theme gradient + right-arm wave ── --}}
-        {{-- Gradient applied via CSS fill:url(#hlThemeGrad) — no SVG path edits --}}
-        @php
-            $svgRaw = file_get_contents(public_path('images/men.svg'));
-            // Strip XML declaration (invalid inside HTML)
-            $svgRaw = preg_replace('/<\?xml[^?]*\?>\s*/', '', $svgRaw);
-            // Strip fixed dimensions so CSS controls sizing
-            $svgRaw = preg_replace('/\s+width="\d+(\.\d+)?"/', '', $svgRaw);
-            $svgRaw = preg_replace('/\s+height="\d+(\.\d+)?"/', '', $svgRaw);
-        @endphp
-
-        <div id="avatar-wrap">
-            {{-- Base body layer: full SVG — themed via CSS --}}
-            <div id="avatar-svg-body">{!! $svgRaw !!}</div>
-            {{-- Wave arm layer: same SVG clipped to right-arm region, rotates from shoulder --}}
-            <div id="avatar-arm-layer">{!! $svgRaw !!}</div>
-        </div>
 
         {{-- Floating health tags — 6 pills, z-index:1 --}}
         <span class="float-tag" style="top:14%;left:5%;   --tf-delay:0s;">💤 Sleep Pattern</span>
@@ -495,33 +482,22 @@
 
 <script>
 (function () {
-    'use strict';
-
-    var armLayer   = document.getElementById('avatar-arm-layer');
-    var avatarWrap = document.getElementById('avatar-wrap');
-    if (!armLayer || !avatarWrap) return;
-
-    /**
-     * Trigger one right-arm wave cycle.
-     * Removes .waving, forces reflow to restart the animation, re-adds it.
-     * animationend removes the class so the wave is always re-triggerable.
-     */
+    var panel = document.querySelector('.left-panel');
+    var arm   = document.getElementById('bfig-rarm');
     function triggerWave() {
-        armLayer.classList.remove('waving');
-        void armLayer.offsetWidth;          /* reflow — restarts animation */
-        armLayer.classList.add('waving');
+        if (!arm) return;
+        arm.classList.remove('waving');
+        void arm.offsetWidth;
+        arm.classList.add('waving');
+        arm.addEventListener('animationend', function done() {
+            arm.classList.remove('waving');
+            arm.removeEventListener('animationend', done);
+        });
     }
-
-    armLayer.addEventListener('animationend', function () {
-        armLayer.classList.remove('waving');
-    });
-
-    /* Hover: wave once when cursor enters the avatar */
-    avatarWrap.addEventListener('mouseenter', triggerWave);
-
-    /* Click: wave once on any click of the avatar */
-    avatarWrap.addEventListener('click', triggerWave);
-
+    if (panel) {
+        panel.addEventListener('click', triggerWave);
+        panel.addEventListener('mouseenter', triggerWave);
+    }
 })();
 </script>
 </body>

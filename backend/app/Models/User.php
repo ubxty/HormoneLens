@@ -94,4 +94,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(RagQueryLog::class);
     }
+
+    public function simulationResult(): HasOne
+    {
+        return $this->hasOne(SimulationResult::class)->latestOfMany();
+    }
 }
