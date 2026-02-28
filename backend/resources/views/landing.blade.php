@@ -452,6 +452,42 @@
             bottom: -40px; right: 5%;
             animation: obParticleDrift 11s ease-in-out 2s infinite reverse;
         }
+        /* ── Hero typing heading ── */
+        .hero-type-wrap {
+            min-height: 2.4em;   /* two lines at line-height 1.1 → no layout shift */
+            display: block;
+            line-height: 1.1;
+        }
+        .hero-typed-text {
+            display: block;
+            min-height: 1.1em;
+            background: linear-gradient(110deg, #7c3aed 0%, #6366f1 40%, #a21caf 80%, #ec4899 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            filter: drop-shadow(0 0 16px rgba(124,58,237,0.22));
+            animation: heroGradientShift 5s linear infinite;
+        }
+        @keyframes heroGradientShift {
+            0%   { background-position: 0%   center; }
+            100% { background-position: 200% center; }
+        }
+        @keyframes cursorBlink {
+            0%,100% { opacity: 1; }
+            50%      { opacity: 0; }
+        }
+        .hero-cursor {
+            display: inline-block;
+            width: 3px;
+            height: 0.82em;
+            background: #7c3aed;
+            margin-left: 2px;
+            vertical-align: middle;
+            border-radius: 2px;
+            animation: cursorBlink 0.75s step-end infinite;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-800 antialiased">
@@ -502,9 +538,10 @@
             <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-brand-50 text-brand-700 mb-6 border border-brand-100">
                 🧬 AI-Powered Metabolic Simulation Engine
             </span>
-            <h1 class="text-4xl md:text-5xl lg:text-6xl leading-tight font-extrabold tracking-tight">
-                Simulate the <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-purple-600 to-fuchsia-500">Hormonal Impact</span>
-                of Your Lifestyle Before It Affects Your Health
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight hero-type-wrap"
+                aria-label="See Your Health Before You Live It!">
+                <span id="heroLine1" class="hero-typed-text"></span>
+                <span id="heroLine2" class="hero-typed-text"><span id="heroCursor" class="hero-cursor" aria-hidden="true"></span></span>
             </h1>
             <p class="mt-5 text-lg text-gray-500 max-w-xl leading-relaxed">
                 Run AI-powered simulations to predict how sleep, diet, stress, and physical activity influence your risk of PCOS, Type 2 Diabetes, insulin resistance, and metabolic imbalance.
@@ -625,6 +662,68 @@
 {{-- ═══════════ Init Script ═══════════ --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+
+    /* ── Hero typing animation ──
+       Line 1: types once ("See Your Health")
+       Line 2: types once, then loops forever ("Before You Live It!") */
+    (function () {
+        const line1El  = document.getElementById('heroLine1');
+        const line2El  = document.getElementById('heroLine2');
+        const cursor   = document.getElementById('heroCursor');
+        if (!line1El || !line2El || !cursor) return;
+
+        const LINE1  = 'See Your Health';
+        const LINE2  = 'Before You Live It!';
+        const SPEED  = 90;   // ms per character
+        const PAUSE  = 1500; // ms before line2 re-types
+
+        /* Move cursor to end of an element (append as last child) */
+        function attachCursor(el) {
+            el.appendChild(cursor);
+        }
+
+        /* Type text into el, call done() when finished */
+        function typeInto(el, text, done) {
+            let i = 0;
+            attachCursor(el);
+            (function tick() {
+                if (i < text.length) {
+                    // Insert text node before cursor
+                    const tn = document.createTextNode(text[i++]);
+                    el.insertBefore(tn, cursor);
+                    setTimeout(tick, SPEED);
+                } else {
+                    done && done();
+                }
+            })();
+        }
+
+        /* Clear all text nodes from el, leave cursor intact */
+        function clearText(el) {
+            Array.from(el.childNodes).forEach(n => {
+                if (n !== cursor) el.removeChild(n);
+            });
+        }
+
+        /* Loop: type line2, pause, clear, repeat */
+        function loopLine2() {
+            clearText(line2El);
+            attachCursor(line2El);
+            typeInto(line2El, LINE2, function () {
+                setTimeout(function () {
+                    clearText(line2El);
+                    loopLine2();
+                }, PAUSE);
+            });
+        }
+
+        /* Phase 1: type line1 once, then start loop */
+        setTimeout(function () {
+            typeInto(line1El, LINE1, function () {
+                setTimeout(loopLine2, 300);
+            });
+        }, 350);
+    })();
 
     /* ── Navbar entrance (0ms) ── */
     requestAnimationFrame(() => {
