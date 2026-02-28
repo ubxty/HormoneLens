@@ -363,7 +363,6 @@
                     </div>
                     <h1 class="text-lg font-bold text-white">{{ $disease->icon }} {{ $disease->name }} Health Indicators</h1>
                 </div>
-                <p class="text-white/60 text-xs hidden sm:block max-w-[200px]">{{ $disease->description ?? 'Enter your health data for AI-powered risk analysis.' }}</p>
             </div>
         </div>
 
