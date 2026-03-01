@@ -192,6 +192,9 @@ class GameScene extends Phaser.Scene {
         };
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
+        // ESC → exit game back to MenuScene
+        this.input.keyboard.once('keydown-ESC', () => this._exitToMenu());
+
         // Mobile: pointer drag to move, auto fire
         this.pointerDown = false;
         this.pointerTarget = { x: this.player.x, y: this.player.y };
@@ -210,6 +213,18 @@ class GameScene extends Phaser.Scene {
         });
         this.input.on('pointerup', () => {
             this.pointerDown = false;
+        });
+    }
+
+    /* ── Exit to Menu ────────────────────────────── */
+    _exitToMenu() {
+        // Notify parent page so it can unlock scroll
+        try { window.parent.postMessage({ type: 'GAME_EXIT' }, '*'); } catch (e) {}
+        this.cameras.main.fadeOut(300, 4, 5, 24);
+        this.time.delayedCall(300, () => {
+            this.scene.stop('UIScene');
+            this.scene.stop('GameScene');
+            this.scene.start('MenuScene');
         });
     }
 

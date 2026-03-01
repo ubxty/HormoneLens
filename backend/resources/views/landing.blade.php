@@ -873,7 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </p>
         </div>
 
-        <div class="rounded-2xl overflow-hidden shadow-[0_25px_60px_-12px_rgba(0,0,0,0.15)] border border-purple-100/60 ring-1 ring-black/[0.03]" style="background: linear-gradient(135deg, #040518 0%, #0A0C2A 100%);">
+        <div id="game-frame-wrap" class="rounded-2xl overflow-hidden shadow-[0_25px_60px_-12px_rgba(0,0,0,0.15)] border border-purple-100/60 ring-1 ring-black/[0.03]" style="background: linear-gradient(135deg, #040518 0%, #0A0C2A 100%);">
             <iframe
                 src="{{ asset('sleep-catcher/index.html') }}"
                 title="Hormone Defense — Defend Your Hormonal Balance"
@@ -889,10 +889,67 @@ document.addEventListener('DOMContentLoaded', () => {
             <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">Arrow keys</kbd> /
             <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">WASD</kbd> to move &bull;
             <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">Space</kbd> to shoot &bull;
+            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">ESC</kbd> to exit &bull;
             Touch to move on mobile &bull; 60-second mission
         </p>
     </div>
 </section>
+
+<script>
+(function () {
+    var gameActive = false;
+    var scrollKeys = [32, 37, 38, 39, 40]; // Space, arrows
+
+    function preventScroll(e) {
+        if (scrollKeys.includes(e.keyCode)) { e.preventDefault(); }
+    }
+
+    // Listen for messages from the game iframe
+    window.addEventListener('message', function (ev) {
+        var d = ev.data;
+        if (!d || typeof d.type !== 'string') return;
+
+        if (d.type === 'GAME_FOCUS') {
+            gameActive = true;
+            document.body.style.overflow = 'hidden';
+            window.addEventListener('keydown', preventScroll, { passive: false });
+        }
+        if (d.type === 'GAME_BLUR' || d.type === 'GAME_EXIT') {
+            gameActive = false;
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', preventScroll);
+        }
+    });
+
+    // Clicking inside iframe wrapper → lock scroll; clicking outside → unlock
+    var wrap = document.getElementById('game-frame-wrap');
+    if (wrap) {
+        wrap.addEventListener('click', function () {
+            gameActive = true;
+            document.body.style.overflow = 'hidden';
+            window.addEventListener('keydown', preventScroll, { passive: false });
+        });
+    }
+    document.addEventListener('click', function (e) {
+        if (wrap && !wrap.contains(e.target)) {
+            gameActive = false;
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', preventScroll);
+        }
+    });
+
+    // ESC from parent page while game is active → scroll to section / unlock
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && gameActive) {
+            gameActive = false;
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', preventScroll);
+            // move focus away from iframe
+            if (wrap) { var btn = wrap.querySelector('iframe'); if (btn) btn.blur(); }
+        }
+    });
+})();
+</script>
 
 {{-- ═══════════ CAPABILITIES ═══════════ --}}
 <section id="features" class="py-20 bg-gray-50 overflow-hidden">

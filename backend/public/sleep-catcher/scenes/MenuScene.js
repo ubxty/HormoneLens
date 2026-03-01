@@ -156,7 +156,7 @@ class MenuScene extends Phaser.Scene {
         const isMob = ResponsiveScale.isMobile();
         const ctrlText = isMob
             ? 'Drag to move  \u2022  Auto-fire'
-            : 'Arrow / WASD  \u2022  Space to fire';
+            : 'Arrow / WASD  \u2022  Space to fire  \u2022  ESC to exit';
         this.add.text(cx, yPos, ctrlText, {
             fontFamily: font, fontSize: Math.round(12 * s) + 'px',
             color: '#97A8C8'
