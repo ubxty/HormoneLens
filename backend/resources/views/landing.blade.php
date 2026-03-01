@@ -665,64 +665,96 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ── Hero typing animation ──
        Line 1: types once ("See Your Health")
-       Line 2: types once, then loops forever ("Before You Live It!") */
+       Line 2: fade-in → type → pause 2s → fade-out → next sentence → loop ∞ */
     (function () {
-        const line1El  = document.getElementById('heroLine1');
-        const line2El  = document.getElementById('heroLine2');
-        const cursor   = document.getElementById('heroCursor');
+        const line1El = document.getElementById('heroLine1');
+        const line2El = document.getElementById('heroLine2');
+        const cursor  = document.getElementById('heroCursor');
         if (!line1El || !line2El || !cursor) return;
 
-        const LINE1  = 'See Your Health';
-        const LINE2  = 'Before You Live It!';
-        const SPEED  = 90;   // ms per character
-        const PAUSE  = 1500; // ms before line2 re-types
+        const LINE1 = 'Stay Ahead Before';
+        const SENTENCES = [
+            'Your PCOS Symptoms Worsen',
+            'Insulin Resistance Begins',
+            'Metabolic Damage Happens',
+            'Hormonal Imbalance Starts',
+        ];
+        const SPEED    = 55;   // ms per character
+        const PAUSE_MS = 2000; // ms to hold full sentence
+        const FADE_MS  = 550;  // ms for fade transition
 
-        /* Move cursor to end of an element (append as last child) */
-        function attachCursor(el) {
-            el.appendChild(cursor);
+        let sentenceIdx = 0;
+
+        /*
+         * Reliable opacity fade.
+         * KEY: disable transition → set start opacity → force browser layout
+         * flush (getBoundingClientRect) → re-enable transition → set end opacity.
+         * Without the flush the browser batches both style changes together and
+         * never actually transitions — causing the "instant disappear" bug.
+         */
+        function fadeEl(el, from, to, duration, done) {
+            el.style.transition = 'none';
+            el.style.opacity    = String(from);
+            el.getBoundingClientRect(); // force layout flush — commits `from` opacity
+            el.style.transition = 'opacity ' + duration + 'ms ease';
+            el.style.opacity    = String(to);
+            setTimeout(done, duration + 20);
         }
 
-        /* Type text into el, call done() when finished */
-        function typeInto(el, text, done) {
-            let i = 0;
-            attachCursor(el);
-            (function tick() {
-                if (i < text.length) {
-                    // Insert text node before cursor
-                    const tn = document.createTextNode(text[i++]);
-                    el.insertBefore(tn, cursor);
-                    setTimeout(tick, SPEED);
-                } else {
-                    done && done();
-                }
-            })();
-        }
+        function attachCursor(el) { el.appendChild(cursor); }
 
-        /* Clear all text nodes from el, leave cursor intact */
         function clearText(el) {
-            Array.from(el.childNodes).forEach(n => {
+            Array.from(el.childNodes).forEach(function (n) {
                 if (n !== cursor) el.removeChild(n);
             });
         }
 
-        /* Loop: type line2, pause, clear, repeat */
-        function loopLine2() {
+        function typeInto(el, text, done) {
+            var i = 0;
+            attachCursor(el);
+            (function tick() {
+                if (i < text.length) {
+                    el.insertBefore(document.createTextNode(text[i++]), cursor);
+                    setTimeout(tick, SPEED);
+                } else {
+                    if (done) done();
+                }
+            })();
+        }
+
+        function runSentence() {
+            var text = SENTENCES[sentenceIdx];
+            sentenceIdx = (sentenceIdx + 1) % SENTENCES.length;
+
+            // Start hidden & cleared
             clearText(line2El);
             attachCursor(line2El);
-            typeInto(line2El, LINE2, function () {
-                setTimeout(function () {
-                    clearText(line2El);
-                    loopLine2();
-                }, PAUSE);
+            line2El.style.transition = 'none';
+            line2El.style.opacity    = '0';
+            line2El.getBoundingClientRect();
+
+            // 1. Fade in
+            fadeEl(line2El, 0, 1, FADE_MS, function () {
+                // 2. Type letter-by-letter
+                typeInto(line2El, text, function () {
+                    // 3. Pause
+                    setTimeout(function () {
+                        // 4. Fade out
+                        fadeEl(line2El, 1, 0, FADE_MS, function () {
+                            // 5. Next sentence
+                            runSentence();
+                        });
+                    }, PAUSE_MS);
+                });
             });
         }
 
-        /* Phase 1: type line1 once, then start loop */
+        // Phase 1: type Line 1 once, then kick off the loop
         setTimeout(function () {
             typeInto(line1El, LINE1, function () {
-                setTimeout(loopLine2, 300);
+                setTimeout(runSentence, 350);
             });
-        }, 350);
+        }, 400);
     })();
 
     /* ── Navbar entrance (0ms) ── */

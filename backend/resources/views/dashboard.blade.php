@@ -121,6 +121,24 @@
 .anim-d7 { animation-delay: 0.7s !important; }
 .anim-d8 { animation-delay: 0.8s !important; }
 
+/* ── Dashboard right panel: override dash-bg overflow so sticky works ── */
+.dash-bg { overflow: visible !important; }
+.dash-particles-wrap { position:absolute;inset:0;overflow:clip;pointer-events:none;z-index:0; }
+
+/* ── Twin body panel ── */
+.dash-twin-panel { height:calc(100vh - 3.5rem); }
+
+/* ── Body viz shared animations ── */
+@keyframes dtBodyIn{from{opacity:0;transform:translateY(30px) scale(.78)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes dtTagFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes dtNodePulse{0%,100%{opacity:.3;box-shadow:0 0 0 0 rgba(91,33,182,.45)}50%{opacity:1;box-shadow:0 0 0 5px rgba(91,33,182,0)}}
+@keyframes dtLineDash{to{stroke-dashoffset:-16}}
+.dt-body-anim{animation:dtBodyIn 1.1s cubic-bezier(.4,0,.2,1) both}
+.dt-hv-glow{position:absolute;border-radius:50%;filter:blur(26px);pointer-events:none;transform:translateX(-50%);transition:opacity .7s ease}
+.dt-node{position:absolute;width:6px;height:6px;border-radius:50%;background:#5b21b6;animation:dtNodePulse 2s ease-in-out infinite;transform:translate(-50%,-50%)}
+.dt-hv-tag{background:rgba(255,255,255,.93);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(139,92,246,.22);border-radius:8px;padding:.22rem .48rem;box-shadow:0 3px 10px rgba(139,92,246,.1);animation:dtTagFloat 3.5s ease-in-out infinite;width:70px}
+.dt-conn-line{stroke-dasharray:5 3;animation:dtLineDash 1.5s linear infinite}
+
 /* ── Progress bar animation ── */
 .progress-track {
     height: 8px;
@@ -244,13 +262,36 @@
 </style>
 @endpush
 
-@section('content')
-<div class="dash-bg -m-4 sm:-m-6 p-4 sm:p-6">
+@php
+$dashTwinSvg = '';
+$_dsvgPath = public_path('images/men.svg');
+if (file_exists($_dsvgPath)) {
+    $_dsvgRaw = file_get_contents($_dsvgPath);
+    $_dsvgRaw = preg_replace('/<\?xml[^?]*\?>\s*/', '', $_dsvgRaw);
+    $_dsvgRaw = preg_replace('/fill="#FEFEFE"/', 'fill="none"', $_dsvgRaw, 1);
+    $dashTwinSvg = preg_replace(
+        '/<svg\b[^>]*>/',
+        '<svg viewBox="182 8 118 335" preserveAspectRatio="xMidYMid meet" style="width:120px;height:auto;display:block;position:relative;z-index:2;pointer-events:none">',
+        $_dsvgRaw, 1
+    );
+}
+@endphp
 
-    {{-- Ambient particles --}}
-    <div class="dash-particle dash-particle-1"></div>
-    <div class="dash-particle dash-particle-2"></div>
-    <div class="dash-particle dash-particle-3"></div>
+@section('content')
+<div class="dash-bg -m-4 sm:-m-6">
+
+    {{-- Ambient particles (in own overflow:clip wrapper so sticky children still work) --}}
+    <div class="dash-particles-wrap">
+        <div class="dash-particle dash-particle-1"></div>
+        <div class="dash-particle dash-particle-2"></div>
+        <div class="dash-particle dash-particle-3"></div>
+    </div>
+
+    {{-- ── Two-column layout ── --}}
+    <div class="flex flex-col lg:flex-row relative z-10">
+
+    {{-- LEFT: main scrollable content column --}}
+    <div class="flex-1 min-w-0 p-4 sm:p-6">
 
     {{-- ══════════════════════════════════════════════
          Section 1: Welcome Panel
@@ -436,7 +477,159 @@
     </div>
     @endif
 
-</div>
+    </div>{{-- /left content column --}}
+
+    {{-- ─────────────────────────────────────────────────────────────
+         RIGHT: Sticky Digital Twin Body Panel (full-height)
+         ───────────────────────────────────────────────────────────── --}}
+    <div x-data="dashBodyViz()" x-init="initBodyViz()"
+         class="hidden lg:flex lg:flex-col w-80 xl:w-[340px] shrink-0 sticky top-0 z-10 dash-twin-panel"
+         style="background:rgba(255,255,255,.22);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-left:1px solid rgba(255,255,255,.32)">
+
+        {{-- Panel header --}}
+        <div class="shrink-0 px-4 py-3 border-b border-white/25 flex items-center justify-between"
+             style="background:linear-gradient(135deg,rgba(95,111,255,.07),rgba(194,77,255,.05))">
+            <div>
+                <div class="flex items-center gap-1.5 mb-0.5">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 status-pulse"></div>
+                    <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Digital Twin</span>
+                </div>
+                <p class="text-xs font-bold gradient-text"
+                   x-text="hvTwin ? '🧬 Model Active' : '🧬 Not Generated Yet'"></p>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] text-gray-500 font-semibold"
+                   x-show="hvHealthProfile" x-cloak
+                   x-text="'BMI '+hvBmiVal().toFixed(1)+' · '+hvBmiLabel()"></p>
+                <a href="{{ route('digital-twin') }}"
+                   class="text-[9px] font-bold uppercase tracking-wide hover:underline"
+                   style="color:#c24dff">Full View →</a>
+            </div>
+        </div>
+
+        {{-- Body visualization area --}}
+        <div class="flex-1 relative overflow-hidden">
+
+            {{-- Risk zone glows --}}
+            <div class="dt-hv-glow" style="width:82px;height:65px;background:rgba(239,68,68,.6);top:12%;left:50%"
+                 :style="'opacity:'+(hvStressRisk()?0.85:0)"></div>
+            <div class="dt-hv-glow" style="width:94px;height:72px;background:rgba(59,130,246,.55);top:31%;left:50%"
+                 :style="'opacity:'+(hvSleepRisk()?0.85:0)"></div>
+            <div class="dt-hv-glow" style="width:100px;height:76px;background:rgba(168,85,247,.55);top:47%;left:50%"
+                 :style="'opacity:'+(hvMetabolicRisk()?0.85:0)"></div>
+            <div class="dt-hv-glow" style="width:130px;height:60px;background:rgba(249,115,22,.45);top:29%;left:50%"
+                 :style="'opacity:'+(hvInsulinRisk()?0.85:0)"></div>
+
+            {{-- SVG animated connector lines --}}
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 320 520"
+                 preserveAspectRatio="xMidYMid meet" style="pointer-events:none;z-index:1">
+                <path d="M 74,86 C 108,86 118,80 128,80"
+                      fill="none" stroke="#ef444438" stroke-width="1.5" stroke-linecap="round" class="dt-conn-line"/>
+                <path d="M 74,175 C 108,175 118,170 128,170"
+                      fill="none" stroke="#3b82f638" stroke-width="1.5" stroke-linecap="round" class="dt-conn-line" style="animation-delay:.3s"/>
+                <path d="M 246,148 C 212,148 202,143 192,143"
+                      fill="none" stroke="#c24dff38" stroke-width="1.5" stroke-linecap="round" class="dt-conn-line" style="animation-delay:.15s"/>
+                <path d="M 246,248 C 212,248 202,243 192,243"
+                      fill="none" stroke="#10b98138" stroke-width="1.5" stroke-linecap="round" class="dt-conn-line" style="animation-delay:.45s"/>
+            </svg>
+
+            {{-- Body figure (centered, BMI-scaled) --}}
+            <div class="absolute inset-0 flex items-center justify-center" style="z-index:2">
+                <div class="relative dt-body-anim"
+                     :style="'transform:scaleX('+hvBmiScaleX()+')'">
+
+                    {{-- Metabolic nodes --}}
+                    <div class="dt-node" style="left:50%;top:15%;animation-delay:0s"></div>
+                    <div class="dt-node" style="left:50%;top:32%;animation-delay:.4s"></div>
+                    <div class="dt-node" style="left:50%;top:50%;animation-delay:.8s"></div>
+                    <div class="dt-node" style="left:50%;top:67%;animation-delay:1.2s"></div>
+                    <div class="dt-node" style="left:21%;top:35%;animation-delay:.2s"></div>
+                    <div class="dt-node" style="left:79%;top:35%;animation-delay:.6s"></div>
+
+                    {!! $dashTwinSvg !!}
+                </div>
+            </div>
+
+            {{-- Stat tags — left --}}
+            <div class="absolute z-10" style="left:4px;top:19%">
+                <div class="dt-hv-tag" style="animation-delay:0s">
+                    <p class="text-[7px] text-gray-400 font-bold tracking-wide">😤 STRESS</p>
+                    <p class="text-xs font-black gradient-text leading-tight" x-text="(hvTwin?.stress_score||0).toFixed(1)"></p>
+                    <div class="h-0.5 mt-1 rounded-full" style="background:linear-gradient(90deg,#f59e0b,#ef4444)"
+                         :style="'width:'+(hvTwin?.stress_score||0)*10+'%'"></div>
+                </div>
+            </div>
+            <div class="absolute z-10" style="left:4px;top:37%">
+                <div class="dt-hv-tag" style="animation-delay:.6s">
+                    <p class="text-[7px] text-gray-400 font-bold tracking-wide">😴 SLEEP</p>
+                    <p class="text-xs font-black gradient-text leading-tight" x-text="(hvTwin?.sleep_score||0).toFixed(1)"></p>
+                    <div class="h-0.5 mt-1 rounded-full" style="background:linear-gradient(90deg,#3b82f6,#8b5cf6)"
+                         :style="'width:'+(hvTwin?.sleep_score||0)*10+'%'"></div>
+                </div>
+            </div>
+
+            {{-- Stat tags — right --}}
+            <div class="absolute z-10" style="right:4px;top:28%">
+                <div class="dt-hv-tag" style="animation-delay:.3s">
+                    <p class="text-[7px] text-gray-400 font-bold tracking-wide">🩸 INSULIN</p>
+                    <p class="text-xs font-black gradient-text leading-tight" x-text="(hvTwin?.insulin_resistance_score||0).toFixed(1)"></p>
+                    <div class="h-0.5 mt-1 rounded-full" style="background:linear-gradient(90deg,#c24dff,#ff6ec7)"
+                         :style="'width:'+(hvTwin?.insulin_resistance_score||0)*10+'%'"></div>
+                </div>
+            </div>
+            <div class="absolute z-10" style="right:4px;top:47%">
+                <div class="dt-hv-tag" style="animation-delay:.9s">
+                    <p class="text-[7px] text-gray-400 font-bold tracking-wide">🥗 DIET</p>
+                    <p class="text-xs font-black gradient-text leading-tight" x-text="(hvTwin?.diet_score||0).toFixed(1)"></p>
+                    <div class="h-0.5 mt-1 rounded-full" style="background:linear-gradient(90deg,#10b981,#06b6d4)"
+                         :style="'width:'+(hvTwin?.diet_score||0)*10+'%'"></div>
+                </div>
+            </div>
+
+            {{-- No-twin overlay CTA --}}
+            <div x-show="!hvTwin" x-cloak
+                 class="absolute inset-0 flex flex-col items-center justify-center z-20 text-center px-6"
+                 style="background:rgba(255,255,255,.55);backdrop-filter:blur(4px)">
+                <div class="text-4xl mb-2">🧬</div>
+                <p class="text-xs font-semibold text-gray-600 mb-3">Generate your Digital Twin to activate the body model</p>
+                <a href="{{ route('digital-twin') }}"
+                   class="px-4 py-1.5 text-xs font-bold text-white rounded-xl shadow"
+                   style="background:linear-gradient(135deg,#5f6fff,#c24dff)">Generate Twin →</a>
+            </div>
+        </div>
+
+        {{-- Score bars --}}
+        <div class="shrink-0 px-4 pb-2 pt-2 border-t border-white/25 space-y-1.5" x-show="hvTwin" x-cloak>
+            <template x-for="s in hvScoreCards" :key="s.key">
+                <div class="flex items-center gap-2">
+                    <span class="text-[8px] text-gray-400 font-bold uppercase w-14 shrink-0 tracking-wide" x-text="s.short"></span>
+                    <div class="flex-1 h-1.5 rounded-full" style="background:rgba(0,0,0,0.07)">
+                        <div class="h-1.5 rounded-full transition-all duration-700"
+                             :style="'width:'+(hvTwin[s.key]||0)*10+'%;background:linear-gradient(90deg,'+s.from+','+s.to+')'"></div>
+                    </div>
+                    <span class="text-[9px] font-black gradient-text w-7 text-right shrink-0"
+                          x-text="(hvTwin[s.key]||0).toFixed(1)"></span>
+                </div>
+            </template>
+        </div>
+
+        {{-- BMI scale bar --}}
+        <div class="shrink-0 px-4 pb-3 pt-2 border-t border-white/20" x-show="hvHealthProfile" x-cloak>
+            <div class="relative h-2 rounded-full overflow-hidden mb-1.5"
+                 style="background:linear-gradient(90deg,#93c5fd 0%,#34d399 28%,#fbbf24 62%,#f87171 100%)">
+                <div class="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-purple-600 shadow -translate-x-1/2 transition-all duration-700"
+                     :style="'left:'+hvBmiPercent()+'%'"></div>
+            </div>
+            <div class="flex justify-between text-[8px] text-gray-400 font-semibold uppercase tracking-wide mb-0.5">
+                <span>Under</span><span>Normal</span><span>Over</span><span>Obese</span>
+            </div>
+            <p class="text-[10px] text-center font-bold gradient-text"
+               x-text="hvBmiLabel()+' · BMI '+hvBmiVal().toFixed(1)"></p>
+        </div>
+    </div>{{-- /right panel --}}
+
+    </div>{{-- /flex layout --}}
+</div>{{-- /dash-bg --}}
 @endsection
 
 @push('scripts')
@@ -649,5 +842,41 @@ document.addEventListener('DOMContentLoaded', function () {
     @endif
 
 });
+</script>
+<script>
+function dashBodyViz() {
+    return {
+        hvTwin: null,
+        hvHealthProfile: null,
+        hvScoreCards: [
+            {key:'metabolic_health_score',short:'Metabolic',from:'#5f6fff',to:'#c24dff'},
+            {key:'insulin_resistance_score',short:'Insulin',from:'#c24dff',to:'#ff6ec7'},
+            {key:'sleep_score',short:'Sleep',from:'#3b82f6',to:'#8b5cf6'},
+            {key:'stress_score',short:'Stress',from:'#f59e0b',to:'#ef4444'},
+            {key:'diet_score',short:'Diet',from:'#10b981',to:'#06b6d4'},
+        ],
+        hvBmiVal(){const hp=this.hvHealthProfile;if(!hp||!hp.height||!hp.weight)return 22;return hp.weight/Math.pow(hp.height/100,2)},
+        hvBmiLabel(){const b=this.hvBmiVal();return b<18.5?'Underweight':b<25?'Normal':b<30?'Overweight':'Obese'},
+        hvBmiScaleX(){const b=this.hvBmiVal();return b<18.5?0.82:b<25?1.0:b<30?1.12:1.28},
+        hvBmiPercent(){const b=Math.min(Math.max(this.hvBmiVal(),14),45);return Math.round((b-14)/31*100)},
+        hvStressRisk(){return(this.hvTwin?.stress_score||0)>=6},
+        hvSleepRisk(){return(this.hvTwin?.sleep_score||0)>=6},
+        hvMetabolicRisk(){return(this.hvTwin?.metabolic_health_score||0)>=5},
+        hvInsulinRisk(){return(this.hvTwin?.insulin_resistance_score||0)>=5},
+        async initBodyViz(){
+            const _h = {'Accept':'application/json','X-CSRF-TOKEN':(document.querySelector('meta[name=csrf-token]')||{}).content||''};
+            const _o = {headers:_h,credentials:'same-origin'};
+            try {
+                const [tr,hr] = await Promise.all([
+                    fetch('/api/digital-twin/active',_o),
+                    fetch('/api/health-profile',_o)
+                ]);
+                const td=await tr.json(), hd=await hr.json();
+                if(td.success&&td.data) this.hvTwin=td.data;
+                if(hd.success&&hd.data) this.hvHealthProfile=hd.data;
+            } catch(e){}
+        }
+    };
+}
 </script>
 @endpush

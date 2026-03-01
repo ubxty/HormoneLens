@@ -31,8 +31,35 @@
 .gl-ring{width:80px;height:80px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center}
 .gl-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .gl-table-glass{background:rgba(255,255,255,.45);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.3);border-radius:16px;overflow:hidden}
+
+/* ─── Digital Twin Body Visualization ─── */
+@keyframes dtBodyIn{from{opacity:0;transform:translateY(36px) scale(.75)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes dtTagFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes dtNodePulse{0%,100%{opacity:.35;box-shadow:0 0 0 0 rgba(91,33,182,.4)}50%{opacity:1;box-shadow:0 0 0 5px rgba(91,33,182,0)}}
+@keyframes dtLineDash{to{stroke-dashoffset:-16}}
+.dt-body-anim{animation:dtBodyIn 1s cubic-bezier(.4,0,.2,1) both}
+.dt-glow{position:absolute;border-radius:50%;filter:blur(22px);pointer-events:none;transform:translateX(-50%);transition:opacity .6s ease}
+.dt-node{position:absolute;width:7px;height:7px;border-radius:50%;background:#5b21b6;animation:dtNodePulse 2s ease-in-out infinite;transform:translate(-50%,-50%)}
+.dt-tag{position:absolute;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:.3rem .65rem;box-shadow:0 4px 14px rgba(139,92,246,.12);animation:dtTagFloat 3.5s ease-in-out infinite;width:100px;z-index:3}
+.dt-conn-line{stroke-dasharray:5 3;animation:dtLineDash 1.5s linear infinite}
 </style>
 @endpush
+
+@php
+$dtBodySvg = '';
+$_svgSrc = public_path('images/men.svg');
+if (file_exists($_svgSrc)) {
+    $_raw = file_get_contents($_svgSrc);
+    // Strip white background fill so glassmorphism shows through
+    $_raw = preg_replace('/fill="#FEFEFE"/', 'fill="none"', $_raw, 1);
+    $dtBodySvg = preg_replace(
+        '/<svg\b[^>]*>/',
+        '<svg viewBox="183 0 96 350" preserveAspectRatio="xMidYMid meet" style="width:90px;height:auto;display:block;position:relative;z-index:2;pointer-events:none">',
+        $_raw,
+        1
+    );
+}
+@endphp
 
 @section('content')
 <div x-data="digitalTwinPage()" x-init="init()" class="gl-bg -m-4 sm:-m-6 p-4 sm:p-6">
@@ -76,6 +103,148 @@
 
         {{-- Twin display --}}
         <div x-show="!loading && twin" x-cloak>
+
+            {{-- ═══ Body Visualization ═══ --}}
+            <div class="gl-card p-5 mb-4 gl-a gl-d1" data-gl>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xs font-bold uppercase tracking-widest gl-grad-text">🫀 Body Visualization</h2>
+                    <span class="text-[11px] text-gray-500 font-medium"
+                          x-text="healthProfile ? 'BMI ' + bmiVal().toFixed(1) + ' · ' + bmiLabel() : 'Complete health profile for BMI'"></span>
+                </div>
+
+                {{-- Desktop viz frame (hidden on xs) --}}
+                <div class="hidden sm:block relative mx-auto" style="height:340px;max-width:500px">
+
+                    {{-- SVG connecting lines --}}
+                    <svg class="absolute inset-0 w-full h-full" viewBox="0 0 500 340"
+                         preserveAspectRatio="xMidYMid meet" style="z-index:1;pointer-events:none">
+                        {{-- Stress → Head --}}
+                        <path d="M103,40 C150,40 165,36 213,36"
+                              fill="none" stroke="#ef444455" stroke-width="1.5" stroke-linecap="round"
+                              class="dt-conn-line"/>
+                        {{-- Sleep → Chest --}}
+                        <path d="M103,135 C150,135 165,130 212,130"
+                              fill="none" stroke="#3b82f655" stroke-width="1.5" stroke-linecap="round"
+                              class="dt-conn-line" style="animation-delay:.3s"/>
+                        {{-- Metabolic → Abdomen --}}
+                        <path d="M103,215 C150,215 165,200 212,200"
+                              fill="none" stroke="#a855f755" stroke-width="1.5" stroke-linecap="round"
+                              class="dt-conn-line" style="animation-delay:.6s"/>
+                        {{-- Insulin → Arm R --}}
+                        <path d="M397,118 C350,118 335,128 290,128"
+                              fill="none" stroke="#f9731655" stroke-width="1.5" stroke-linecap="round"
+                              class="dt-conn-line" style="animation-delay:.15s"/>
+                        {{-- Diet → Abdomen R --}}
+                        <path d="M397,218 C350,218 335,202 290,202"
+                              fill="none" stroke="#10b98155" stroke-width="1.5" stroke-linecap="round"
+                              class="dt-conn-line" style="animation-delay:.45s"/>
+                    </svg>
+
+                    {{-- Body figure --}}
+                    <div class="absolute dt-body-anim"
+                         style="left:50%;top:0;transform-origin:top center;overflow:visible"
+                         :style="'transform:translateX(-50%) scaleX('+bmiScaleX()+')'">
+
+                        {{-- Risk zone glows --}}
+                        <div class="dt-glow" style="width:72px;height:58px;background:rgba(239,68,68,.55);left:50%;top:4px"
+                             :style="'opacity:'+(stressRisk()?1:0)"></div>
+                        <div class="dt-glow" style="width:82px;height:62px;background:rgba(59,130,246,.55);left:50%;top:94px"
+                             :style="'opacity:'+(sleepRisk()?1:0)"></div>
+                        <div class="dt-glow" style="width:88px;height:66px;background:rgba(168,85,247,.55);left:50%;top:158px"
+                             :style="'opacity:'+(metabolicRisk()?1:0)"></div>
+                        <div class="dt-glow" style="width:110px;height:56px;background:rgba(249,115,22,.45);left:50%;top:110px"
+                             :style="'opacity:'+(insulinRisk()?1:0)"></div>
+
+                        {{-- Body SVG (cropped to figure) --}}
+                        {!! $dtBodySvg !!}
+
+                        {{-- Metabolic nodes --}}
+                        <div class="dt-node" style="left:50%;top:20%;animation-delay:0s"></div>
+                        <div class="dt-node" style="left:50%;top:38%;animation-delay:.45s"></div>
+                        <div class="dt-node" style="left:50%;top:56%;animation-delay:.9s"></div>
+                        <div class="dt-node" style="left:22%;top:37%;animation-delay:.25s"></div>
+                        <div class="dt-node" style="left:78%;top:37%;animation-delay:.7s"></div>
+                        <div class="dt-node" style="left:50%;top:70%;animation-delay:1.15s"></div>
+                    </div>
+
+                    {{-- Stat tags — left column --}}
+                    <div class="dt-tag" style="left:0;top:20px;animation-delay:0s">
+                        <p class="text-[9px] text-gray-400 mb-0.5 font-medium">😤 Stress</p>
+                        <p class="text-sm font-black gl-grad-text" x-text="(twin?.stress_score||0).toFixed(1)"></p>
+                        <div class="h-0.5 rounded-full mt-1.5 transition-all duration-700"
+                             style="background:linear-gradient(90deg,#f59e0b,#ef4444)"
+                             :style="'width:'+(twin?.stress_score||0)*10+'%'"></div>
+                    </div>
+                    <div class="dt-tag" style="left:0;top:115px;animation-delay:.7s">
+                        <p class="text-[9px] text-gray-400 mb-0.5 font-medium">😴 Sleep</p>
+                        <p class="text-sm font-black gl-grad-text" x-text="(twin?.sleep_score||0).toFixed(1)"></p>
+                        <div class="h-0.5 rounded-full mt-1.5 transition-all duration-700"
+                             style="background:linear-gradient(90deg,#3b82f6,#8b5cf6)"
+                             :style="'width:'+(twin?.sleep_score||0)*10+'%'"></div>
+                    </div>
+                    <div class="dt-tag" style="left:0;top:195px;animation-delay:1.4s">
+                        <p class="text-[9px] text-gray-400 mb-0.5 font-medium">⚡ Metabolic</p>
+                        <p class="text-sm font-black gl-grad-text" x-text="(twin?.metabolic_health_score||0).toFixed(1)"></p>
+                        <div class="h-0.5 rounded-full mt-1.5 transition-all duration-700"
+                             style="background:linear-gradient(90deg,#5f6fff,#c24dff)"
+                             :style="'width:'+(twin?.metabolic_health_score||0)*10+'%'"></div>
+                    </div>
+
+                    {{-- Stat tags — right column --}}
+                    <div class="dt-tag" style="right:0;top:99px;animation-delay:.35s">
+                        <p class="text-[9px] text-gray-400 mb-0.5 font-medium">🩸 Insulin</p>
+                        <p class="text-sm font-black gl-grad-text" x-text="(twin?.insulin_resistance_score||0).toFixed(1)"></p>
+                        <div class="h-0.5 rounded-full mt-1.5 transition-all duration-700"
+                             style="background:linear-gradient(90deg,#c24dff,#ff6ec7)"
+                             :style="'width:'+(twin?.insulin_resistance_score||0)*10+'%'"></div>
+                    </div>
+                    <div class="dt-tag" style="right:0;top:199px;animation-delay:1.05s">
+                        <p class="text-[9px] text-gray-400 mb-0.5 font-medium">🥗 Diet</p>
+                        <p class="text-sm font-black gl-grad-text" x-text="(twin?.diet_score||0).toFixed(1)"></p>
+                        <div class="h-0.5 rounded-full mt-1.5 transition-all duration-700"
+                             style="background:linear-gradient(90deg,#10b981,#06b6d4)"
+                             :style="'width:'+(twin?.diet_score||0)*10+'%'"></div>
+                    </div>
+                </div>
+
+                {{-- Mobile: compact score pills --}}
+                <div class="sm:hidden grid grid-cols-2 gap-2 mb-3">
+                    <div class="flex items-center gap-2 bg-white/50 rounded-xl p-2.5 border border-white/40">
+                        <span class="text-lg">😤</span>
+                        <div><p class="text-[9px] text-gray-400">Stress</p><p class="text-sm font-black gl-grad-text" x-text="(twin?.stress_score||0).toFixed(1)"></p></div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white/50 rounded-xl p-2.5 border border-white/40">
+                        <span class="text-lg">😴</span>
+                        <div><p class="text-[9px] text-gray-400">Sleep</p><p class="text-sm font-black gl-grad-text" x-text="(twin?.sleep_score||0).toFixed(1)"></p></div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white/50 rounded-xl p-2.5 border border-white/40">
+                        <span class="text-lg">⚡</span>
+                        <div><p class="text-[9px] text-gray-400">Metabolic</p><p class="text-sm font-black gl-grad-text" x-text="(twin?.metabolic_health_score||0).toFixed(1)"></p></div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white/50 rounded-xl p-2.5 border border-white/40">
+                        <span class="text-lg">🩸</span>
+                        <div><p class="text-[9px] text-gray-400">Insulin</p><p class="text-sm font-black gl-grad-text" x-text="(twin?.insulin_resistance_score||0).toFixed(1)"></p></div>
+                    </div>
+                </div>
+
+                {{-- BMI Scale bar --}}
+                <div class="mt-4" x-show="healthProfile" x-cloak>
+                    <div class="flex justify-between text-[9px] text-gray-400 mb-1.5 font-medium uppercase tracking-wide">
+                        <span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span>
+                    </div>
+                    <div class="relative h-2 rounded-full overflow-hidden"
+                         style="background:linear-gradient(90deg,#93c5fd 0%,#34d399 28%,#fbbf24 62%,#f87171 100%)">
+                        <div class="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-purple-600 shadow-lg -translate-x-1/2 transition-all duration-700"
+                             :style="'left:'+bmiPercent()+'%'"></div>
+                    </div>
+                    <div class="flex items-center justify-center gap-2 mt-2">
+                        <span class="text-xs font-black gl-grad-text" x-text="bmiLabel()"></span>
+                        <span class="text-[11px] text-gray-400" x-text="'· BMI ' + bmiVal().toFixed(1)"></span>
+                    </div>
+                </div>
+            </div>
+            {{-- ═══ END Body Visualization ═══ --}}
+
             {{-- Risk ring --}}
             <div class="gl-card p-5 mb-4 gl-a gl-d1" data-gl>
                 <div class="flex items-center gap-5">
@@ -157,7 +326,7 @@
 <script>
 function digitalTwinPage() {
     return {
-        loading: true, generating: false, twin: null, history: [],
+        loading: true, generating: false, twin: null, history: [], healthProfile: null,
         scoreCards: [
             {key:'metabolic_health_score',label:'Metabolic Health',from:'#5f6fff',to:'#c24dff'},
             {key:'insulin_resistance_score',label:'Insulin Resist.',from:'#c24dff',to:'#ff6ec7'},
@@ -165,10 +334,23 @@ function digitalTwinPage() {
             {key:'stress_score',label:'Stress Level',from:'#f59e0b',to:'#ef4444'},
             {key:'diet_score',label:'Diet Quality',from:'#10b981',to:'#06b6d4'},
         ],
+        bmiVal(){const hp=this.healthProfile;if(!hp||!hp.height||!hp.weight)return 22;return hp.weight/Math.pow(hp.height/100,2)},
+        bmiLabel(){const b=this.bmiVal();return b<18.5?'Underweight':b<25?'Normal':b<30?'Overweight':'Obese'},
+        bmiScaleX(){const b=this.bmiVal();return b<18.5?0.82:b<25?1.0:b<30?1.12:1.28},
+        bmiPercent(){const b=Math.min(Math.max(this.bmiVal(),14),45);return Math.round((b-14)/31*100)},
+        stressRisk(){return(this.twin?.stress_score||0)>=6},
+        sleepRisk(){return(this.twin?.sleep_score||0)>=6},
+        metabolicRisk(){return(this.twin?.metabolic_health_score||0)>=5},
+        insulinRisk(){return(this.twin?.insulin_resistance_score||0)>=5},
         async init(){
-            const [active, all] = await Promise.all([api.get('/digital-twin/active'), api.get('/digital-twin')]);
+            const [active, all, prof] = await Promise.all([
+                api.get('/digital-twin/active'),
+                api.get('/digital-twin'),
+                api.get('/health-profile').catch(()=>({success:false,data:null}))
+            ]);
             if(active.success && active.data) this.twin = active.data;
             if(all.success && all.data) this.history = all.data;
+            if(prof && prof.success && prof.data) this.healthProfile = prof.data;
             this.loading = false;
             this.$nextTick(()=>document.querySelectorAll('[data-gl]').forEach(el=>el.classList.add('gl-v')));
         },

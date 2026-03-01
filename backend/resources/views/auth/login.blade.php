@@ -185,27 +185,26 @@
 
         /* ── Avatar: HormoneLens simulation figure (men.svg) ── */
 
-        /* Wrapper: centres the avatar and acts as hover/click target */
+        /* Wrapper: fills the entire left panel */
         #avatar-wrap {
             position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 130px;
-            z-index: 2;
+            inset: 0;                  /* stretch to all four edges */
+            z-index: 6;
             cursor: pointer;
         }
 
         /* Base body layer */
         #avatar-svg-body {
-            width: 130px;
-            height: auto;
+            width: 100%;
+            height: 100%;
             display: block;
             pointer-events: none;
         }
         #avatar-svg-body svg {
-            width: 130px;
-            height: auto;
+            width: 100%;
+            height: 100%;
             display: block;
+            object-fit: contain;
         }
 
         /* ── SVG gradient theming via CSS fill override ──
@@ -213,54 +212,88 @@
            Defined in a hidden <svg><defs> block above the avatar in the HTML.
            fill: url(#hlThemeGrad) !important overrides every presentation-
            attribute fill on the imported SVG paths.                          */
-        #avatar-svg-body svg path[fill="#FEFEFE"],
-        #avatar-arm-layer svg path[fill="#FEFEFE"] {
+        #avatar-svg-body svg path[fill="#FEFEFE"] {
             display: none !important;          /* hide white background rect */
         }
         #avatar-svg-body svg path,
         #avatar-svg-body svg rect,
         #avatar-svg-body svg ellipse,
         #avatar-svg-body svg circle,
-        #avatar-svg-body svg line,
-        #avatar-arm-layer svg path,
-        #avatar-arm-layer svg rect,
-        #avatar-arm-layer svg ellipse,
-        #avatar-arm-layer svg circle,
-        #avatar-arm-layer svg line {
+        #avatar-svg-body svg line {
             fill:   url(#hlThemeGrad) !important;
             stroke: none !important;
         }
 
-        /* ── Right-arm wave overlay ──
-           Same SVG, clipped to the figure's right arm area (viewer's left),
-           absolutely overlaid on the body layer.
-           SVG is 467 × 350; figure centred at x ≈ 241.
-           Right arm column: x [175-215]/467 ≈ [37%-46%]  y [55-220]/350 ≈ [16%-63%]  */
-        #avatar-arm-layer {
-            position:        absolute;
-            top: 0; left: 0;
-            width:           130px;
-            pointer-events:  none;
-            /* shoulder pivot of figure's right arm */
-            transform-origin: 41% 16%;
+        /* ── Interactive body hotspots — dark purple pulsing dots ── */
+        .hl-hotspot {
+            position: absolute;
+            width: 18px; height: 18px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 12;
+            border-radius: 50%;
+            background: #4c1d95;
+            box-shadow: 0 0 0 0 rgba(76,29,149,0.6);
+            animation: hsPulse 2.2s ease-out infinite;
+            transition: background 0.18s ease, transform 0.18s ease;
         }
-        #avatar-arm-layer svg {
-            width:       130px;
-            height:      auto;
-            display:     block;
-            clip-path:   polygon(35% 14%, 48% 14%, 50% 64%, 33% 64%);
+        /* Invisible 46px hit-area so hover triggers even if cursor is nearby */
+        .hl-hotspot::before {
+            content: '';
+            position: absolute;
+            inset: -14px;
+            border-radius: 50%;
+        }
+        .hl-hotspot::after { content: none; }
+        .hl-hotspot:hover {
+            background: #6d28d9;
+            transform: translate(-50%, -50%) scale(1.35);
+        }
+        @keyframes hsPulse {
+            0%   { box-shadow: 0 0 0 0   rgba(76,29,149,0.65); }
+            70%  { box-shadow: 0 0 0 12px rgba(76,29,149,0);   }
+            100% { box-shadow: 0 0 0 0   rgba(76,29,149,0);    }
         }
 
-        /* ── Wave keyframe: 10°–15° shoulder rotation, one smooth cycle ── */
-        @keyframes hlRightArmWave {
-            0%   { transform: rotate(0deg);    }
-            28%  { transform: rotate(-13deg);  }
-            68%  { transform: rotate(10deg);   }
-            100% { transform: rotate(0deg);    }
+        /* ── Body info tooltip card ── */
+        #hl-tooltip {
+            position: absolute;
+            z-index: 20;
+            width: 218px;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(139,92,246,0.28);
+            border-radius: 14px;
+            padding: 13px 32px 12px 16px;
+            box-shadow: 0 10px 32px rgba(124,58,237,0.22);
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.88) translateY(6px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: top left;
         }
-        #avatar-arm-layer.waving {
-            animation: hlRightArmWave 0.8s ease-in-out forwards;
+        #hl-tooltip.hl-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
         }
+        #hl-tip-icon { font-size: 22px; margin-bottom: 4px; }
+        #hl-tip-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #7c3aed;
+            margin-bottom: 5px;
+        }
+        #hl-tip-body { font-size: 12px; line-height: 1.55; color: #374151; }
+        #hl-tip-close {
+            position: absolute; top: 8px; right: 10px;
+            background: none; border: none; cursor: pointer;
+            font-size: 17px; color: #9ca3af; line-height: 1; padding: 2px 4px;
+        }
+        #hl-tip-close:hover { color: #6b7280; }
 
         /* ── Cloud blobs ── */
         @keyframes cloudFloat {
@@ -390,10 +423,13 @@
         {{-- ── Hidden gradient defs: referenced by CSS `fill: url(#hlThemeGrad)` ── --}}
         <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
             <defs>
-                <linearGradient id="hlThemeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%"   stop-color="#5f6fff"/>
-                    <stop offset="50%"  stop-color="#c24dff"/>
-                    <stop offset="100%" stop-color="#ff6ec7"/>
+                <!-- Gradient tuned to the soft lavender background palette
+                     #f3f0ff → #ede9fe → #dde8ff — keeps the figure harmonious
+                     with the panel instead of clashing against it. -->
+                <linearGradient id="hlThemeGrad" x1="0%" y1="0%" x2="60%" y2="100%">
+                    <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.82"/>
+                    <stop offset="50%"  stop-color="#8b5cf6" stop-opacity="0.75"/>
+                    <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.65"/>
                 </linearGradient>
             </defs>
         </svg>
@@ -402,18 +438,93 @@
         {{-- Gradient applied via CSS fill:url(#hlThemeGrad) — no SVG path edits --}}
         @php
             $svgRaw = file_get_contents(public_path('images/men.svg'));
-            // Strip XML declaration (invalid inside HTML)
+            // Strip XML declaration
             $svgRaw = preg_replace('/<\?xml[^?]*\?>\s*/', '', $svgRaw);
-            // Strip fixed dimensions so CSS controls sizing
+            // IMPORTANT: add viewBox BEFORE stripping width/height, so SVG
+            // content scales properly inside the CSS-sized container.
+            // Without viewBox the paths render at their native 467×350
+            // coordinate scale and only a tiny corner is visible.
+            $svgRaw = preg_replace(
+                '/(<svg[^>]*?)\s+width="(\d+(?:\.\d+)?)"\s+height="(\d+(?:\.\d+)?)"/',
+                '$1 viewBox="0 0 $2 $3" preserveAspectRatio="xMidYMid meet"',
+                $svgRaw
+            );
             $svgRaw = preg_replace('/\s+width="\d+(\.\d+)?"/', '', $svgRaw);
             $svgRaw = preg_replace('/\s+height="\d+(\.\d+)?"/', '', $svgRaw);
         @endphp
 
         <div id="avatar-wrap">
-            {{-- Base body layer: full SVG — themed via CSS --}}
+            {{-- Body SVG — gradient themed via CSS --}}
             <div id="avatar-svg-body">{!! $svgRaw !!}</div>
-            {{-- Wave arm layer: same SVG clipped to right-arm region, rotates from shoulder --}}
-            <div id="avatar-arm-layer">{!! $svgRaw !!}</div>
+
+            {{-- ── Hotspots: positioned relative to the SVG viewBox (467×350).
+                 SVG fills panel width; letterboxed ~13% top & bottom at 1366×768.
+                 Figure spans SVG y: 17–334 (of 350), x-centre: 241/467 ≈ 52%.
+                 Panel % = letterbox_offset + (svgY/350) × svgHeightRatio         ── --}}
+
+            {{-- Head / Brain --}}
+            <div class="hl-hotspot"
+                 data-icon="🧠"
+                 data-title="Brain & HPA Axis"
+                 data-body="Your hypothalamic-pituitary-adrenal (HPA) axis controls cortisol release. Chronic stress keeps cortisol elevated, disrupting sleep, thyroid output, and reproductive hormone cycles."
+                 style="top:21%;left:52%;"></div>
+
+            {{-- Neck / Thyroid --}}
+            <div class="hl-hotspot"
+                 data-icon="🦋"
+                 data-title="Thyroid Gland"
+                 data-body="T3 & T4 hormones set your metabolic rate, body temperature, and heart rhythm. Subclinical hypothyroidism is a common hidden driver of fatigue, weight gain, and cycle irregularity."
+                 style="top:28%;left:52%;"></div>
+
+            {{-- Chest / Heart & Adrenals --}}
+            <div class="hl-hotspot"
+                 data-icon="❤️"
+                 data-title="Heart & Adrenal Health"
+                 data-body="Adrenaline (epinephrine) and cortisol from the adrenal glands regulate heart rate and blood pressure. Excess cortisol over time elevates cardiovascular risk and disrupts insulin signalling."
+                 style="top:36%;left:48%;"></div>
+
+            {{-- Left arm (viewer left = figure's right) — Muscle & Insulin --}}
+            <div class="hl-hotspot"
+                 data-icon="💪"
+                 data-title="Muscle & Insulin Sensitivity"
+                 data-body="Skeletal muscle is the largest site of insulin-driven glucose uptake. Every 1 kg of lean muscle gained can reduce fasting insulin by ~5%. Resistance training is medicine here."
+                 style="top:42%;left:43%;"></div>
+
+            {{-- Right arm (viewer right = figure's left) — Blood Panel --}}
+            <div class="hl-hotspot"
+                 data-icon="🩸"
+                 data-title="Hormone Blood Panel"
+                 data-body="Venous draws from the arm measure estrogen, progesterone, testosterone, insulin, cortisol, and thyroid markers. These numbers form your complete metabolic fingerprint."
+                 style="top:42%;left:58%;"></div>
+
+            {{-- Abdomen / Gut-Hormone Axis --}}
+            <div class="hl-hotspot"
+                 data-icon="🦠"
+                 data-title="Gut–Hormone Axis"
+                 data-body="Over 70% of serotonin is produced in the gut. Your microbiome regulates estrogen recycling (estrobolome), modulates cortisol feedback, and directly influences insulin sensitivity."
+                 style="top:53%;left:52%;"></div>
+
+            {{-- Pelvis / Reproductive --}}
+            <div class="hl-hotspot"
+                 data-icon="🌸"
+                 data-title="Reproductive Hormones"
+                 data-body="Ovaries and adrenal glands produce estrogen, progesterone, and testosterone. These hormones govern cycle regularity, mood stability, bone density, and metabolic efficiency."
+                 style="top:64%;left:52%;"></div>
+
+            {{-- Legs / Glucose sink --}}
+            <div class="hl-hotspot"
+                 data-icon="⚡"
+                 data-title="Leg Muscles & Glucose"
+                 data-body="Leg muscles account for ~30% of total blood glucose disposal. A 30-minute walk after meals can lower post-prandial glucose by 20–30% and meaningfully reduce HbA1c over time."
+                 style="top:76%;left:52%;"></div>
+        </div>
+
+        {{-- Body part info tooltip (sibling of avatar-wrap so it is not clipped by it) --}}
+        <div id="hl-tooltip" role="tooltip">
+            <button id="hl-tip-close" aria-label="Close">&times;</button>
+            <div id="hl-tip-icon"></div>
+            <div id="hl-tip-title"></div>
+            <div id="hl-tip-body"></div>
         </div>
 
         {{-- Floating health tags — 6 pills, z-index:1 --}}
@@ -469,8 +580,29 @@
                 </div>
                 <div>
                     <label for="password" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Password</label>
-                    <input id="password" name="password" type="password" required
-                           class="hl-input" placeholder="••••••••">
+                    <div class="relative">
+                        <input id="password" name="password" type="password" required
+                               class="hl-input" placeholder="••••••••" style="padding-right:44px;">
+                        <button type="button" id="togglePassword"
+                                onclick="(function(){
+                                    var inp = document.getElementById('password');
+                                    var btn = document.getElementById('togglePassword');
+                                    if(inp.type==='password'){
+                                        inp.type='text';
+                                        btn.innerHTML='<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.8\' stroke=\'currentColor\' class=\'w-5 h-5\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88\'/></svg>';
+                                    } else {
+                                        inp.type='password';
+                                        btn.innerHTML='<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.8\' stroke=\'currentColor\' class=\'w-5 h-5\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z\'/><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z\'/></svg>';
+                                    }
+                                })()"
+                                aria-label="Toggle password visibility"
+                                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7c3aed;padding:4px;display:flex;align-items:center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <input type="checkbox" name="remember" id="remember"
@@ -497,30 +629,60 @@
 (function () {
     'use strict';
 
-    var armLayer   = document.getElementById('avatar-arm-layer');
-    var avatarWrap = document.getElementById('avatar-wrap');
-    if (!armLayer || !avatarWrap) return;
+    var tooltip  = document.getElementById('hl-tooltip');
+    var tipIcon  = document.getElementById('hl-tip-icon');
+    var tipTitle = document.getElementById('hl-tip-title');
+    var tipBody  = document.getElementById('hl-tip-body');
+    var tipClose = document.getElementById('hl-tip-close');
+    var panel    = document.querySelector('.left-panel');
+    if (!tooltip || !panel) return;
 
-    /**
-     * Trigger one right-arm wave cycle.
-     * Removes .waving, forces reflow to restart the animation, re-adds it.
-     * animationend removes the class so the wave is always re-triggerable.
-     */
-    function triggerWave() {
-        armLayer.classList.remove('waving');
-        void armLayer.offsetWidth;          /* reflow — restarts animation */
-        armLayer.classList.add('waving');
+    var hideTimer = null;
+
+    function showTip(hs) {
+        clearTimeout(hideTimer);
+        tipIcon.textContent  = hs.dataset.icon;
+        tipTitle.textContent = hs.dataset.title;
+        tipBody.textContent  = hs.dataset.body;
+        var pr  = panel.getBoundingClientRect();
+        var hsr = hs.getBoundingClientRect();
+        var cx  = hsr.left + hsr.width  / 2 - pr.left;
+        var cy  = hsr.top  + hsr.height / 2 - pr.top;
+        var TW  = 218, TH = 160;
+        var tx  = cx + 18;
+        if (tx + TW > pr.width  - 8) tx = cx - TW - 14;
+        var ty  = cy - 40;
+        if (ty + TH > pr.height - 8) ty = pr.height - TH - 8;
+        if (ty < 8) ty = 8;
+        tooltip.style.left = tx + 'px';
+        tooltip.style.top  = ty + 'px';
+        tooltip.classList.add('hl-visible');
     }
 
-    armLayer.addEventListener('animationend', function () {
-        armLayer.classList.remove('waving');
+    function hideTip() {
+        hideTimer = setTimeout(function() {
+            tooltip.classList.remove('hl-visible');
+        }, 120);
+    }
+
+    document.querySelectorAll('.hl-hotspot').forEach(function(hs) {
+        hs.addEventListener('mouseenter', function() { showTip(hs); });
+        hs.addEventListener('mouseleave', hideTip);
     });
 
-    /* Hover: wave once when cursor enters the avatar */
-    avatarWrap.addEventListener('mouseenter', triggerWave);
+    /* keep tooltip open when cursor moves onto the card */
+    tooltip.addEventListener('mouseenter', function() { clearTimeout(hideTimer); });
+    tooltip.addEventListener('mouseleave', hideTip);
 
-    /* Click: wave once on any click of the avatar */
-    avatarWrap.addEventListener('click', triggerWave);
+    tipClose.addEventListener('click', function(e) {
+        e.stopPropagation();
+        clearTimeout(hideTimer);
+        tooltip.classList.remove('hl-visible');
+    });
+
+    panel.addEventListener('click', function() {
+        tooltip.classList.remove('hl-visible');
+    });
 
 })();
 </script>
