@@ -858,6 +858,42 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+{{-- ═══════════ HORMONE DEFENSE GAME ═══════════ --}}
+<section id="sleep-game" class="py-16 lg:py-20 bg-gradient-to-b from-white via-purple-50/40 to-white overflow-hidden">
+    <div class="max-w-5xl mx-auto px-6">
+        <div class="text-center mb-8">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 mb-4 border border-purple-100">
+                🚀 Interactive Health Game
+            </span>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+                Can You <span class="bg-gradient-to-r from-brand-600 to-purple-600 bg-clip-text text-transparent">Defend Your Hormones?</span>
+            </h2>
+            <p class="mt-3 text-gray-500 max-w-2xl mx-auto text-sm lg:text-base">
+                Play <strong>Hormone Defense</strong> — pilot your ship through space, destroy cortisol &amp; insulin disruptors, collect hormone boosters, and learn the real impact of imbalances on PCOS.
+            </p>
+        </div>
+
+        <div class="rounded-2xl overflow-hidden shadow-[0_25px_60px_-12px_rgba(0,0,0,0.15)] border border-purple-100/60 ring-1 ring-black/[0.03]" style="background: linear-gradient(135deg, #040518 0%, #0A0C2A 100%);">
+            <iframe
+                src="{{ asset('sleep-catcher/index.html') }}"
+                title="Hormone Defense — Defend Your Hormonal Balance"
+                class="w-full border-0"
+                style="height: 520px; max-height: 70vh;"
+                allow="autoplay"
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
+            ></iframe>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mt-4">
+            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">Arrow keys</kbd> /
+            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">WASD</kbd> to move &bull;
+            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">Space</kbd> to shoot &bull;
+            Touch to move on mobile &bull; 60-second mission
+        </p>
+    </div>
+</section>
+
 {{-- ═══════════ CAPABILITIES ═══════════ --}}
 <section id="features" class="py-20 bg-gray-50 overflow-hidden">
     <div class="max-w-7xl mx-auto px-6">
