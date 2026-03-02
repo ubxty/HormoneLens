@@ -5,7 +5,7 @@
 <div x-data="adminSims()" x-init="init()">
 
     {{-- Filters --}}
-    <div class="flex flex-col sm:flex-row gap-3 mb-5 adm-a adm-d0" data-adm>
+    <div class="flex flex-col sm:flex-row gap-3 mb-5 adm-a adm-d0 items-center" data-adm>
         <select x-model="typeFilter" @change="page=1;load()" class="adm-input w-auto min-w-[160px]">
             <option value="">All Types</option>
             <option value="lifestyle_change">Lifestyle Change</option>
@@ -14,9 +14,19 @@
             <option value="exercise_change">Exercise Change</option>
             <option value="food_impact">Food Impact</option>
         </select>
+
         <div class="flex-1 relative">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" x-model.debounce.400ms="search" @input="page=1;load()" placeholder="Search by user name&#8230;" class="adm-input w-full pl-10">
+            <input type="text" x-model.debounce.400ms="search" @input="page=1;load()" placeholder="Search by user name&#8230;" class="adm-input w-full pl-10 pr-28">
+        </div>
+
+        <div class="flex items-center">
+            <button @click="page=1;load()" class="adm-btn px-4 py-2.5 flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M3 12h18M3 20h18" />
+                </svg>
+                <span>Filter</span>
+            </button>
         </div>
     </div>
 

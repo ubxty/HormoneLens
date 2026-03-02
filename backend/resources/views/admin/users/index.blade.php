@@ -10,11 +10,26 @@
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input type="text" x-model.debounce.400ms="search" @input="page=1;load()" placeholder="Search users by name or email&#8230;" class="adm-input w-full pl-10">
         </div>
-        <select x-model="roleFilter" @change="page=1;load()" class="adm-input w-auto min-w-[140px]">
-            <option value="">All Roles</option>
-            <option value="1">Admins</option>
-            <option value="0">Users</option>
-        </select>
+        
+        <div class="relative flex items-center gap-2">
+            <div class="flex items-center gap-2 adm-input py-0 px-3 min-w-[160px]">
+                <svg class="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4.5h18m-18 5h18m-18 5h18m-18 5h18" />
+                </svg>
+                <select x-model="roleFilter" @change="page=1;load()" class="bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-600 cursor-pointer w-full py-2.5 outline-none">
+                    <option value="">All Roles</option>
+                    <option value="1">Admins Only</option>
+                    <option value="0">Standard Users</option>
+                </select>
+            </div>
+            
+            <button @click="load()" class="adm-btn px-4 py-2.5 flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span>Filter</span>
+            </button>
+        </div>
     </div>
 
     {{-- Loading --}}
