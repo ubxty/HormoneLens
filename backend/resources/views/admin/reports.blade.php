@@ -22,18 +22,6 @@
     </div>
 
     <div x-show="!loading" class="space-y-5">
-        {{-- Daily Risk Scores --}}
-        <div class="adm-chart-glass p-5 adm-a adm-d1" data-adm>
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-bold adm-grad-text flex items-center gap-2">
-                    <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-red-400/20 to-orange-400/20 flex items-center justify-center text-xs">&#128200;</div>
-                    Average Risk Score Trend
-                </h2>
-                <span class="text-[10px] text-gray-400" x-text="days + '-day window'"></span>
-            </div>
-            <canvas id="riskTrendR" height="80"></canvas>
-        </div>
-
         {{-- Daily Simulations --}}
         <div class="adm-chart-glass p-5 adm-a adm-d2" data-adm>
             <div class="flex items-center justify-between mb-4">
@@ -111,12 +99,6 @@ function adminReports() {
             const rs = this.data.daily_risk_scores || [];
             const ds = this.data.daily_simulations || [];
             const as = this.data.daily_alerts_by_severity || [];
-
-            const ctx1 = document.getElementById('riskTrendR');
-            if (ctx1) this.charts.risk = new Chart(ctx1, { type: 'line', data: {
-                labels: rs.map(d => d.date),
-                datasets: [{ label: 'Avg Risk', data: rs.map(d => parseFloat(d.avg_score || 0)), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#ef4444', pointBorderColor: '#fff', pointBorderWidth: 2 }]
-            }, options: { scales: { y: { beginAtZero: true, max: 10, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 9 } } }, x: { grid: { display: false }, ticks: { font: { size: 9 } } } }, plugins: { legend: { display: false } } } });
 
             const ctx2 = document.getElementById('simTrendR');
             if (ctx2) this.charts.sim = new Chart(ctx2, { type: 'bar', data: {
