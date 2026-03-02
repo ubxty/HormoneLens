@@ -921,7 +921,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Clicking inside iframe wrapper → lock scroll; clicking outside → unlock
+    // Clicking inside iframe wrapper → lock scroll; mouse leaving wrapper → unlock
     var wrap = document.getElementById('game-frame-wrap');
     if (wrap) {
         wrap.addEventListener('click', function () {
@@ -929,7 +929,16 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.style.overflow = 'hidden';
             window.addEventListener('keydown', preventScroll, { passive: false });
         });
+
+        // Restore scroll as soon as the cursor leaves the game area
+        wrap.addEventListener('mouseleave', function () {
+            gameActive = false;
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', preventScroll);
+        });
     }
+
+    // Also restore scroll when clicking anywhere outside the wrapper
     document.addEventListener('click', function (e) {
         if (wrap && !wrap.contains(e.target)) {
             gameActive = false;
@@ -937,6 +946,15 @@ document.addEventListener('DOMContentLoaded', () => {
             window.removeEventListener('keydown', preventScroll);
         }
     });
+
+    // Restore scroll on wheel/trackpad swipe when cursor is outside game area
+    document.addEventListener('wheel', function (e) {
+        if (gameActive && wrap && !wrap.contains(e.target)) {
+            gameActive = false;
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', preventScroll);
+        }
+    }, { passive: true });
 
     // ESC from parent page while game is active → scroll to section / unlock
     document.addEventListener('keydown', function (e) {
