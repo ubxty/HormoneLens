@@ -159,12 +159,18 @@ if (file_exists($_svgSrc)) {
                         {!! $dtBodySvg !!}
 
                         {{-- Metabolic nodes --}}
-                        <div class="dt-node" style="left:50%;top:20%;animation-delay:0s"></div>
-                        <div class="dt-node" style="left:50%;top:38%;animation-delay:.45s"></div>
-                        <div class="dt-node" style="left:50%;top:56%;animation-delay:.9s"></div>
-                        <div class="dt-node" style="left:22%;top:37%;animation-delay:.25s"></div>
-                        <div class="dt-node" style="left:78%;top:37%;animation-delay:.7s"></div>
-                        <div class="dt-node" style="left:50%;top:70%;animation-delay:1.15s"></div>
+                        {{-- Brain / Stress --}}
+                        <div class="dt-node" style="left:50%;top:11%;animation-delay:0s"></div>
+                        {{-- Chest / Sleep --}}
+                        <div class="dt-node" style="left:50%;top:33%;animation-delay:.45s"></div>
+                        {{-- Stomach / Gut --}}
+                        <div class="dt-node" style="left:50%;top:47%;animation-delay:.9s"></div>
+                        {{-- Left arm / Waist --}}
+                        <div class="dt-node" style="left:20%;top:33%;animation-delay:.25s"></div>
+                        {{-- Right arm / Waist --}}
+                        <div class="dt-node" style="left:80%;top:33%;animation-delay:.7s"></div>
+                        {{-- Reproductive / Pelvis --}}
+                        <div class="dt-node" style="left:50%;top:62%;animation-delay:1.15s"></div>
                     </div>
 
                     {{-- Stat tags — left column --}}

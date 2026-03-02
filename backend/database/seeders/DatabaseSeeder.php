@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             DiabetesRagSeeder::class,
             PcodRagSeeder::class,
             LifestyleNutritionRagSeeder::class,
+            AdminDashboardSeeder::class,
         ]);
     }
 }

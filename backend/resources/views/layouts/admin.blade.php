@@ -150,7 +150,54 @@
 <div class="adm-particle adm-particle-3"></div>
 
 
-<div x-data="{ sidebarOpen: window.innerWidth >= 1024 }" class="flex min-h-screen">
+<div x-data="{
+        sidebarOpen: window.innerWidth >= 1024,
+        unreadAlerts: 0,
+        bellOpen: false,
+        alertItems: [],
+        alertsLoading: false,
+        async fetchAlertCount() {
+            try {
+                const r = await fetch('/api/alerts/unread-count',{headers:{'Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content},credentials:'same-origin'});
+                const d = await r.json();
+                if(d.success) this.unreadAlerts = d.data?.unread_count ?? d.data?.count ?? 0;
+            } catch(e){}
+        },
+        async fetchAlerts() {
+            this.alertsLoading = true;
+            try {
+                const r = await fetch('/api/alerts',{headers:{'Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content},credentials:'same-origin'});
+                const d = await r.json();
+                if(d.success) this.alertItems = (d.data || []).slice(0, 20);
+            } catch(e){}
+            this.alertsLoading = false;
+        },
+        async markAlertRead(a) {
+            try {
+                const r = await fetch('/api/alerts/'+a.id+'/read',{method:'PATCH',headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content},credentials:'same-origin'});
+                const d = await r.json();
+                if(d.success){ a.is_read = true; this.unreadAlerts = Math.max(0, this.unreadAlerts - 1); }
+            } catch(e){}
+        },
+        async markAllRead() {
+            const unread = this.alertItems.filter(a => !a.is_read);
+            for(const a of unread) { await this.markAlertRead(a); }
+        },
+        openBell() {
+            this.bellOpen = !this.bellOpen;
+            if(this.bellOpen) this.fetchAlerts();
+        },
+        sevIcon(s){ return s==='critical'?'⛔':s==='warning'?'⚠️':'ℹ️'; },
+        sevColor(s){ return s==='critical'?'bg-red-100 text-red-600':s==='warning'?'bg-amber-100 text-amber-600':'bg-blue-100 text-blue-600'; },
+        sevBorder(s){ return s==='critical'?'border-l-red-400':s==='warning'?'border-l-amber-400':'border-l-blue-400'; },
+        timeAgo(d){
+            const s=Math.floor((Date.now()-new Date(d))/1000);
+            if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+'m ago';
+            if(s<86400)return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago';
+        }
+    }"
+     x-init="fetchAlertCount(); setInterval(()=>fetchAlertCount(), 5000)"
+     class="flex min-h-screen">
 
     {{-- Overlay --}}
     <div x-show="sidebarOpen" @click="sidebarOpen=false"
@@ -217,11 +264,68 @@
             <h1 class="text-sm font-bold text-gray-700">@yield('heading', 'Admin Dashboard')</h1>
             <div class="flex-1"></div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('admin.alerts') }}" class="relative p-2 rounded-xl text-gray-500 hover:text-purple-600 hover:bg-purple-50 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
-                    </svg>
-                </a>
+                {{-- Bell icon with live alerts dropdown --}}
+                <div class="relative">
+                    <button @click="openBell()" @click.outside="bellOpen = false" class="relative p-2 rounded-xl text-gray-500 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+                        </svg>
+                        <span x-show="unreadAlerts > 0" x-cloak
+                              class="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm animate-pulse"
+                              x-text="unreadAlerts"></span>
+                    </button>
+
+                    <div x-show="bellOpen" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                         class="absolute right-0 mt-2 w-80 sm:w-96 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/60 overflow-hidden z-50">
+
+                        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-purple-50/80 to-pink-50/80">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs">🔔</div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-800">Notifications</p>
+                                    <p class="text-[10px] text-gray-400" x-text="unreadAlerts + ' unread'"></p>
+                                </div>
+                            </div>
+                            <button x-show="unreadAlerts > 0" @click="markAllRead()" class="text-[10px] font-bold text-purple-600 hover:text-purple-800 uppercase tracking-wide transition-colors">Mark all read</button>
+                        </div>
+
+                        <div class="max-h-80 overflow-y-auto overscroll-contain" style="scrollbar-width:thin;scrollbar-color:#e5e7eb transparent">
+                            <div x-show="alertsLoading" class="py-8 text-center">
+                                <div class="inline-block w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                                <p class="text-[10px] text-gray-400 mt-1.5">Loading…</p>
+                            </div>
+                            <div x-show="!alertsLoading && alertItems.length === 0" class="py-10 text-center">
+                                <div class="text-3xl mb-1.5">🔕</div>
+                                <p class="text-xs text-gray-400">No alerts yet</p>
+                            </div>
+                            <template x-for="a in alertItems" :key="a.id">
+                                <div class="px-4 py-3 border-b border-gray-50 hover:bg-purple-50/40 transition-colors cursor-pointer border-l-[3px]"
+                                     :class="!a.is_read ? sevBorder(a.severity) + ' bg-purple-50/20' : 'border-l-transparent'"
+                                     @click="if(!a.is_read) markAlertRead(a)">
+                                    <div class="flex items-start gap-2.5">
+                                        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs flex-shrink-0 mt-0.5" :class="sevColor(a.severity)">
+                                            <span x-text="sevIcon(a.severity)"></span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-0.5">
+                                                <p class="text-xs text-gray-800 truncate" :class="!a.is_read ? 'font-bold' : 'font-medium'" x-text="a.title"></p>
+                                                <span x-show="!a.is_read" class="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0"></span>
+                                            </div>
+                                            <p class="text-[11px] text-gray-500 line-clamp-2" x-text="a.message"></p>
+                                            <p class="text-[10px] text-gray-400 mt-1" x-text="timeAgo(a.created_at)"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
                 <div x-data="{ open: false }" class="relative">
                     <button @click="open=!open" @click.outside="open=false" class="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl hover:bg-gray-100 transition">
                         <div class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-[10px] font-bold">
@@ -235,7 +339,7 @@
                             <p class="text-[10px] text-gray-400">{{ Auth::user()->email }}</p>
                         </div>
                         <div class="py-1">
-                            <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-xs text-gray-600 hover:bg-purple-50 hover:text-purple-700">User Dashboard</a>
+                            <a href="{{ route('health-profile') }}" class="block px-4 py-2 text-xs text-gray-600 hover:bg-purple-50 hover:text-purple-700">Settings</a>
                         </div>
                         <div class="border-t border-gray-100 py-1">
                             <form method="POST" action="{{ route('logout') }}">@csrf

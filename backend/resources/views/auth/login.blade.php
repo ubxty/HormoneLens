@@ -467,56 +467,56 @@
                  data-icon="🧠"
                  data-title="Brain & HPA Axis"
                  data-body="Your hypothalamic-pituitary-adrenal (HPA) axis controls cortisol release. Chronic stress keeps cortisol elevated, disrupting sleep, thyroid output, and reproductive hormone cycles."
-                 style="top:21%;left:52%;"></div>
+                 style="top:19%;left:52%;"></div>
 
             {{-- Neck / Thyroid --}}
             <div class="hl-hotspot"
                  data-icon="🦋"
                  data-title="Thyroid Gland"
                  data-body="T3 & T4 hormones set your metabolic rate, body temperature, and heart rhythm. Subclinical hypothyroidism is a common hidden driver of fatigue, weight gain, and cycle irregularity."
-                 style="top:28%;left:52%;"></div>
+                 style="top:27%;left:52%;"></div>
 
             {{-- Chest / Heart & Adrenals --}}
             <div class="hl-hotspot"
                  data-icon="❤️"
                  data-title="Heart & Adrenal Health"
                  data-body="Adrenaline (epinephrine) and cortisol from the adrenal glands regulate heart rate and blood pressure. Excess cortisol over time elevates cardiovascular risk and disrupts insulin signalling."
-                 style="top:36%;left:48%;"></div>
+                 style="top:35%;left:48%;"></div>
 
             {{-- Left arm (viewer left = figure's right) — Muscle & Insulin --}}
             <div class="hl-hotspot"
                  data-icon="💪"
                  data-title="Muscle & Insulin Sensitivity"
                  data-body="Skeletal muscle is the largest site of insulin-driven glucose uptake. Every 1 kg of lean muscle gained can reduce fasting insulin by ~5%. Resistance training is medicine here."
-                 style="top:42%;left:43%;"></div>
+                 style="top:40%;left:42%;"></div>
 
             {{-- Right arm (viewer right = figure's left) — Blood Panel --}}
             <div class="hl-hotspot"
                  data-icon="🩸"
                  data-title="Hormone Blood Panel"
                  data-body="Venous draws from the arm measure estrogen, progesterone, testosterone, insulin, cortisol, and thyroid markers. These numbers form your complete metabolic fingerprint."
-                 style="top:42%;left:58%;"></div>
+                 style="top:40%;left:57%;"></div>
 
             {{-- Abdomen / Gut-Hormone Axis --}}
             <div class="hl-hotspot"
                  data-icon="🦠"
                  data-title="Gut–Hormone Axis"
                  data-body="Over 70% of serotonin is produced in the gut. Your microbiome regulates estrogen recycling (estrobolome), modulates cortisol feedback, and directly influences insulin sensitivity."
-                 style="top:53%;left:52%;"></div>
+                 style="top:47%;left:52%;"></div>
 
             {{-- Pelvis / Reproductive --}}
             <div class="hl-hotspot"
                  data-icon="🌸"
                  data-title="Reproductive Hormones"
                  data-body="Ovaries and adrenal glands produce estrogen, progesterone, and testosterone. These hormones govern cycle regularity, mood stability, bone density, and metabolic efficiency."
-                 style="top:64%;left:52%;"></div>
+                 style="top:57%;left:52%;"></div>
 
             {{-- Legs / Glucose sink --}}
             <div class="hl-hotspot"
                  data-icon="⚡"
                  data-title="Leg Muscles & Glucose"
                  data-body="Leg muscles account for ~30% of total blood glucose disposal. A 30-minute walk after meals can lower post-prandial glucose by 20–30% and meaningfully reduce HbA1c over time."
-                 style="top:76%;left:52%;"></div>
+                 style="top:72%;left:52%;"></div>
         </div>
 
         {{-- Body part info tooltip (sibling of avatar-wrap so it is not clipped by it) --}}

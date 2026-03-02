@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Laravel: Serve",
+			"type": "shell",
+			"command": "cd backend && php artisan serve --host=0.0.0.0 --port=8080",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Vite: Dev",
+			"type": "shell",
+			"command": "cd backend && npm run dev",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

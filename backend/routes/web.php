@@ -7,9 +7,12 @@ use Illuminate\Support\Facades\Route;
 
 // ─── Landing page (public) ───────────────────────────
 Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('dashboard')
-        : view('landing');
+    if (auth()->check()) {
+        return auth()->user()->is_admin
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('dashboard');
+    }
+    return view('landing');
 })->name('home');
 
 // ─── Auth (guest) ────────────────────────────────────
