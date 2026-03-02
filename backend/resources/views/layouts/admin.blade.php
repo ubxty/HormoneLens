@@ -190,12 +190,7 @@
             <a href="{{ route('admin.alerts') }}" class="adm-nav-item {{ str_starts_with($cur,'admin.alerts') ? 'adm-nav-active' : '' }}">
                 <span class="text-sm">🚨</span> Alert Oversight</a>
             <a href="{{ route('admin.rag') }}" class="adm-nav-item {{ str_starts_with($cur,'admin.rag') ? 'adm-nav-active' : '' }}">
-                <span class="text-sm">📚</span> RAG Knowledge Base</a>
-
-            <div class="pt-4 mt-4 border-t border-white/10">
-                <a href="{{ route('dashboard') }}" class="adm-nav-item text-purple-300/70 hover:text-white">
-                    <span class="text-sm">←</span> Back to User Panel</a>
-            </div>
+                <span class="text-sm">📚</span> Knowledge Base</a>
         </nav>
 
         {{-- Admin user --}}
