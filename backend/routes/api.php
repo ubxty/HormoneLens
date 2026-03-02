@@ -40,7 +40,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn (\Illuminate\Http\Request $r) => new \App\Http\Resources\UserResource($r->user()));
 
     // ── Health Profile ───────────────────────────────
+    // primary routes use hyphen, but frontend historically requested underscore
     Route::prefix('health-profile')->group(function () {
+        Route::get('/', [HealthProfileController::class, 'show']);
+        Route::post('/', [HealthProfileController::class, 'store']);
+        Route::put('/', [HealthProfileController::class, 'update']);
+    });
+
+    // backward‑compatible aliases with underscore
+    Route::prefix('health_profile')->group(function () {
         Route::get('/', [HealthProfileController::class, 'show']);
         Route::post('/', [HealthProfileController::class, 'store']);
         Route::put('/', [HealthProfileController::class, 'update']);
