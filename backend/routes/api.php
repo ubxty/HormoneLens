@@ -84,6 +84,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('alerts')->group(function () {
         Route::get('/', [AlertController::class, 'index']);
         Route::get('/unread-count', [AlertController::class, 'unreadCount']);
+        Route::patch('/read-all', [AlertController::class, 'markAllRead']);
         Route::patch('/{id}/read', [AlertController::class, 'markRead']);
     });
 

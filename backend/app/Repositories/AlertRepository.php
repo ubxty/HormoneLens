@@ -31,6 +31,13 @@ class AlertRepository
         return $alert;
     }
 
+    public function markAllAsReadForUser(User $user): int
+    {
+        return Alert::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+    }
+
     public function unreadCountForUser(User $user): int
     {
         return Alert::where('user_id', $user->id)

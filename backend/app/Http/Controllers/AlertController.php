@@ -57,6 +57,19 @@ class AlertController extends Controller
     }
 
     /**
+     * Mark all unread alerts for the authenticated user as read.
+     */
+    public function markAllRead(Request $request)
+    {
+        $count = $this->alertRepo->markAllAsReadForUser($request->user());
+
+        return response()->json([
+            'success' => true,
+            'message' => "Marked {$count} alerts as read.",
+        ]);
+    }
+
+    /**
      * Get the count of unread alerts.
      */
     public function unreadCount(Request $request)
