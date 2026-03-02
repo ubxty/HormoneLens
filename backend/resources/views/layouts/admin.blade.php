@@ -180,8 +180,14 @@
             } catch(e){}
         },
         async markAllRead() {
-            const unread = this.alertItems.filter(a => !a.is_read);
-            for(const a of unread) { await this.markAlertRead(a); }
+            try {
+                const r = await fetch('/api/alerts/read-all',{method:'PATCH',headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content},credentials:'same-origin'});
+                const d = await r.json();
+                if(d.success){
+                    this.alertItems.forEach(a => a.is_read = true);
+                    this.unreadAlerts = 0;
+                }
+            } catch(e){}
         },
         openBell() {
             this.bellOpen = !this.bellOpen;
