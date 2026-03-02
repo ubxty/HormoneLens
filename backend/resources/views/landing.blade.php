@@ -665,64 +665,96 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ── Hero typing animation ──
        Line 1: types once ("See Your Health")
-       Line 2: types once, then loops forever ("Before You Live It!") */
+       Line 2: fade-in → type → pause 2s → fade-out → next sentence → loop ∞ */
     (function () {
-        const line1El  = document.getElementById('heroLine1');
-        const line2El  = document.getElementById('heroLine2');
-        const cursor   = document.getElementById('heroCursor');
+        const line1El = document.getElementById('heroLine1');
+        const line2El = document.getElementById('heroLine2');
+        const cursor  = document.getElementById('heroCursor');
         if (!line1El || !line2El || !cursor) return;
 
-        const LINE1  = 'See Your Health';
-        const LINE2  = 'Before You Live It!';
-        const SPEED  = 90;   // ms per character
-        const PAUSE  = 1500; // ms before line2 re-types
+        const LINE1 = 'Stay Ahead Before';
+        const SENTENCES = [
+            'Your PCOS Symptoms Worsen',
+            'Insulin Resistance Begins',
+            'Metabolic Damage Happens',
+            'Hormonal Imbalance Starts',
+        ];
+        const SPEED    = 55;   // ms per character
+        const PAUSE_MS = 2000; // ms to hold full sentence
+        const FADE_MS  = 550;  // ms for fade transition
 
-        /* Move cursor to end of an element (append as last child) */
-        function attachCursor(el) {
-            el.appendChild(cursor);
+        let sentenceIdx = 0;
+
+        /*
+         * Reliable opacity fade.
+         * KEY: disable transition → set start opacity → force browser layout
+         * flush (getBoundingClientRect) → re-enable transition → set end opacity.
+         * Without the flush the browser batches both style changes together and
+         * never actually transitions — causing the "instant disappear" bug.
+         */
+        function fadeEl(el, from, to, duration, done) {
+            el.style.transition = 'none';
+            el.style.opacity    = String(from);
+            el.getBoundingClientRect(); // force layout flush — commits `from` opacity
+            el.style.transition = 'opacity ' + duration + 'ms ease';
+            el.style.opacity    = String(to);
+            setTimeout(done, duration + 20);
         }
 
-        /* Type text into el, call done() when finished */
-        function typeInto(el, text, done) {
-            let i = 0;
-            attachCursor(el);
-            (function tick() {
-                if (i < text.length) {
-                    // Insert text node before cursor
-                    const tn = document.createTextNode(text[i++]);
-                    el.insertBefore(tn, cursor);
-                    setTimeout(tick, SPEED);
-                } else {
-                    done && done();
-                }
-            })();
-        }
+        function attachCursor(el) { el.appendChild(cursor); }
 
-        /* Clear all text nodes from el, leave cursor intact */
         function clearText(el) {
-            Array.from(el.childNodes).forEach(n => {
+            Array.from(el.childNodes).forEach(function (n) {
                 if (n !== cursor) el.removeChild(n);
             });
         }
 
-        /* Loop: type line2, pause, clear, repeat */
-        function loopLine2() {
+        function typeInto(el, text, done) {
+            var i = 0;
+            attachCursor(el);
+            (function tick() {
+                if (i < text.length) {
+                    el.insertBefore(document.createTextNode(text[i++]), cursor);
+                    setTimeout(tick, SPEED);
+                } else {
+                    if (done) done();
+                }
+            })();
+        }
+
+        function runSentence() {
+            var text = SENTENCES[sentenceIdx];
+            sentenceIdx = (sentenceIdx + 1) % SENTENCES.length;
+
+            // Start hidden & cleared
             clearText(line2El);
             attachCursor(line2El);
-            typeInto(line2El, LINE2, function () {
-                setTimeout(function () {
-                    clearText(line2El);
-                    loopLine2();
-                }, PAUSE);
+            line2El.style.transition = 'none';
+            line2El.style.opacity    = '0';
+            line2El.getBoundingClientRect();
+
+            // 1. Fade in
+            fadeEl(line2El, 0, 1, FADE_MS, function () {
+                // 2. Type letter-by-letter
+                typeInto(line2El, text, function () {
+                    // 3. Pause
+                    setTimeout(function () {
+                        // 4. Fade out
+                        fadeEl(line2El, 1, 0, FADE_MS, function () {
+                            // 5. Next sentence
+                            runSentence();
+                        });
+                    }, PAUSE_MS);
+                });
             });
         }
 
-        /* Phase 1: type line1 once, then start loop */
+        // Phase 1: type Line 1 once, then kick off the loop
         setTimeout(function () {
             typeInto(line1El, LINE1, function () {
-                setTimeout(loopLine2, 300);
+                setTimeout(runSentence, 350);
             });
-        }, 350);
+        }, 400);
     })();
 
     /* ── Navbar entrance (0ms) ── */
@@ -824,6 +856,99 @@ document.addEventListener('DOMContentLoaded', () => {
         slObserver.observe(simLoopWrap);
     }
 });
+</script>
+
+{{-- ═══════════ HORMONE DEFENSE GAME ═══════════ --}}
+<section id="sleep-game" class="py-16 lg:py-20 bg-gradient-to-b from-white via-purple-50/40 to-white overflow-hidden">
+    <div class="max-w-5xl mx-auto px-6">
+        <div class="text-center mb-8">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 mb-4 border border-purple-100">
+                🚀 Interactive Health Game
+            </span>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+                Can You <span class="bg-gradient-to-r from-brand-600 to-purple-600 bg-clip-text text-transparent">Defend Your Hormones?</span>
+            </h2>
+            <p class="mt-3 text-gray-500 max-w-2xl mx-auto text-sm lg:text-base">
+                Play <strong>Hormone Defense</strong> — pilot your ship through space, destroy cortisol &amp; insulin disruptors, collect hormone boosters, and learn the real impact of imbalances on PCOS.
+            </p>
+        </div>
+
+        <div id="game-frame-wrap" class="rounded-2xl overflow-hidden shadow-[0_25px_60px_-12px_rgba(0,0,0,0.15)] border border-purple-100/60 ring-1 ring-black/[0.03]" style="background: linear-gradient(135deg, #040518 0%, #0A0C2A 100%);">
+            <iframe
+                src="{{ asset('sleep-catcher/index.html') }}"
+                title="Hormone Defense — Defend Your Hormonal Balance"
+                class="w-full border-0"
+                style="height: 520px; max-height: 70vh;"
+                allow="autoplay"
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
+            ></iframe>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mt-4">
+            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">Arrow keys</kbd> /
+            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">WASD</kbd> to move &bull;
+            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">Space</kbd> to shoot &bull;
+            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">ESC</kbd> to exit &bull;
+            Touch to move on mobile &bull; 60-second mission
+        </p>
+    </div>
+</section>
+
+<script>
+(function () {
+    var gameActive = false;
+    var scrollKeys = [32, 37, 38, 39, 40]; // Space, arrows
+
+    function preventScroll(e) {
+        if (scrollKeys.includes(e.keyCode)) { e.preventDefault(); }
+    }
+
+    // Listen for messages from the game iframe
+    window.addEventListener('message', function (ev) {
+        var d = ev.data;
+        if (!d || typeof d.type !== 'string') return;
+
+        if (d.type === 'GAME_FOCUS') {
+            gameActive = true;
+            document.body.style.overflow = 'hidden';
+            window.addEventListener('keydown', preventScroll, { passive: false });
+        }
+        if (d.type === 'GAME_BLUR' || d.type === 'GAME_EXIT') {
+            gameActive = false;
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', preventScroll);
+        }
+    });
+
+    // Clicking inside iframe wrapper → lock scroll; clicking outside → unlock
+    var wrap = document.getElementById('game-frame-wrap');
+    if (wrap) {
+        wrap.addEventListener('click', function () {
+            gameActive = true;
+            document.body.style.overflow = 'hidden';
+            window.addEventListener('keydown', preventScroll, { passive: false });
+        });
+    }
+    document.addEventListener('click', function (e) {
+        if (wrap && !wrap.contains(e.target)) {
+            gameActive = false;
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', preventScroll);
+        }
+    });
+
+    // ESC from parent page while game is active → scroll to section / unlock
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && gameActive) {
+            gameActive = false;
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', preventScroll);
+            // move focus away from iframe
+            if (wrap) { var btn = wrap.querySelector('iframe'); if (btn) btn.blur(); }
+        }
+    });
+})();
 </script>
 
 {{-- ═══════════ CAPABILITIES ═══════════ --}}
