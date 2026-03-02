@@ -213,6 +213,9 @@ if (file_exists($_svgSrc)) {
                     </div>
                 </div>
 
+                    {{-- Removed old absolute column tags from here --}}
+                </div>
+
                 {{-- Mobile: compact score pills --}}
                 <div class="sm:hidden grid grid-cols-2 gap-2 mb-3">
                     <div class="flex items-center gap-2 bg-white/50 rounded-xl p-2.5 border border-white/40">
@@ -280,7 +283,7 @@ if (file_exists($_svgSrc)) {
                     <div class="gl-card p-3 gl-a" :class="'gl-d' + (i+2)" data-gl>
                         <p class="text-[11px] text-gray-400 font-medium mb-2" x-text="s.label"></p>
                         <div class="relative h-1.5 rounded-full mb-2" style="background:rgba(0,0,0,.06)">
-                            <div class="absolute inset-y-0 left-0 rounded-full transition-all"
+                            <div class="h-full rounded-full transition-all"
                                  :style="'width:' + (twin?.[s.key]||0)*10 + '%;background:linear-gradient(90deg,' + s.from + ',' + s.to + ')'"></div>
                         </div>
                         <p class="text-lg font-black gl-grad-text" x-text="twin?.[s.key]?.toFixed(1) ?? '—'"></p>

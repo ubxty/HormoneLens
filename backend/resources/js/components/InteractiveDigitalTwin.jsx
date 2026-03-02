@@ -260,7 +260,7 @@ export default function InteractiveDigitalTwin() {
                       {score.toFixed(1)}
                     </span>
                   </div>
-                  <div style={{ height: 4, background: 'rgba(0,0,0,.07)', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: 4, background: 'rgba(0,0,0,.07)', borderRadius: 99 }}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
