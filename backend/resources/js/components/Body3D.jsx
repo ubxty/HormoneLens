@@ -1,290 +1,392 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback, Suspense } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import * as THREE from 'three';
-import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+import React, { useRef, useState, useMemo, useCallback, Suspense } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Html, ContactShadows, Float } from '@react-three/drei';
 
-// ── Zone overlay geometry definitions (Y positions in normalized body space) ──
-// Body SVG viewBox: "182 8 118 335" → width=118, height=335
-// We center the body at origin, so Y goes from +halfH to -halfH
-const SVG_VB = { x: 182, y: 8, w: 118, h: 335 };
-const BODY_SCALE = 0.035; // Scales SVG units → Three.js units
-
-const ZONE_DEFS = [
-  { id: 'head',    yStart: 0.0,  yEnd: 0.12, color: '#ef4444' },
-  { id: 'chest',   yStart: 0.17, yEnd: 0.29, color: '#3b82f6' },
-  { id: 'waist',   yStart: 0.28, yEnd: 0.40, color: '#f97316' },
-  { id: 'abdomen', yStart: 0.38, yEnd: 0.51, color: '#a855f7' },
-  { id: 'thighs',  yStart: 0.59, yEnd: 0.75, color: '#6366f1' },
+/* ═══════════════════════════════════════════════════════════════════════════
+   BODY PART DEFINITIONS — female silhouette built from capsule + sphere prims
+   ═══════════════════════════════════════════════════════════════════════════ */
+const BASE_PARTS = [
+  // Head & neck
+  { n: 'head',    g: 'sphere',  p: [0, 1.62, 0],   a: [0.17, 32, 32],            s: [1, 1.06, 0.94] },
+  { n: 'neck',    g: 'capsule', p: [0, 1.43, 0],    a: [0.048, 0.06, 8, 16],      s: [1, 1, 0.88] },
+  // Torso
+  { n: 'shoulderBridge', g: 'capsule', p: [0, 1.33, 0], a: [0.055, 0.04, 8, 16],  s: [3.2, 0.75, 0.82] },
+  { n: 'upperTorso',     g: 'capsule', p: [0, 1.21, 0], a: [0.115, 0.1, 8, 16],   s: [1.48, 1, 0.82] },
+  { n: 'bustL',          g: 'sphere',  p: [-0.075, 1.2, 0.06], a: [0.06, 16, 16] },
+  { n: 'bustR',          g: 'sphere',  p: [0.075, 1.2, 0.06],  a: [0.06, 16, 16] },
+  { n: 'midTorso',       g: 'capsule', p: [0, 1.06, 0], a: [0.098, 0.07, 8, 16],  s: [1.22, 1, 0.78] },
+  { n: 'waist',          g: 'sphere',  p: [0, 0.93, 0], a: [0.1, 16, 16],          s: [1.18, 0.9, 0.78] },
+  // Abdomen — dynamically scaled
+  { n: 'abdomen',        g: 'sphere',  p: [0, 0.81, 0.01], a: [0.125, 20, 20],     s: [1.3, 1, 0.85], dynamic: 'abdomen' },
+  // Hips & pelvis
+  { n: 'hips',           g: 'sphere',  p: [0, 0.69, 0],    a: [0.145, 20, 20],     s: [1.6, 0.72, 0.82] },
+  { n: 'pelvis',         g: 'sphere',  p: [0, 0.6, 0],     a: [0.1, 16, 16],       s: [1.38, 0.58, 0.78] },
+  // Legs — thighs dynamically scaled
+  { n: 'thighL', g: 'capsule', p: [-0.1, 0.36, 0],  a: [0.065, 0.28, 8, 16], s: [1, 1, 0.88], dynamic: 'thigh' },
+  { n: 'thighR', g: 'capsule', p: [0.1, 0.36, 0],   a: [0.065, 0.28, 8, 16], s: [1, 1, 0.88], dynamic: 'thigh' },
+  { n: 'calfL',  g: 'capsule', p: [-0.1, -0.04, 0],  a: [0.048, 0.3, 8, 16] },
+  { n: 'calfR',  g: 'capsule', p: [0.1, -0.04, 0],   a: [0.048, 0.3, 8, 16] },
+  { n: 'footL',  g: 'capsule', p: [-0.1, -0.36, 0.02], a: [0.033, 0.055, 8, 16], s: [0.88, 1, 1.4], r: [0.3, 0, 0] },
+  { n: 'footR',  g: 'capsule', p: [0.1, -0.36, 0.02],  a: [0.033, 0.055, 8, 16], s: [0.88, 1, 1.4], r: [0.3, 0, 0] },
+  // Arms
+  { n: 'upperArmL', g: 'capsule', p: [-0.235, 1.16, 0], a: [0.034, 0.17, 8, 16], r: [0, 0, 0.08] },
+  { n: 'upperArmR', g: 'capsule', p: [0.235, 1.16, 0],  a: [0.034, 0.17, 8, 16], r: [0, 0, -0.08] },
+  { n: 'forearmL',   g: 'capsule', p: [-0.25, 0.9, 0],   a: [0.028, 0.17, 8, 16], r: [0, 0, 0.04] },
+  { n: 'forearmR',   g: 'capsule', p: [0.25, 0.9, 0],    a: [0.028, 0.17, 8, 16], r: [0, 0, -0.04] },
+  { n: 'handL',      g: 'sphere',  p: [-0.26, 0.74, 0],  a: [0.028, 12, 12], s: [0.7, 1, 0.5] },
+  { n: 'handR',      g: 'sphere',  p: [0.26, 0.74, 0],   a: [0.028, 12, 12], s: [0.7, 1, 0.5] },
 ];
 
-// ── Parse SVG string → array of THREE.Shape ──────────────────────────────────
-function parseSvgToShapes(svgText) {
-  const loader = new SVGLoader();
-  const data = loader.parse(svgText);
-  const shapes = [];
+/* ═══════════════════════════════════════════════════════════════════════════
+   HORMONE NODE DEFINITIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+const HORMONE_NODES = [
+  { id: 'pituitary', label: 'Pituitary Gland', info: 'Master endocrine regulator · HPA Axis',     pos: [0, 1.64, 0.14],    r: 0.032 },
+  { id: 'thyroid',   label: 'Thyroid',          info: 'T3/T4 metabolic rate control',              pos: [0, 1.42, 0.06],    r: 0.036 },
+  { id: 'pancreas',  label: 'Pancreas',         info: 'Insulin & glucagon secretion',              pos: [0.08, 0.91, 0.1],  r: 0.034 },
+  { id: 'ovaryL',    label: 'Left Ovary',       info: 'Estrogen · Progesterone · PCOS marker',     pos: [-0.09, 0.67, 0.06], r: 0.026 },
+  { id: 'ovaryR',    label: 'Right Ovary',      info: 'Estrogen · Progesterone · PCOS marker',     pos: [0.09, 0.67, 0.06],  r: 0.026 },
+];
 
-  for (const path of data.paths) {
-    // Skip the white background path (#FEFEFE)
-    const fillColor = path.userData?.style?.fill;
-    if (fillColor === '#FEFEFE' || fillColor === '#fefefe') continue;
-    // Skip paths with fill="none"
-    if (fillColor === 'none') continue;
-
-    const pathShapes = SVGLoader.createShapes(path);
-    for (const shape of pathShapes) {
-      shapes.push({
-        shape,
-        color: fillColor || '#232021',
-      });
-    }
+/* ---------- Node glow color logic ---------- */
+function getNodeColor(id, pcosIdx, insulinRes, thyroidFac, sim) {
+  if (sim) return '#10b981';
+  switch (id) {
+    case 'ovaryL': case 'ovaryR':
+      return pcosIdx > 5 ? '#a855f7' : pcosIdx > 2 ? '#c084fc' : '#10b981';
+    case 'pancreas':
+      return insulinRes > 5 ? '#3b82f6' : insulinRes > 2 ? '#60a5fa' : '#10b981';
+    case 'thyroid':
+      return thyroidFac < 0.4 ? '#f97316' : thyroidFac < 0.7 ? '#fb923c' : '#10b981';
+    default: return '#8b5cf6';
   }
-  return shapes;
 }
 
-// ── Extruded SVG body mesh component ─────────────────────────────────────────
-function BodyMesh({ shapes, scaleX = 1, scaleY = 1, hovered, hoveredZone, zoneScores }) {
-  const groupRef = useRef();
-  const [centered, setCentered] = useState(false);
+/* ---------- Status text for tooltip ---------- */
+function getNodeStatus(id, pcosIdx, insulinRes, thyroidFac) {
+  switch (id) {
+    case 'ovaryL': case 'ovaryR':
+      return pcosIdx > 5 ? `PCOS Imbalance \u2191 ${(pcosIdx * 10).toFixed(0)}%` :
+             pcosIdx > 2 ? `Mild PCOS Signal \u2191 ${(pcosIdx * 10).toFixed(0)}%` : 'Normal Range';
+    case 'pancreas':
+      return insulinRes > 5 ? `Insulin Sensitivity \u2193 ${(insulinRes * 12).toFixed(0)}%` :
+             insulinRes > 2 ? `Mild Resistance \u2193 ${(insulinRes * 7).toFixed(0)}%` : 'Normal Range';
+    case 'thyroid':
+      return thyroidFac < 0.4 ? `Thyroid Dysfunction \u2193 ${((1 - thyroidFac) * 100).toFixed(0)}%` :
+             thyroidFac < 0.7 ? `Mild Hypofunction \u2193 ${((1 - thyroidFac) * 100).toFixed(0)}%` : 'Normal Range';
+    default: return 'Active Regulation';
+  }
+}
 
-  // Create geometries from shapes
-  const meshes = useMemo(() => {
-    if (!shapes.length) return [];
+/* ═══════════════════════════════════════════════════════════════════════════
+   HORMONE NODE — inner core + outer glow + optional tooltip
+   ═══════════════════════════════════════════════════════════════════════════ */
+function HormoneNode({ node, color, intensity, isHovered, onHover, statusText }) {
+  const glowRef = useRef();
+  const coreRef = useRef();
+  const idx = HORMONE_NODES.indexOf(node);
 
-    const extrudeSettings = {
-      depth: 3,
-      bevelEnabled: false,
-      curveSegments: 24,
-    };
-
-    return shapes.map(({ shape, color }, i) => {
-      const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-      return { geometry, color, key: i };
-    });
-  }, [shapes]);
-
-  // Center the geometry group after first render
-  useEffect(() => {
-    if (!groupRef.current || !meshes.length || centered) return;
-
-    const box = new THREE.Box3();
-    groupRef.current.traverse((child) => {
-      if (child.isMesh) {
-        child.geometry.computeBoundingBox();
-        const childBox = child.geometry.boundingBox.clone();
-        childBox.applyMatrix4(child.matrixWorld);
-        box.union(childBox);
-      }
-    });
-
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-
-    // Offset to center
-    groupRef.current.position.set(-center.x, -center.y, -center.z);
-    setCentered(true);
-  }, [meshes, centered]);
-
-  // Idle float animation
-  useFrame((state) => {
-    if (!groupRef.current) return;
-    const t = state.clock.elapsedTime;
-    groupRef.current.position.y = (-groupRef.current.userData.centerY || 0) + Math.sin(t * 0.6) * 0.08;
+  useFrame(function (state) {
+    var t = state.clock.elapsedTime;
+    if (glowRef.current) {
+      var pulse = 1.0 + Math.sin(t * 2.2 + idx * 1.4) * 0.35;
+      glowRef.current.scale.setScalar(pulse);
+      glowRef.current.material.opacity = 0.12 + Math.sin(t * 2.2 + idx) * 0.06;
+    }
+    if (coreRef.current) {
+      coreRef.current.material.emissiveIntensity = intensity * (0.7 + Math.sin(t * 3 + idx) * 0.4);
+    }
   });
 
-  // Store centerY for float reference
-  useEffect(() => {
-    if (groupRef.current && centered) {
-      groupRef.current.userData.centerY = groupRef.current.position.y;
-    }
-  }, [centered]);
-
   return (
-    <group
-      ref={groupRef}
-      scale={[BODY_SCALE * scaleX, -BODY_SCALE * scaleY, BODY_SCALE]}
-      rotation={[0, 0, 0]}
-    >
-      {meshes.map(({ geometry, color, key }) => (
-        <mesh key={key} geometry={geometry}>
-          <meshStandardMaterial
-            color={color}
-            metalness={0.1}
-            roughness={0.7}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      ))}
+    <group position={node.pos}>
+      {/* Core sphere */}
+      <mesh
+        ref={coreRef}
+        onPointerEnter={function (e) { e.stopPropagation(); onHover(node.id); }}
+        onPointerLeave={function (e) { e.stopPropagation(); onHover(null); }}
+      >
+        <sphereGeometry args={[node.r, 20, 20]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={intensity}
+          toneMapped={false}
+        />
+      </mesh>
+      {/* Outer glow halo */}
+      <mesh ref={glowRef}>
+        <sphereGeometry args={[node.r * 2.8, 16, 16]} />
+        <meshBasicMaterial color={color} transparent opacity={0.12} depthWrite={false} />
+      </mesh>
+      {/* Tooltip via drei Html */}
+      {isHovered && (
+        <Html center distanceFactor={5.5} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+          <div style={{
+            background: 'rgba(12,6,22,0.94)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid ' + color + '55',
+            borderRadius: 14,
+            padding: '12px 16px',
+            minWidth: 170,
+            maxWidth: 220,
+            boxShadow: '0 10px 40px ' + color + '44, 0 2px 8px rgba(0,0,0,0.3)',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, boxShadow: '0 0 8px ' + color }} />
+              <span style={{ fontSize: 12, fontWeight: 800, color: '#e2ddf5', letterSpacing: '0.02em' }}>{node.label}</span>
+            </div>
+            <p style={{ fontSize: 10, color: '#9b8fc4', margin: '0 0 8px', lineHeight: 1.4 }}>{node.info}</p>
+            <div style={{
+              padding: '6px 10px',
+              background: color + '18',
+              borderRadius: 8,
+              border: '1px solid ' + color + '30',
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: color }}>{statusText}</span>
+            </div>
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
 
-// ── Zone glow overlays (transparent cylinders around body regions) ────────────
-function ZoneGlows({ hoveredZone, zoneScores }) {
-  const glowsRef = useRef({});
+/* ═══════════════════════════════════════════════════════════════════════════
+   FEMALE BODY — group of primitive meshes + hormone nodes
+   ═══════════════════════════════════════════════════════════════════════════ */
+function FemaleBody(props) {
+  var userHeight       = props.userHeight || 165;
+  var userWeight       = props.userWeight || 58;
+  var pcosIndex        = props.pcosIndex || 0;
+  var insulinResistance = props.insulinResistance || 0;
+  var thyroidFactor    = props.thyroidFactor != null ? props.thyroidFactor : 1;
+  var isSimulating     = props.isSimulating || false;
+  var hoveredNode      = props.hoveredNode;
+  var onNodeHover      = props.onNodeHover || function () {};
 
-  useFrame(() => {
-    for (const zone of ZONE_DEFS) {
-      const mesh = glowsRef.current[zone.id];
-      if (!mesh) continue;
-      const score = zoneScores?.[zone.id] ?? 0;
-      const isHov = hoveredZone === zone.id;
-      const targetOpacity = isHov ? 0.35 : score >= 6 ? 0.18 : 0;
-      mesh.material.opacity += (targetOpacity - mesh.material.opacity) * 0.1;
+  /* Dynamic scale factors */
+  var heightScale = useMemo(function () { return userHeight / 165; }, [userHeight]);
+  var bmi = useMemo(function () {
+    if (!userWeight || !userHeight || userHeight < 1) return 22;
+    return userWeight / Math.pow(userHeight / 100, 2);
+  }, [userWeight, userHeight]);
+  var widthScale = useMemo(function () {
+    if (bmi < 18.5) return Math.max(0.84, 0.84 + (bmi - 15) * 0.028);
+    if (bmi <= 25) return 1.0;
+    return Math.min(1 + (bmi - 25) * 0.024, 1.38);
+  }, [bmi]);
+
+  var abdomenMult = useMemo(function () {
+    return 1 + pcosIndex * 0.028 + insulinResistance * 0.022;
+  }, [pcosIndex, insulinResistance]);
+  var thighMult = useMemo(function () {
+    return 1 + pcosIndex * 0.018;
+  }, [pcosIndex]);
+  var glowBase = useMemo(function () {
+    return 0.04 + thyroidFactor * 0.14;
+  }, [thyroidFactor]);
+
+  /* Simulation pulse */
+  var bodyGroupRef = useRef();
+  var simPulseRef = useRef(0);
+
+  useFrame(function (state) {
+    if (!bodyGroupRef.current) return;
+    var t = state.clock.elapsedTime;
+    if (isSimulating) {
+      simPulseRef.current = Math.min(simPulseRef.current + 0.02, 1);
+    } else {
+      simPulseRef.current = Math.max(simPulseRef.current - 0.01, 0);
     }
+    /* Idle breathing */
+    var breathe = 1 + Math.sin(t * 1.2) * 0.004;
+    var sx = widthScale * breathe;
+    var sy = heightScale;
+    bodyGroupRef.current.scale.set(sx, sy, sx * 0.95);
   });
 
-  const halfH = (SVG_VB.h * BODY_SCALE) / 2;
+  /* Body material color (slightly purple-tinted for digital look) */
+  var skinColor = '#d0bfea';
+  var emissiveColor = '#6d28d9';
+
+  /* Render parts */
+  var parts = useMemo(function () {
+    return BASE_PARTS.map(function (part) {
+      var sc = part.s ? part.s.slice() : [1, 1, 1];
+      if (part.dynamic === 'abdomen') {
+        sc[0] *= abdomenMult;
+        sc[2] *= abdomenMult * 0.9;
+      }
+      if (part.dynamic === 'thigh') {
+        sc[0] *= thighMult;
+        sc[2] *= thighMult * 0.95;
+      }
+      return { key: part.n, geom: part.g, pos: part.p, args: part.a, scale: sc, rot: part.r || [0, 0, 0] };
+    });
+  }, [abdomenMult, thighMult]);
 
   return (
-    <group>
-      {ZONE_DEFS.map((zone) => {
-        const yTop = halfH - zone.yStart * (SVG_VB.h * BODY_SCALE);
-        const yBot = halfH - zone.yEnd * (SVG_VB.h * BODY_SCALE);
-        const height = Math.abs(yTop - yBot);
-        const yCenter = (yTop + yBot) / 2;
-        const width = SVG_VB.w * BODY_SCALE * 0.6;
-
+    <group ref={bodyGroupRef}>
+      {/* Body parts */}
+      {parts.map(function (p) {
         return (
-          <mesh
-            key={zone.id}
-            ref={(el) => { if (el) glowsRef.current[zone.id] = el; }}
-            position={[0, yCenter, 0.1]}
-          >
-            <planeGeometry args={[width, height]} />
-            <meshBasicMaterial
-              color={zone.color}
+          <mesh key={p.key} position={p.pos} scale={p.scale} rotation={p.rot}>
+            {p.geom === 'sphere' ? (
+              <sphereGeometry args={p.args} />
+            ) : (
+              <capsuleGeometry args={p.args} />
+            )}
+            <meshStandardMaterial
+              color={skinColor}
+              emissive={emissiveColor}
+              emissiveIntensity={glowBase + simPulseRef.current * 0.18}
+              metalness={0.12}
+              roughness={0.52}
               transparent
-              opacity={0}
-              side={THREE.DoubleSide}
-              depthWrite={false}
+              opacity={0.9}
             />
           </mesh>
         );
       })}
+
+      {/* Hormone nodes */}
+      {HORMONE_NODES.map(function (node) {
+        var color = getNodeColor(node.id, pcosIndex, insulinResistance, thyroidFactor, isSimulating);
+        var status = getNodeStatus(node.id, pcosIndex, insulinResistance, thyroidFactor);
+        var intensity = isSimulating ? 2.0 : 1.2;
+        return (
+          <HormoneNode
+            key={node.id}
+            node={node}
+            color={color}
+            intensity={intensity}
+            isHovered={hoveredNode === node.id}
+            onHover={onNodeHover}
+            statusText={isSimulating ? 'Simulating\u2026' : status}
+          />
+        );
+      })}
+
+      {/* Contact shadow below feet */}
+      <ContactShadows
+        position={[0, -0.44, 0]}
+        opacity={0.35}
+        scale={1.6}
+        blur={2.2}
+        far={1}
+        color="#4c1d95"
+      />
     </group>
   );
 }
 
-// ── Scene setup (lights + camera adjustment) ──────────────────────────────────
-function SceneLighting() {
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCENE LIGHTING — ambient + directional + hemisphere for depth
+   ═══════════════════════════════════════════════════════════════════════════ */
+function SceneLights() {
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 8, 10]} intensity={0.8} castShadow={false} />
-      <directionalLight position={[-5, 4, -8]} intensity={0.3} />
-      <hemisphereLight skyColor="#e0e7ff" groundColor="#4a1d96" intensity={0.4} />
+      <ambientLight intensity={0.5} color="#e0d4f5" />
+      <directionalLight position={[4, 8, 6]} intensity={0.9} color="#f0e6ff" />
+      <directionalLight position={[-3, 4, -5]} intensity={0.25} color="#c084fc" />
+      <hemisphereLight skyColor="#ddd6fe" groundColor="#3b0764" intensity={0.45} />
+      <pointLight position={[0, 2.2, 2]} intensity={0.3} color="#a78bfa" distance={5} />
     </>
   );
 }
 
-// ── Inner scene content ──────────────────────────────────────────────────────
-function SceneContent({ shapes, scaleX, scaleY, hoveredZone, zoneScores, onZoneHover }) {
-  const controlsRef = useRef();
-
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCENE CONTENT — assembled inside Canvas
+   ═══════════════════════════════════════════════════════════════════════════ */
+function SceneContent(props) {
   return (
     <>
-      <SceneLighting />
-      <BodyMesh
-        shapes={shapes}
-        scaleX={scaleX}
-        scaleY={scaleY}
-        hoveredZone={hoveredZone}
-        zoneScores={zoneScores}
-      />
-      <ZoneGlows hoveredZone={hoveredZone} zoneScores={zoneScores} />
+      <SceneLights />
+      <Float speed={1.4} rotationIntensity={0} floatIntensity={0.3} floatingRange={[-0.04, 0.04]}>
+        <FemaleBody
+          userHeight={props.userHeight}
+          userWeight={props.userWeight}
+          pcosIndex={props.pcosIndex}
+          insulinResistance={props.insulinResistance}
+          thyroidFactor={props.thyroidFactor}
+          isSimulating={props.isSimulating}
+          hoveredNode={props.hoveredNode}
+          onNodeHover={props.onNodeHover}
+        />
+      </Float>
       <OrbitControls
-        ref={controlsRef}
         enableZoom={false}
         enablePan={false}
-        minPolarAngle={Math.PI / 2}
-        maxPolarAngle={Math.PI / 2}
+        minPolarAngle={Math.PI * 0.3}
+        maxPolarAngle={Math.PI * 0.7}
         autoRotate
-        autoRotateSpeed={0.8}
-        dampingFactor={0.08}
+        autoRotateSpeed={0.6}
         enableDamping
+        dampingFactor={0.08}
       />
     </>
   );
 }
 
-// ── Loading fallback ─────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOADING FALLBACK (inside Canvas)
+   ═══════════════════════════════════════════════════════════════════════════ */
 function LoadingFallback() {
+  var ref = useRef();
+  useFrame(function (state) {
+    if (ref.current) ref.current.rotation.y = state.clock.elapsedTime * 1.5;
+  });
   return (
-    <mesh>
-      <boxGeometry args={[1, 2, 0.1]} />
-      <meshStandardMaterial color="#c24dff" opacity={0.2} transparent />
+    <mesh ref={ref}>
+      <boxGeometry args={[0.4, 1.2, 0.1]} />
+      <meshStandardMaterial color="#7c3aed" transparent opacity={0.25} />
     </mesh>
   );
 }
 
-// ── Main exported component ──────────────────────────────────────────────────
-export default function Body3D({
-  scaleX = 1,
-  scaleY = 1,
-  hoveredZone = null,
-  zoneScores = {},
-  onZoneHover,
-  width = '100%',
-  height = 460,
-  style = {},
-}) {
-  const [shapes, setShapes] = useState([]);
-  const [loading, setLoading] = useState(true);
+/* ═══════════════════════════════════════════════════════════════════════════
+   BODY3D — main exported component with Canvas
+   ═══════════════════════════════════════════════════════════════════════════ */
+function Body3D(props) {
+  var width  = props.width  || '100%';
+  var height = props.height || '100%';
+  var style  = props.style  || {};
 
-  // Fetch and parse SVG
-  useEffect(() => {
-    fetch('/images/men.svg')
-      .then((r) => r.text())
-      .then((svgText) => {
-        const parsed = parseSvgToShapes(svgText);
-        setShapes(parsed);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return (
-      <div style={{
-        width, height, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        ...style,
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 36, height: 36, border: '3px solid rgba(194,77,255,.25)',
-            borderTopColor: '#c24dff', borderRadius: '50%',
-            animation: 'body3dSpin .8s linear infinite',
-            margin: '0 auto 10px',
-          }} />
-          <p style={{ color: '#9ca3af', fontSize: 12 }}>Loading 3D Model…</p>
-          <style>{`@keyframes body3dSpin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      </div>
-    );
-  }
+  var userHeight       = props.userHeight || 165;
+  var userWeight       = props.userWeight || 58;
+  var pcosIndex        = props.pcosIndex || 0;
+  var insulinResistance = props.insulinResistance || 0;
+  var thyroidFactor    = props.thyroidFactor != null ? props.thyroidFactor : 1;
+  var isSimulating     = props.isSimulating || false;
+  var hoveredNode      = props.hoveredNode != null ? props.hoveredNode : null;
+  var onNodeHover      = props.onNodeHover || function () {};
 
   return (
-    <div style={{ width, height, position: 'relative', ...style }}>
+    <div style={Object.assign({ width: width, height: height, position: 'relative', overflow: 'hidden' }, style)}>
       <Canvas
-        camera={{ position: [0, 0, 10], fov: 45, near: 0.1, far: 100 }}
-        gl={{ antialias: true, alpha: true }}
+        camera={{ position: [0, 0.7, 3.2], fov: 38, near: 0.1, far: 50 }}
+        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        dpr={[1, 1.5]}
         style={{ background: 'transparent' }}
-        dpr={[1, 2]}
       >
         <Suspense fallback={<LoadingFallback />}>
           <SceneContent
-            shapes={shapes}
-            scaleX={scaleX}
-            scaleY={scaleY}
-            hoveredZone={hoveredZone}
-            zoneScores={zoneScores}
-            onZoneHover={onZoneHover}
+            userHeight={userHeight}
+            userWeight={userWeight}
+            pcosIndex={pcosIndex}
+            insulinResistance={insulinResistance}
+            thyroidFactor={thyroidFactor}
+            isSimulating={isSimulating}
+            hoveredNode={hoveredNode}
+            onNodeHover={onNodeHover}
           />
         </Suspense>
       </Canvas>
     </div>
   );
 }
+
+export default Body3D;

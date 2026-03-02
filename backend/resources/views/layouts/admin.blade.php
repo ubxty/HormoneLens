@@ -16,6 +16,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
+    [x-cloak] { display: none !important; }
     /* ═══════════════════════════════════════════════
        HormoneLens — Admin Glassmorphism System v2
        Pastel gradient healthcare AI theme
@@ -407,6 +408,7 @@ function toastManager() {
     };
 }
 function toast(m,t='success'){window.dispatchEvent(new CustomEvent('toast',{detail:{message:m,type:t}}));}
+
 /* Animate elements */
 function admAnimate(){ document.querySelectorAll('[data-adm]').forEach(el=>el.classList.add('adm-v')); }
 function admCountUp(el,target,dur){dur=dur||900;let s=null;const n=parseFloat(target)||0;const step=t=>{if(!s)s=t;const p=Math.min((t-s)/dur,1);el.textContent=Math.floor(p*n);if(p<1)requestAnimationFrame(step);else el.textContent=n;};requestAnimationFrame(step);}
