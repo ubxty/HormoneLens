@@ -14,6 +14,7 @@ class UpdateHealthProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'gender' => ['sometimes', 'in:female,male'],
             'weight' => ['sometimes', 'numeric', 'min:20', 'max:300'],
             'height' => ['sometimes', 'numeric', 'min:50', 'max:250'],
             'avg_sleep_hours' => ['sometimes', 'numeric', 'min:0', 'max:24'],
