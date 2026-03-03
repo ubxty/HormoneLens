@@ -93,6 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [HistoryController::class, 'index']);
         Route::get('/{id}', [HistoryController::class, 'show']);
         Route::post('/{id}/rerun', [HistoryController::class, 'rerun']);
+        Route::delete('/{id}', [HistoryController::class, 'destroy']);
     });
 
     // ── RAG Knowledge Base ───────────────────────────

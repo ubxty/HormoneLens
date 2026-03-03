@@ -31,4 +31,12 @@ class HistoryRepository
             ->with(['digitalTwin', 'alerts'])
             ->find($id);
     }
+
+    public function deleteForUser(int $id, User $user): bool
+    {
+        $simulation = $this->findByIdForUser($id, $user);
+        if (!$simulation) return false;
+
+        return $simulation->delete();
+    }
 }

@@ -92,4 +92,24 @@ class HistoryController extends Controller
             'data' => new SimulationResource($simulation),
         ], 201);
     }
+
+    /**
+     * Delete a history entry.
+     */
+    public function destroy(Request $request, int $id)
+    {
+        $deleted = $this->historyRepo->deleteForUser($id, $request->user());
+
+        if (!$deleted) {
+            return response()->json([
+                'success' => false,
+                'message' => 'History entry not found or could not be deleted.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'History entry deleted successfully.',
+        ]);
+    }
 }

@@ -121,9 +121,12 @@
                             <p x-show="s.rag_confidence" class="text-[10px] text-gray-400 mt-1" x-text="'Confidence: '+(s.rag_confidence*100).toFixed(0)+'%'"></p>
                         </div>
 
-                        <div>
+                        <div class="flex items-center gap-2">
                             <button @click="rerun(s)" :disabled="s._rerunning" class="gl-btn">
                                 <span x-show="!s._rerunning">🔄 Rerun</span><span x-show="s._rerunning">Running…</span>
+                            </button>
+                            <button @click="deleteEntry(s.id)" class="gl-btn !bg-rose-500 hover:!bg-rose-600">
+                                🗑️ Delete
                             </button>
                         </div>
                     </div>
@@ -155,6 +158,16 @@ function historyPage() {
             if(r.success){ toast('Simulation rerun complete!'); this.history.unshift({...r.data, _open:true, _rerunning:false}); }
             else toast(r.message || 'Rerun failed', 'error');
             s._rerunning = false;
+        },
+        async deleteEntry(id){
+            if(!confirm('Are you sure you want to delete this simulation?')) return;
+            const r = await api.delete('/history/' + id);
+            if(r.success){
+                toast('Simulation deleted');
+                this.history = this.history.filter(h => h.id !== id);
+            } else {
+                toast(r.message || 'Delete failed', 'error');
+            }
         }
     };
 }
