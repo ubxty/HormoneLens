@@ -54,7 +54,7 @@ if (file_exists($_svgSrc)) {
     $_raw = preg_replace('/fill="#FEFEFE"/', 'fill="none"', $_raw, 1);
     $dtBodySvg = preg_replace(
         '/<svg\b[^>]*>/',
-        '<svg viewBox="183 0 96 350" preserveAspectRatio="xMidYMid meet" style="width:90px;height:auto;display:block;position:relative;z-index:2;pointer-events:none">',
+        '<svg viewBox="183 0 96 350" preserveAspectRatio="xMidYMid meet" style="width:90px;height:auto;display:block;position:relative;z-index:2;pointer-events:none;margin:auto">',
         $_raw,
         1
     );
@@ -105,7 +105,7 @@ if (file_exists($_svgSrc)) {
         <div x-show="!loading && twin" x-cloak>
 
             {{-- ═══ Body Visualization ═══ --}}
-            <div class="gl-card p-5 mb-4 gl-a gl-d1" data-gl>
+            <div class="gl-card p-5 mb-4 gl-a gl-d1 " data-gl>
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xs font-bold uppercase tracking-widest gl-grad-text">🫀 Body Visualization</h2>
                     <span class="text-[11px] text-gray-500 font-medium"
@@ -113,35 +113,35 @@ if (file_exists($_svgSrc)) {
                 </div>
 
                 {{-- Desktop viz frame (hidden on xs) --}}
-                <div class="hidden sm:block relative mx-auto" style="height:340px;max-width:500px">
+                <div class="hidden sm:block relative mx-auto " style="height:340px;max-width:750px">
 
                     {{-- SVG connecting lines --}}
-                    <svg class="absolute inset-0 w-full h-full" viewBox="0 0 500 340"
+                    <svg class="absolute inset-0 w-full h-full" viewBox="0 0 750 340"
                          preserveAspectRatio="xMidYMid meet" style="z-index:1;pointer-events:none">
                         {{-- Stress → Head --}}
-                        <path d="M103,40 C150,40 165,36 213,36"
+                        <path d="M120,40 C220,40 260,36 330,36"
                               fill="none" stroke="#ef444455" stroke-width="1.5" stroke-linecap="round"
                               class="dt-conn-line"/>
                         {{-- Sleep → Chest --}}
-                        <path d="M103,135 C150,135 165,130 212,130"
+                        <path d="M120,135 C220,135 260,130 330,130"
                               fill="none" stroke="#3b82f655" stroke-width="1.5" stroke-linecap="round"
                               class="dt-conn-line" style="animation-delay:.3s"/>
                         {{-- Metabolic → Abdomen --}}
-                        <path d="M103,215 C150,215 165,200 212,200"
+                        <path d="M120,215 C220,215 260,200 330,200"
                               fill="none" stroke="#a855f755" stroke-width="1.5" stroke-linecap="round"
                               class="dt-conn-line" style="animation-delay:.6s"/>
                         {{-- Insulin → Arm R --}}
-                        <path d="M397,118 C350,118 335,128 290,128"
+                        <path d="M630,118 C530,118 490,128 420,128"
                               fill="none" stroke="#f9731655" stroke-width="1.5" stroke-linecap="round"
                               class="dt-conn-line" style="animation-delay:.15s"/>
                         {{-- Diet → Abdomen R --}}
-                        <path d="M397,218 C350,218 335,202 290,202"
+                        <path d="M630,218 C530,218 490,202 420,202"
                               fill="none" stroke="#10b98155" stroke-width="1.5" stroke-linecap="round"
                               class="dt-conn-line" style="animation-delay:.45s"/>
                     </svg>
 
                     {{-- Body figure --}}
-                    <div class="absolute dt-body-anim"
+                    <div class="absolute dt-body-anim w-full"
                          style="left:50%;top:0;transform-origin:top center;overflow:visible"
                          :style="'transform:translateX(-50%) scaleX('+bmiScaleX()+')'">
 
@@ -211,9 +211,6 @@ if (file_exists($_svgSrc)) {
                              style="background:linear-gradient(90deg,#10b981,#06b6d4)"
                              :style="'width:'+(twin?.diet_score||0)*10+'%'"></div>
                     </div>
-                </div>
-
-                    {{-- Removed old absolute column tags from here --}}
                 </div>
 
                 {{-- Mobile: compact score pills --}}
