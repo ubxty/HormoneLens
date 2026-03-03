@@ -11,6 +11,7 @@ class HealthProfileResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'gender' => $this->gender,
             'weight' => (float) $this->weight,
             'height' => (float) $this->height,
             'avg_sleep_hours' => (float) $this->avg_sleep_hours,

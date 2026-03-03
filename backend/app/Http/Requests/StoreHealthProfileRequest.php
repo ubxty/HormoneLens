@@ -14,6 +14,7 @@ class StoreHealthProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'gender' => ['required', 'in:female,male'],
             'weight' => ['required', 'numeric', 'min:20', 'max:300'],
             'height' => ['required', 'numeric', 'min:50', 'max:250'],
             'avg_sleep_hours' => ['required', 'numeric', 'min:0', 'max:24'],

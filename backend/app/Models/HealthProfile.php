@@ -13,6 +13,7 @@ class HealthProfile extends Model
     use HasFactory;
     protected $fillable = [
         'user_id',
+        'gender',
         'weight',
         'height',
         'avg_sleep_hours',
