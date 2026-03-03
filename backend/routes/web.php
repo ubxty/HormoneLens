@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/alerts',         [PageController::class, 'alerts'])->name('alerts');
     Route::get('/history',        [PageController::class, 'history'])->name('history');
     Route::get('/knowledge',      [PageController::class, 'ragQuery'])->name('knowledge');
+    Route::get('/rag-query', function () { return redirect()->route('knowledge'); })->name('rag-query');
 });
 
 // ─── Admin pages (auth + admin) ─────────────────────

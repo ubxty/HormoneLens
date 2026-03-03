@@ -341,11 +341,14 @@ export default function InteractiveDigitalTwin() {
           style={{ position: 'relative', width: '100%', maxWidth: 360 }}
         >
           <Body3D
-            scaleX={scaleX}
-            scaleY={scaleY}
-            hoveredZone={hoveredZone}
-            zoneScores={zoneScores}
-            onZoneHover={setHoveredZone}
+            userHeight={profile?.height || 165}
+            userWeight={profile?.weight || 58}
+            pcosIndex={twin?.metabolic_health_score || 0}
+            insulinResistance={twin?.insulin_resistance_score || 0}
+            thyroidFactor={twin ? Math.max(0.2, 1 - (twin.stress_score || 0) * 0.08) : 1}
+            isSimulating={false}
+            hoveredNode={hoveredZone}
+            onNodeHover={setHoveredZone}
             height={isMobile ? 440 : 480}
           />
 
