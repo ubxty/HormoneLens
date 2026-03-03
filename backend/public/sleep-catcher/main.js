@@ -51,6 +51,7 @@
 
         input: {
             activePointers: 2,
+            keyboard: true,
             touch: {
                 capture: true
             }

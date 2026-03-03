@@ -13,6 +13,11 @@ class MenuScene extends Phaser.Scene {
         const s = Math.max(ResponsiveScale.getScale(this.game), 0.55);
         const font = '"Segoe UI", system-ui, sans-serif';
 
+        // Ensure canvas has focus for keyboard input
+        this.game.canvas.setAttribute('tabindex', '1');
+        this.game.canvas.style.outline = 'none';
+        this.game.canvas.focus();
+
         // Space background
         this.add.image(cx, cy, 'bg_space').setDisplaySize(width, height);
         this.starsFar = this.add.tileSprite(cx, cy, width, height, 'bg_stars_far')
@@ -153,17 +158,32 @@ class MenuScene extends Phaser.Scene {
         yPos += 12;
 
         // ── Controls hint ──
+        this.add.text(panelX + pad, yPos, 'CONTROLS', {
+            fontFamily: font, fontSize: Math.round(10 * s) + 'px',
+            color: '#00FFCC', fontStyle: 'bold', letterSpacing: 2
+        });
+        yPos += 20 * s;
+
         const isMob = ResponsiveScale.isMobile();
-        const ctrlText = isMob
-            ? 'Drag to move  \u2022  Auto-fire'
-            : 'Arrow / WASD  \u2022  Space to fire  \u2022  ESC to exit';
-        this.add.text(cx, yPos, ctrlText, {
-            fontFamily: font, fontSize: Math.round(12 * s) + 'px',
-            color: '#97A8C8'
-        }).setOrigin(0.5, 0);
+        if (isMob) {
+            this.add.text(cx, yPos + 5, '👆 Drag finger to move  |  🔥 Auto-fire enabled', {
+                fontFamily: font, fontSize: Math.round(14 * s) + 'px',
+                color: '#FFFFFF', fontStyle: 'bold'
+            }).setOrigin(0.5, 0);
+        } else {
+            this.add.text(cx - 30 * s, yPos, 'W A S D  /  ARROWS  —  Move Ship', {
+                fontFamily: font, fontSize: Math.round(13 * s) + 'px',
+                color: '#FFFFFF', fontStyle: 'bold'
+            }).setOrigin(1, 0);
+            this.add.text(cx + 30 * s, yPos, 'SPACE  —  Shoot', {
+                fontFamily: font, fontSize: Math.round(13 * s) + 'px',
+                color: '#FFFFFF', fontStyle: 'bold'
+            }).setOrigin(0, 0);
+        }
+        yPos += 24 * s;
 
         // ── Start button ──
-        const btnY = panelY + panelH - 40;
+        const btnY = panelY + panelH - 30;
         const startBtn = this.add.image(cx, btnY, 'ui_button').setScale(s).setInteractive({ useHandCursor: true });
         const startLabel = this.add.text(cx, btnY, '\u25B6  LAUNCH', {
             fontFamily: font, fontSize: Math.round(18 * s) + 'px',

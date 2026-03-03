@@ -12,26 +12,17 @@
     <div id="game-container"></div>
 
     <script>
-        // Prevent parent page from scrolling while the game is active
+        // Notify parent page about focus so it can lock its own scroll
         (function () {
-            var keys = [32, 37, 38, 39, 40]; // Space, Left, Up, Right, Down
-            function lock(e) {
-                if (keys.includes(e.keyCode)) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }
-            document.addEventListener('keydown', lock, { passive: false });
-            document.addEventListener('wheel',   function(e){ e.preventDefault(); }, { passive: false });
-            document.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive: false });
-
-            // Tell parent page we are active so IT can lock scroll too
             window.addEventListener('focus', function () {
                 try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch(e) {}
             });
             window.addEventListener('blur', function () {
                 try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch(e) {}
             });
+            // Prevent wheel/touch scroll (no page scroll inside game iframe)
+            document.addEventListener('wheel', function(e){ e.preventDefault(); }, { passive: false });
+            document.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive: false });
         })();
     </script>
 

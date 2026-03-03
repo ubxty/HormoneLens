@@ -183,6 +183,11 @@ class GameScene extends Phaser.Scene {
 
     /* ── Controls ──────────────────────────────────── */
     _createControls(w, h) {
+        // Ensure canvas has focus so keyboard events reach Phaser
+        this.game.canvas.setAttribute('tabindex', '1');
+        this.game.canvas.style.outline = 'none';
+        this.game.canvas.focus();
+
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasd = {
             up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -191,6 +196,15 @@ class GameScene extends Phaser.Scene {
             right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         };
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+        // Capture these keys so browser doesn't handle them
+        this.input.keyboard.addCapture([
+            Phaser.Input.Keyboard.KeyCodes.SPACE,
+            Phaser.Input.Keyboard.KeyCodes.UP,
+            Phaser.Input.Keyboard.KeyCodes.DOWN,
+            Phaser.Input.Keyboard.KeyCodes.LEFT,
+            Phaser.Input.Keyboard.KeyCodes.RIGHT
+        ]);
 
         // ESC → exit game back to MenuScene
         this.input.keyboard.once('keydown-ESC', () => this._exitToMenu());
@@ -271,19 +285,18 @@ class GameScene extends Phaser.Scene {
         if (time < this.lastFired + rate) return;
         this.lastFired = time;
 
-        const bullet = this.playerBullets.get(this.player.x + 28, this.player.y,
-            this.isRapidFire ? 'bullet_charged' : 'bullet_player');
+        const key = this.isRapidFire ? 'bullet_charged' : 'bullet_player';
+        const bullet = this.playerBullets.get(this.player.x + 28, this.player.y, key);
         if (!bullet) return;
 
+        bullet.setTexture(key);
         bullet.setActive(true).setVisible(true).setDepth(8);
-        bullet.body.enable = true;
+        if (bullet.body) {
+            bullet.body.enable = true;
+            bullet.body.setSize(bullet.width, bullet.height);
+        }
         bullet.setVelocityX(this.isRapidFire ? 550 : 480);
         bullet.setVelocityY(0);
-
-        // Auto-cleanup
-        this.time.delayedCall(2500, () => {
-            if (bullet.active) { bullet.setActive(false); bullet.setVisible(false); bullet.body.enable = false; }
-        });
 
         this._playSound(this.isRapidFire ? 'snd_charged' : 'snd_shoot');
     }
@@ -365,8 +378,12 @@ class GameScene extends Phaser.Scene {
         const bullet = this.enemyBullets.get(enemy.x - 10, enemy.y, 'bullet_enemy');
         if (!bullet) return;
 
+        bullet.setTexture('bullet_enemy');
         bullet.setActive(true).setVisible(true).setDepth(5);
-        bullet.body.enable = true;
+        if (bullet.body) {
+            bullet.body.enable = true;
+            bullet.body.setSize(bullet.width, bullet.height);
+        }
 
         // Fire ONLY toward the left — never behind the ship
         const speed = 180 + this.waveNum * 10;
@@ -376,10 +393,6 @@ class GameScene extends Phaser.Scene {
             -speed,
             Math.sin(angleToPlayer) * speed * 0.5
         );
-
-        this.time.delayedCall(4000, () => {
-            if (bullet.active) { bullet.setActive(false); bullet.setVisible(false); bullet.body.enable = false; }
-        });
     }
 
     /* ── Power-Up Spawning ─────────────────────────── */
