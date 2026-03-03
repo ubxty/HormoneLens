@@ -75,6 +75,7 @@ export default function InteractiveDigitalTwin() {
   const [twin, setTwin]           = useState(null);
   const [profile, setProfile]     = useState(null);
   const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
   const [hoveredZone, setHovered] = useState(null);
   const [isMobile, setIsMobile]   = useState(window.innerWidth < 900);
 
@@ -85,16 +86,40 @@ export default function InteractiveDigitalTwin() {
   }, []);
 
   useEffect(() => {
-    const csrf = document.querySelector('meta[name=csrf-token]')?.content ?? '';
-    const opts = { headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf }, credentials: 'same-origin' };
-    Promise.all([
-      fetch('/api/digital-twin/active', opts).then(r => r.json()).catch(() => ({})),
-      fetch('/api/health-profile',       opts).then(r => r.json()).catch(() => ({})),
-    ]).then(([td, hd]) => {
-      if (td?.success && td.data) setTwin(td.data);
-      if (hd?.success && hd.data) setProfile(hd.data);
-      setLoading(false);
-    });
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const csrf = document.querySelector('meta[name=csrf-token]')?.content ?? '';
+        const opts = { headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf }, credentials: 'same-origin' };
+        
+        const [twinResponse, profileResponse] = await Promise.all([
+          fetch('/api/digital-twin/active', opts),
+          fetch('/api/health-profile', opts),
+        ]);
+
+        const twinResult = await twinResponse.json();
+        const profileResult = await profileResponse.json();
+
+        if (twinResult?.success) {
+          setTwin(twinResult.data);
+        } else if (twinResult?.message) {
+          console.warn('Digital Twin API:', twinResult.message);
+        }
+
+        if (profileResult?.success) {
+          setProfile(profileResult.data);
+        } else if (profileResult?.message) {
+          console.warn('Health Profile API:', profileResult.message);
+        }
+        
+      } catch (e) {
+        console.error("Failed to load dashboard data:", e);
+        setError('Could not connect to the API. Please ensure the backend server is running.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
   }, []);
 
   const height = profile?.height || 165;
@@ -106,6 +131,26 @@ export default function InteractiveDigitalTwin() {
 
   const CARD_Y = [22, 36, 50, 64, 78];
   const zoneYPct = { head: 10, chest: 28, abdomen: 42, ovaries: 53, thighs: 70 };
+
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ width: 44, height: 44, border: '3px solid rgba(194,77,255,.25)', borderTopColor: '#c24dff', borderRadius: '50%', animation: 'dtSpin .7s linear infinite', margin: '0 auto 14px' }} />
+        <p style={{ color: '#9ca3af', fontSize: 13 }}>Loading Digital Twin… (the API can be slow)</p>
+        <style>{'@keyframes dtSpin { to { transform: rotate(360deg); } }'}</style>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 20 }}>
+      <div style={{ maxWidth: 500, textAlign: 'center', background: 'rgba(255,255,255,.8)', padding: '20px 30px', borderRadius: 12, border: '1px solid #ef444430' }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>😥</div>
+        <h3 style={{ color: '#be123c', fontSize: 16, fontWeight: 800, marginBottom: 4 }}>API Error</h3>
+        <p style={{ color: '#dc2626', fontSize: 13 }}>{error}</p>
+      </div>
+    </div>
+  );
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
