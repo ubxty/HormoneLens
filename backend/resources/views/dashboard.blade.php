@@ -38,5 +38,5 @@
 @endsection
 
 @push('scripts')
-@vite('resources/js/dashboard-twin.jsx')
+{{-- @vite('resources/js/dashboard-twin.jsx') --}}
 @endpush
