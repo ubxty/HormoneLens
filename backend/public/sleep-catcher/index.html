@@ -3,36 +3,583 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Hormone Defense — Defend your hormonal balance from disruptors. A HormoneLens mini-game.">
-    <title>🚀 Hormone Defense | HormoneLens</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <meta name="description" content="Healthy Snake — eat healthy food, avoid junk, stay alive. A HormoneLens mini-game.">
+    <title>🐍 Healthy Snake | HormoneLens</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            background: #0d1117;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        canvas { display: block; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <div id="game-container"></div>
+<canvas id="gc"></canvas>
+<script>
+// ══════════════════════════════════════════════════════
+//  HEALTHY SNAKE GAME  —  HormoneLens Mini‑Game
+//  Eat healthy food to grow. Avoid junk food.
+//  3 junk food strikes → snake dies.
+// ══════════════════════════════════════════════════════
 
-    <script>
-        // Notify parent page about focus so it can lock its own scroll
-        (function () {
-            window.addEventListener('focus', function () {
-                try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch(e) {}
-            });
-            window.addEventListener('blur', function () {
-                try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch(e) {}
-            });
-            // Prevent wheel/touch scroll (no page scroll inside game iframe)
-            document.addEventListener('wheel', function(e){ e.preventDefault(); }, { passive: false });
-            document.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive: false });
-        })();
-    </script>
+// ── Constants ─────────────────────────────────────────
+const CELL      = 20;          // grid cell size (px)
+const COLS      = 30;          // grid columns
+const ROWS      = 23;          // grid rows
+const HUD_H     = 60;          // top HUD height (px)
+const W         = COLS * CELL; // canvas width  = 600
+const H         = ROWS * CELL + HUD_H; // canvas height = 520
 
-    <script src="utils/responsiveScale.js"></script>
-    <script src="scenes/BootScene.js"></script>
-    <script src="scenes/PreloadScene.js"></script>
-    <script src="scenes/MenuScene.js"></script>
-    <script src="scenes/GameScene.js"></script>
-    <script src="scenes/UIScene.js"></script>
-    <script src="scenes/ResultScene.js"></script>
-    <script src="main.js"></script>
+// Speed (ms per tick). Increases (slower) as snake gets fatter.
+const SPEEDS    = [145, 160, 182]; // index = fatLevel (0 / 1 / 2)
+
+const HEALTHY_FOODS = ['🍎', '🥕', '🥦', '🍇'];
+const JUNK_FOODS    = ['🍔', '🍟', '🍕', '🍩'];
+const JUNK_CHANCE   = 0.30; // 30% chance each food spawn is junk
+
+// Segment pixel size per fat level (cell = 20px)
+const SEG_SZ    = [16, 18, 20]; // slim / chubby / fat
+
+// Snake body colours per fat level: [even-segment colour, odd-segment colour]
+const SEG_COL   = [
+    ['#4ade80', '#22c55e'], // healthy green
+    ['#a3e635', '#84cc16'], // yellow-green (slightly fat)
+    ['#fb923c', '#f97316'], // orange (fat)
+];
+
+// ── Canvas setup ──────────────────────────────────────
+const canvas = document.getElementById('gc');
+const ctx    = canvas.getContext('2d');
+canvas.width  = W;
+canvas.height = H;
+
+function fitCanvas() {
+    const s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+    canvas.style.width  = (W * s) + 'px';
+    canvas.style.height = (H * s) + 'px';
+}
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
+
+// ── Game state ────────────────────────────────────────
+let S; // single mutable state object; recreated on each new game
+
+function newState() {
+    const mx = (COLS / 2) | 0;
+    const my = (ROWS / 2) | 0;
+    return {
+        screen       : 'menu',  // 'menu' | 'playing' | 'gameover'
+        snake        : [{ x: mx, y: my }, { x: mx - 1, y: my }, { x: mx - 2, y: my }],
+        dir          : { x: 1, y: 0 },
+        nextDir      : { x: 1, y: 0 },
+        food         : null,
+        score        : 0,
+        junkAttempts : 0,       // 0–3; at 3 → game over
+        fatLevel     : 0,       // 0–2 (visual + speed tier)
+        speed        : SPEEDS[0],
+        warnEnd      : 0,       // performance.now() timestamp when warning fades
+        gameOverReason : '',
+        isNewBest    : false,
+        lastTick     : 0,
+        highScore    : parseInt(localStorage.getItem('hl_snake_hs') || '0'),
+    };
+}
+S = newState();
+
+// ── Food helpers ──────────────────────────────────────
+function spawnFood() {
+    let pos;
+    // Ensure food never spawns on a snake body segment
+    do {
+        pos = { x: (Math.random() * COLS) | 0, y: (Math.random() * ROWS) | 0 };
+    } while (S.snake.some(s => s.x === pos.x && s.y === pos.y));
+
+    const isJunk = Math.random() < JUNK_CHANCE;
+    const list   = isJunk ? JUNK_FOODS : HEALTHY_FOODS;
+    S.food = { ...pos, isJunk, emoji: list[(Math.random() * list.length) | 0] };
+}
+
+// ── Game flow ─────────────────────────────────────────
+function startGame() {
+    const hs = S.highScore;
+    S           = newState();
+    S.highScore = hs;
+    S.screen    = 'playing';
+    S.lastTick  = performance.now();
+    spawnFood();
+}
+
+function triggerGameOver(reason) {
+    S.screen         = 'gameover';
+    S.gameOverReason = reason;
+    S.isNewBest      = false;
+    if (S.score > 0 && S.score > S.highScore) {
+        S.isNewBest = true;
+        S.highScore = S.score;
+        localStorage.setItem('hl_snake_hs', S.highScore);
+    }
+    try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
+}
+
+// ── Tick — one step of game logic ─────────────────────
+function tick() {
+    S.dir = S.nextDir;
+
+    const head = S.snake[0];
+    const nx   = head.x + S.dir.x;
+    const ny   = head.y + S.dir.y;
+
+    // Wall collision
+    if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) {
+        return triggerGameOver('Snake hit the wall!');
+    }
+    // Self-collision — exclude tail because it moves away this same tick
+    if (S.snake.slice(0, -1).some(s => s.x === nx && s.y === ny)) {
+        return triggerGameOver('Snake hit itself!');
+    }
+
+    const ateFood = S.food && nx === S.food.x && ny === S.food.y;
+
+    // Advance snake
+    S.snake.unshift({ x: nx, y: ny });
+    if (!ateFood) S.snake.pop(); // remove tail unless food eaten (grow)
+
+    // Process food effects
+    if (ateFood) {
+        if (S.food.isJunk) {
+            S.score        = Math.max(0, S.score - 5);
+            S.junkAttempts++;
+            S.fatLevel     = Math.min(S.junkAttempts, 2);
+            S.speed        = SPEEDS[S.fatLevel];
+            S.warnEnd      = performance.now() + 2200;
+            if (S.junkAttempts >= 3) {
+                return triggerGameOver('unhealthy');
+            }
+        } else {
+            S.score += 10;
+        }
+        spawnFood();
+    }
+}
+
+// ── Main game loop ────────────────────────────────────
+function loop(ts) {
+    requestAnimationFrame(loop);
+    if (S.screen === 'playing' && ts - S.lastTick >= S.speed) {
+        S.lastTick = ts;
+        tick();
+    }
+    render(ts);
+}
+requestAnimationFrame(loop);
+
+// ══════════════════════════════════════════════════════
+//  RENDERING
+// ══════════════════════════════════════════════════════
+
+function render(ts) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    if (S.screen === 'menu') { drawMenu(); return; }
+
+    drawGrid();
+    drawFood(ts);
+    drawSnake();
+    drawHUD();
+    if (ts < S.warnEnd) drawWarningBanner(S.warnEnd - ts);
+    if (S.screen === 'gameover') drawGameOver();
+}
+
+// ── Grid ──────────────────────────────────────────────
+function drawGrid() {
+    ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+    ctx.lineWidth   = 0.5;
+    for (let c = 0; c <= COLS; c++) {
+        ctx.beginPath();
+        ctx.moveTo(c * CELL, HUD_H);
+        ctx.lineTo(c * CELL, H);
+        ctx.stroke();
+    }
+    for (let r = 0; r <= ROWS; r++) {
+        ctx.beginPath();
+        ctx.moveTo(0, HUD_H + r * CELL);
+        ctx.lineTo(W, HUD_H + r * CELL);
+        ctx.stroke();
+    }
+}
+
+// ── Snake ─────────────────────────────────────────────
+function drawSnake() {
+    const fat        = Math.min(S.fatLevel, 2);
+    const seg        = SEG_SZ[fat];
+    const pad        = (CELL - seg) / 2;
+    const [c1, c2]   = SEG_COL[fat];
+    const cornerRad  = Math.max(3, seg * 0.28);
+
+    S.snake.forEach((cell, i) => {
+        const px = cell.x * CELL + pad;
+        const py = HUD_H + cell.y * CELL + pad;
+        ctx.fillStyle = i === 0 ? '#86efac' : (i % 2 === 0 ? c1 : c2);
+        rrect(px, py, seg, seg, cornerRad);
+        ctx.fill();
+    });
+
+    drawSnakeEyes(S.snake[0], seg, pad);
+}
+
+function drawSnakeEyes(head, seg, pad) {
+    const ox = head.x * CELL + pad;
+    const oy = HUD_H + head.y * CELL + pad;
+    const d  = S.dir;
+    const er = Math.max(1.5, seg * 0.1); // eye radius
+    const f  = seg * 0.66;               // forward distance from segment edge
+    const t  = seg * 0.25;               // lateral offset from segment edge
+
+    let p1, p2;
+    if      (d.x ===  1) { p1 = [ox + f,       oy + t      ]; p2 = [ox + f,       oy + seg - t]; }
+    else if (d.x === -1) { p1 = [ox + seg - f,  oy + t      ]; p2 = [ox + seg - f, oy + seg - t]; }
+    else if (d.y === -1) { p1 = [ox + t,         oy + seg - f]; p2 = [ox + seg - t, oy + seg - f]; }
+    else                 { p1 = [ox + t,         oy + f      ]; p2 = [ox + seg - t, oy + f      ]; }
+
+    [p1, p2].forEach(([ex, ey]) => {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(ex, ey, er + 1.2, 0, 6.28); ctx.fill();
+        ctx.fillStyle = '#0d1117';
+        ctx.beginPath(); ctx.arc(ex, ey, er,       0, 6.28); ctx.fill();
+    });
+}
+
+// ── Food ──────────────────────────────────────────────
+function drawFood(ts) {
+    if (!S.food) return;
+    const { x, y, isJunk, emoji } = S.food;
+
+    // Cell origin (top-left of the grid cell)
+    const ox = x * CELL;
+    const oy = HUD_H + y * CELL;
+
+    // Solid background tile — 80% of cell, centered
+    const pad   = CELL * 0.10;          // 2px inset on each side
+    const tileW = CELL - pad * 2;       // 16px
+    const bgColor = isJunk ? '#D32F2F' : '#2E7D32';
+    ctx.fillStyle = bgColor;
+    rrect(ox + pad, oy + pad, tileW, tileW, 4);
+    ctx.fill();
+
+    // Thin solid border for contrast against dark grid
+    const borderColor = isJunk ? '#FFC107' : '#A5D6A7';
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth   = 1.5;
+    rrect(ox + pad, oy + pad, tileW, tileW, 4);
+    ctx.stroke();
+
+    // Emoji at 16px — fills the tile without overflow
+    ctx.font         = '16px serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, ox + CELL / 2, oy + CELL / 2 + 1);
+}
+
+// ── HUD ───────────────────────────────────────────────
+function drawHUD() {
+    ctx.fillStyle = '#161b22';
+    ctx.fillRect(0, 0, W, HUD_H);
+    // Bottom border line
+    ctx.fillStyle = 'rgba(99,102,241,0.55)';
+    ctx.fillRect(0, HUD_H - 1, W, 1);
+
+    // — Score (left) —
+    ctx.font         = '9px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle    = '#64748b';
+    ctx.textAlign    = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('SCORE', 18, 12);
+    ctx.font      = 'bold 20px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#818cf8';
+    ctx.fillText(S.score, 18, 28);
+
+    // — Junk Attempts (centre) —
+    ctx.font         = '9px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle    = '#64748b';
+    ctx.textAlign    = 'center';
+    ctx.fillText('JUNK ATTEMPTS', W / 2, 12);
+    ctx.font      = 'bold 18px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = S.junkAttempts >= 2 ? '#f87171' : '#fb923c';
+    ctx.fillText(`${S.junkAttempts} / 3`, W / 2, 30);
+
+    // — Health hearts (right) —
+    ctx.font         = '9px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle    = '#64748b';
+    ctx.textAlign    = 'right';
+    ctx.fillText('HEALTH', W - 18, 12);
+    ctx.font      = '22px serif';
+    ctx.fillStyle = '#f87171';
+    const hearts = Math.max(0, 3 - S.junkAttempts);
+    ctx.fillText('♥'.repeat(hearts) + '♡'.repeat(3 - hearts), W - 18, 28);
+}
+
+// ── Warning banner ────────────────────────────────────
+function drawWarningBanner(remaining) {
+    const alpha = Math.min(1, remaining / 500);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = 'rgba(239,68,68,0.2)';
+    ctx.fillRect(0, HUD_H, W, 28);
+    ctx.font         = 'bold 12px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle    = '#fca5a5';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⚠️  Warning: Unhealthy Food Consumed!', W / 2, HUD_H + 14);
+    ctx.restore();
+}
+
+// ── Menu screen ───────────────────────────────────────
+function drawMenu() {
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.font = '54px serif';
+    ctx.fillText('🐍', W / 2, 100);
+
+    ctx.font      = 'bold 34px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('Healthy Snake', W / 2, 158);
+
+    ctx.font      = '14px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Eat healthy food. Avoid junk food. Stay alive!', W / 2, 188);
+
+    ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('Arrow Keys or WASD to move', W / 2, 216);
+
+    drawMenuLegend();
+
+    drawButton(W / 2 - 85, 368, 170, 44, '▶  Start Game');
+
+    if (S.highScore > 0) {
+        ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(`Best: ${S.highScore} pts`, W / 2, 428);
+    }
+    ctx.font      = '11px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.fillText('Press Enter or Space to start', W / 2, 450);
+}
+
+function drawMenuLegend() {
+    const bx = W / 2 - 190;
+    const by = 243;
+    const bw = 380;
+    const bh = 96;
+
+    ctx.fillStyle   = 'rgba(255,255,255,0.04)';
+    rrect(bx, by, bw, bh, 10); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+    ctx.lineWidth   = 1;
+    rrect(bx, by, bw, bh, 10); ctx.stroke();
+
+    const cy1 = by + 28;
+    const cy2 = by + 66;
+
+    // Healthy food row
+    ctx.font         = '15px serif';
+    ctx.fillStyle    = '#e2e8f0';
+    ctx.textAlign    = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🍎  🥕  🥦  🍇', bx + 16, cy1);
+    ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'right';
+    ctx.fillText('+10 pts  •  snake grows  •  stays healthy', bx + bw - 16, cy1);
+
+    // Junk food row
+    ctx.font         = '15px serif';
+    ctx.fillStyle    = '#e2e8f0';
+    ctx.textAlign    = 'left';
+    ctx.fillText('🍔  🍟  🍕  🍩', bx + 16, cy2);
+    ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#fb923c';
+    ctx.textAlign = 'right';
+    ctx.fillText('−5 pts  •  gets fat & slower  •  3 strikes = death', bx + bw - 16, cy2);
+}
+
+function drawButton(bx, by, bw, bh, text) {
+    const g = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
+    g.addColorStop(0, '#7c3aed');
+    g.addColorStop(1, '#6d28d9');
+    ctx.fillStyle = g;
+    rrect(bx, by, bw, bh, 10);
+    ctx.fill();
+    ctx.font         = 'bold 16px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle    = '#ffffff';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, bx + bw / 2, by + bh / 2);
+}
+
+// ── Game Over screen ──────────────────────────────────
+function drawGameOver() {
+    ctx.fillStyle = 'rgba(0,0,0,0.72)';
+    ctx.fillRect(0, 0, W, H);
+
+    const pw = 390, ph = 295;
+    const px = W / 2 - pw / 2;
+    const py = H / 2 - ph / 2;
+
+    ctx.fillStyle = '#1e293b';
+    rrect(px, py, pw, ph, 16); ctx.fill();
+    ctx.strokeStyle = 'rgba(99,102,241,0.6)';
+    ctx.lineWidth   = 1.5;
+    rrect(px, py, pw, ph, 16); ctx.stroke();
+
+    const cx = W / 2;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+
+    const isUnhealthyDeath = S.gameOverReason === 'unhealthy';
+
+    ctx.font = '32px serif';
+    ctx.fillText(isUnhealthyDeath ? '💀' : '💥', cx, py + 52);
+
+    ctx.font      = 'bold 26px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#f87171';
+    ctx.fillText('GAME OVER', cx, py + 94);
+
+    ctx.font      = '13px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText(
+        isUnhealthyDeath ? 'Snake became unhealthy and died.' : S.gameOverReason,
+        cx, py + 122
+    );
+
+    if (isUnhealthyDeath) {
+        ctx.font      = '11px "Segoe UI", system-ui, sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('Reason: Unhealthy diet (3 junk food strikes)', cx, py + 143);
+    }
+
+    ctx.font      = 'bold 20px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText(`Final Score: ${S.score}`, cx, py + 168);
+
+    if (S.isNewBest) {
+        ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('🏆  New Best Score!', cx, py + 191);
+    }
+
+    drawButton(cx - 90, py + 214, 180, 44, '↺  Restart Game');
+
+    ctx.font      = '10px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.fillText('Press R, Enter or Space to restart', cx, py + ph - 10);
+}
+
+// ── Rounded rectangle path helper ────────────────────
+function rrect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y,     x + w, y + r,     r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h,     x, y + h - r,     r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y,         x + r, y,         r);
+    ctx.closePath();
+}
+
+// ══════════════════════════════════════════════════════
+//  INPUT HANDLING
+// ══════════════════════════════════════════════════════
+
+document.addEventListener('keydown', function (e) {
+    const k = e.key;
+
+    if (S.screen === 'menu') {
+        if (k === 'Enter' || k === ' ') { e.preventDefault(); startGame(); }
+        return;
+    }
+    if (S.screen === 'gameover') {
+        if (k === 'Enter' || k === ' ' || k === 'r' || k === 'R') {
+            e.preventDefault(); startGame();
+        }
+        return;
+    }
+
+    // Playing — change direction (prevent 180° reversal)
+    const { dir } = S;
+    if ((k === 'ArrowUp'    || k === 'w' || k === 'W') && dir.y !==  1) S.nextDir = { x:  0, y: -1 };
+    if ((k === 'ArrowDown'  || k === 's' || k === 'S') && dir.y !== -1) S.nextDir = { x:  0, y:  1 };
+    if ((k === 'ArrowLeft'  || k === 'a' || k === 'A') && dir.x !==  1) S.nextDir = { x: -1, y:  0 };
+    if ((k === 'ArrowRight' || k === 'd' || k === 'D') && dir.x !== -1) S.nextDir = { x:  1, y:  0 };
+
+    if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(k)) {
+        e.preventDefault();
+    }
+});
+
+// Click — button hit-testing (scaled canvas aware)
+canvas.addEventListener('click', function (e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx   = (e.clientX - rect.left) * (W / rect.width);
+    const my   = (e.clientY - rect.top)  * (H / rect.height);
+
+    if (S.screen === 'menu') {
+        // Start button bounds
+        if (mx >= W / 2 - 85 && mx <= W / 2 + 85 && my >= 368 && my <= 412) startGame();
+    } else if (S.screen === 'gameover') {
+        // Restart button bounds
+        const py = H / 2 - 295 / 2;
+        if (mx >= W / 2 - 90 && mx <= W / 2 + 90 && my >= py + 214 && my <= py + 258) startGame();
+    }
+});
+
+// Touch — swipe to steer, tap to advance non-playing screens
+let tcX = 0, tcY = 0;
+canvas.addEventListener('touchstart', function (e) {
+    tcX = e.touches[0].clientX;
+    tcY = e.touches[0].clientY;
+}, { passive: true });
+
+canvas.addEventListener('touchend', function (e) {
+    const t  = e.changedTouches[0];
+    const dx = t.clientX - tcX;
+    const dy = t.clientY - tcY;
+
+    if (S.screen === 'menu')     { startGame(); return; }
+    if (S.screen === 'gameover') { startGame(); return; }
+
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; // ignore taps
+
+    const { dir } = S;
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0 && dir.x !== -1) S.nextDir = { x:  1, y: 0 };
+        else if (dx < 0 && dir.x !==  1) S.nextDir = { x: -1, y: 0 };
+    } else {
+        if (dy > 0 && dir.y !== -1) S.nextDir = { x: 0, y:  1 };
+        else if (dy < 0 && dir.y !==  1) S.nextDir = { x: 0, y: -1 };
+    }
+}, { passive: true });
+
+// ── Parent page communication (scroll lock) ───────────
+window.addEventListener('focus', () => {
+    try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch (_) {}
+});
+window.addEventListener('blur', () => {
+    try { window.parent.postMessage({ type: 'GAME_BLUR'  }, '*'); } catch (_) {}
+});
+document.addEventListener('wheel',     e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+</script>
 </body>
 </html>
