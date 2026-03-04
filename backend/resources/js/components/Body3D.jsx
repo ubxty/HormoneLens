@@ -1,95 +1,72 @@
-import React, { useRef, useState, useMemo, useCallback, Suspense } from 'react';
+import React, { useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Html, ContactShadows, Float } from '@react-three/drei';
+import { OrbitControls, Html, ContactShadows, Float, useFBX } from '@react-three/drei';
+import * as THREE from 'three';
+import { SkeletonUtils } from 'three-stdlib';
+import characterFbxUrl from './Ch09_nonPBR.fbx?url';
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   BODY PART DEFINITIONS — female silhouette built from capsule + sphere prims
-   ═══════════════════════════════════════════════════════════════════════════ */
-const BASE_PARTS = [
-  // Head & neck
-  { n: 'head',    g: 'sphere',  p: [0, 1.62, 0],   a: [0.17, 32, 32],            s: [1, 1.06, 0.94] },
-  { n: 'neck',    g: 'capsule', p: [0, 1.43, 0],    a: [0.048, 0.06, 8, 16],      s: [1, 1, 0.88] },
-  // Torso
-  { n: 'shoulderBridge', g: 'capsule', p: [0, 1.33, 0], a: [0.055, 0.04, 8, 16],  s: [3.2, 0.75, 0.82] },
-  { n: 'upperTorso',     g: 'capsule', p: [0, 1.21, 0], a: [0.115, 0.1, 8, 16],   s: [1.48, 1, 0.82] },
-  { n: 'bustL',          g: 'sphere',  p: [-0.075, 1.2, 0.06], a: [0.06, 16, 16] },
-  { n: 'bustR',          g: 'sphere',  p: [0.075, 1.2, 0.06],  a: [0.06, 16, 16] },
-  { n: 'midTorso',       g: 'capsule', p: [0, 1.06, 0], a: [0.098, 0.07, 8, 16],  s: [1.22, 1, 0.78] },
-  { n: 'waist',          g: 'sphere',  p: [0, 0.93, 0], a: [0.1, 16, 16],          s: [1.18, 0.9, 0.78] },
-  // Abdomen — dynamically scaled
-  { n: 'abdomen',        g: 'sphere',  p: [0, 0.81, 0.01], a: [0.125, 20, 20],     s: [1.3, 1, 0.85], dynamic: 'abdomen' },
-  // Hips & pelvis
-  { n: 'hips',           g: 'sphere',  p: [0, 0.69, 0],    a: [0.145, 20, 20],     s: [1.6, 0.72, 0.82] },
-  { n: 'pelvis',         g: 'sphere',  p: [0, 0.6, 0],     a: [0.1, 16, 16],       s: [1.38, 0.58, 0.78] },
-  // Legs — thighs dynamically scaled
-  { n: 'thighL', g: 'capsule', p: [-0.1, 0.36, 0],  a: [0.065, 0.28, 8, 16], s: [1, 1, 0.88], dynamic: 'thigh' },
-  { n: 'thighR', g: 'capsule', p: [0.1, 0.36, 0],   a: [0.065, 0.28, 8, 16], s: [1, 1, 0.88], dynamic: 'thigh' },
-  { n: 'calfL',  g: 'capsule', p: [-0.1, -0.04, 0],  a: [0.048, 0.3, 8, 16] },
-  { n: 'calfR',  g: 'capsule', p: [0.1, -0.04, 0],   a: [0.048, 0.3, 8, 16] },
-  { n: 'footL',  g: 'capsule', p: [-0.1, -0.36, 0.02], a: [0.033, 0.055, 8, 16], s: [0.88, 1, 1.4], r: [0.3, 0, 0] },
-  { n: 'footR',  g: 'capsule', p: [0.1, -0.36, 0.02],  a: [0.033, 0.055, 8, 16], s: [0.88, 1, 1.4], r: [0.3, 0, 0] },
-  // Arms
-  { n: 'upperArmL', g: 'capsule', p: [-0.235, 1.16, 0], a: [0.034, 0.17, 8, 16], r: [0, 0, 0.08] },
-  { n: 'upperArmR', g: 'capsule', p: [0.235, 1.16, 0],  a: [0.034, 0.17, 8, 16], r: [0, 0, -0.08] },
-  { n: 'forearmL',   g: 'capsule', p: [-0.25, 0.9, 0],   a: [0.028, 0.17, 8, 16], r: [0, 0, 0.04] },
-  { n: 'forearmR',   g: 'capsule', p: [0.25, 0.9, 0],    a: [0.028, 0.17, 8, 16], r: [0, 0, -0.04] },
-  { n: 'handL',      g: 'sphere',  p: [-0.26, 0.74, 0],  a: [0.028, 12, 12], s: [0.7, 1, 0.5] },
-  { n: 'handR',      g: 'sphere',  p: [0.26, 0.74, 0],   a: [0.028, 12, 12], s: [0.7, 1, 0.5] },
-];
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   HORMONE NODE DEFINITIONS
-   ═══════════════════════════════════════════════════════════════════════════ */
 const HORMONE_NODES = [
   { id: 'pituitary', label: 'Pituitary Gland', info: 'Master endocrine regulator · HPA Axis',     pos: [0, 1.64, 0.14],    r: 0.032 },
   { id: 'thyroid',   label: 'Thyroid',          info: 'T3/T4 metabolic rate control',              pos: [0, 1.42, 0.06],    r: 0.036 },
   { id: 'pancreas',  label: 'Pancreas',         info: 'Insulin & glucagon secretion',              pos: [0.08, 0.91, 0.1],  r: 0.034 },
-  { id: 'ovaryL',    label: 'Left Ovary',       info: 'Estrogen · Progesterone · PCOS marker',     pos: [-0.09, 0.67, 0.06], r: 0.026 },
-  { id: 'ovaryR',    label: 'Right Ovary',      info: 'Estrogen · Progesterone · PCOS marker',     pos: [0.09, 0.67, 0.06],  r: 0.026 },
+  { id: 'ovaryL',    label: 'Left Ovary',       info: 'Estrogen · Progesterone · PCOS marker',    pos: [-0.09, 0.67, 0.06], r: 0.026 },
+  { id: 'ovaryR',    label: 'Right Ovary',      info: 'Estrogen · Progesterone · PCOS marker',    pos: [0.09, 0.67, 0.06],  r: 0.026 },
 ];
 
-/* ---------- Node glow color logic ---------- */
+function clamp01(value) {
+  return Math.min(1, Math.max(0, value));
+}
+
 function getNodeColor(id, pcosIdx, insulinRes, thyroidFac, sim) {
   if (sim) return '#10b981';
   switch (id) {
-    case 'ovaryL': case 'ovaryR':
+    case 'ovaryL':
+    case 'ovaryR':
       return pcosIdx > 5 ? '#a855f7' : pcosIdx > 2 ? '#c084fc' : '#10b981';
     case 'pancreas':
       return insulinRes > 5 ? '#3b82f6' : insulinRes > 2 ? '#60a5fa' : '#10b981';
     case 'thyroid':
       return thyroidFac < 0.4 ? '#f97316' : thyroidFac < 0.7 ? '#fb923c' : '#10b981';
-    default: return '#8b5cf6';
+    default:
+      return '#8b5cf6';
   }
 }
 
-/* ---------- Status text for tooltip ---------- */
 function getNodeStatus(id, pcosIdx, insulinRes, thyroidFac) {
   switch (id) {
-    case 'ovaryL': case 'ovaryR':
-      return pcosIdx > 5 ? `PCOS Imbalance \u2191 ${(pcosIdx * 10).toFixed(0)}%` :
-             pcosIdx > 2 ? `Mild PCOS Signal \u2191 ${(pcosIdx * 10).toFixed(0)}%` : 'Normal Range';
+    case 'ovaryL':
+    case 'ovaryR':
+      return pcosIdx > 5
+        ? `PCOS Imbalance ↑ ${(pcosIdx * 10).toFixed(0)}%`
+        : pcosIdx > 2
+        ? `Mild PCOS Signal ↑ ${(pcosIdx * 10).toFixed(0)}%`
+        : 'Normal Range';
     case 'pancreas':
-      return insulinRes > 5 ? `Insulin Sensitivity \u2193 ${(insulinRes * 12).toFixed(0)}%` :
-             insulinRes > 2 ? `Mild Resistance \u2193 ${(insulinRes * 7).toFixed(0)}%` : 'Normal Range';
+      return insulinRes > 5
+        ? `Insulin Sensitivity ↓ ${(insulinRes * 12).toFixed(0)}%`
+        : insulinRes > 2
+        ? `Mild Resistance ↓ ${(insulinRes * 7).toFixed(0)}%`
+        : 'Normal Range';
     case 'thyroid':
-      return thyroidFac < 0.4 ? `Thyroid Dysfunction \u2193 ${((1 - thyroidFac) * 100).toFixed(0)}%` :
-             thyroidFac < 0.7 ? `Mild Hypofunction \u2193 ${((1 - thyroidFac) * 100).toFixed(0)}%` : 'Normal Range';
-    default: return 'Active Regulation';
+      return thyroidFac < 0.4
+        ? `Thyroid Dysfunction ↓ ${((1 - thyroidFac) * 100).toFixed(0)}%`
+        : thyroidFac < 0.7
+        ? `Mild Hypofunction ↓ ${((1 - thyroidFac) * 100).toFixed(0)}%`
+        : 'Normal Range';
+    default:
+      return 'Active Regulation';
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   HORMONE NODE — inner core + outer glow + optional tooltip
-   ═══════════════════════════════════════════════════════════════════════════ */
 function HormoneNode({ node, color, intensity, isHovered, onHover, statusText }) {
   const glowRef = useRef();
   const coreRef = useRef();
   const idx = HORMONE_NODES.indexOf(node);
 
   useFrame(function (state) {
-    var t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime;
     if (glowRef.current) {
-      var pulse = 1.0 + Math.sin(t * 2.2 + idx * 1.4) * 0.35;
+      const pulse = 1.0 + Math.sin(t * 2.2 + idx * 1.4) * 0.35;
       glowRef.current.scale.setScalar(pulse);
       glowRef.current.material.opacity = 0.12 + Math.sin(t * 2.2 + idx) * 0.06;
     }
@@ -100,51 +77,55 @@ function HormoneNode({ node, color, intensity, isHovered, onHover, statusText })
 
   return (
     <group position={node.pos}>
-      {/* Core sphere */}
       <mesh
         ref={coreRef}
-        onPointerEnter={function (e) { e.stopPropagation(); onHover(node.id); }}
-        onPointerLeave={function (e) { e.stopPropagation(); onHover(null); }}
+        onPointerEnter={function (e) {
+          e.stopPropagation();
+          onHover(node.id);
+        }}
+        onPointerLeave={function (e) {
+          e.stopPropagation();
+          onHover(null);
+        }}
       >
         <sphereGeometry args={[node.r, 20, 20]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={intensity}
-          toneMapped={false}
-        />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={intensity} toneMapped={false} />
       </mesh>
-      {/* Outer glow halo */}
+
       <mesh ref={glowRef}>
         <sphereGeometry args={[node.r * 2.8, 16, 16]} />
         <meshBasicMaterial color={color} transparent opacity={0.12} depthWrite={false} />
       </mesh>
-      {/* Tooltip via drei Html */}
+
       {isHovered && (
         <Html center distanceFactor={5.5} style={{ pointerEvents: 'none', userSelect: 'none' }}>
-          <div style={{
-            background: 'rgba(12,6,22,0.94)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid ' + color + '55',
-            borderRadius: 14,
-            padding: '12px 16px',
-            minWidth: 170,
-            maxWidth: 220,
-            boxShadow: '0 10px 40px ' + color + '44, 0 2px 8px rgba(0,0,0,0.3)',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-          }}>
+          <div
+            style={{
+              background: 'rgba(12,6,22,0.94)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid ' + color + '55',
+              borderRadius: 14,
+              padding: '12px 16px',
+              minWidth: 170,
+              maxWidth: 220,
+              boxShadow: '0 10px 40px ' + color + '44, 0 2px 8px rgba(0,0,0,0.3)',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, boxShadow: '0 0 8px ' + color }} />
               <span style={{ fontSize: 12, fontWeight: 800, color: '#e2ddf5', letterSpacing: '0.02em' }}>{node.label}</span>
             </div>
             <p style={{ fontSize: 10, color: '#9b8fc4', margin: '0 0 8px', lineHeight: 1.4 }}>{node.info}</p>
-            <div style={{
-              padding: '6px 10px',
-              background: color + '18',
-              borderRadius: 8,
-              border: '1px solid ' + color + '30',
-            }}>
+            <div
+              style={{
+                padding: '6px 10px',
+                background: color + '18',
+                borderRadius: 8,
+                border: '1px solid ' + color + '30',
+              }}
+            >
               <span style={{ fontSize: 11, fontWeight: 700, color: color }}>{statusText}</span>
             </div>
           </div>
@@ -154,109 +135,160 @@ function HormoneNode({ node, color, intensity, isHovered, onHover, statusText })
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   FEMALE BODY — group of primitive meshes + hormone nodes
-   ═══════════════════════════════════════════════════════════════════════════ */
-function FemaleBody(props) {
-  var userHeight       = props.userHeight || 165;
-  var userWeight       = props.userWeight || 58;
-  var pcosIndex        = props.pcosIndex || 0;
-  var insulinResistance = props.insulinResistance || 0;
-  var thyroidFactor    = props.thyroidFactor != null ? props.thyroidFactor : 1;
-  var isSimulating     = props.isSimulating || false;
-  var hoveredNode      = props.hoveredNode;
-  var onNodeHover      = props.onNodeHover || function () {};
+function useCharacterModel() {
+  const source = useFBX(characterFbxUrl);
 
-  /* Dynamic scale factors */
-  var heightScale = useMemo(function () { return userHeight / 165; }, [userHeight]);
-  var bmi = useMemo(function () {
+  return useMemo(function () {
+    const cloned = SkeletonUtils.clone(source);
+    let bodyMesh = null;
+
+    cloned.traverse(function (child) {
+      if (!child.isMesh) return;
+      if (!bodyMesh && /body/i.test(child.name)) bodyMesh = child;
+
+      child.castShadow = true;
+      child.receiveShadow = true;
+
+      if (child.material && !Array.isArray(child.material)) {
+        child.material = child.material.clone();
+        child.material.transparent = false;
+        child.material.roughness = 0.6;
+        child.material.metalness = 0.05;
+      }
+    });
+
+    return { root: cloned, bodyMesh };
+  }, [source]);
+}
+
+function FbxCharacter({ bodyShape, baseHeightScale, isSimulating, thyroidFactor }) {
+  const groupRef = useRef();
+  const shapeRef = useRef(clamp01(bodyShape));
+  const { root, bodyMesh } = useCharacterModel();
+  const emissiveColor = useMemo(() => new THREE.Color('#6d28d9'), []);
+
+  const parts = useMemo(function () {
+    const byName = {};
+    root.traverse(function (child) {
+      byName[child.name] = child;
+    });
+
+    const hips = byName['mixamorig6:Hips'];
+    const spine = byName['mixamorig6:Spine'];
+    const spine1 = byName['mixamorig6:Spine1'];
+    const spine2 = byName['mixamorig6:Spine2'];
+    const leftUpLeg = byName['mixamorig6:LeftUpLeg'];
+    const rightUpLeg = byName['mixamorig6:RightUpLeg'];
+
+    return { hips, spine, spine1, spine2, leftUpLeg, rightUpLeg };
+  }, [root]);
+
+  const normalized = useMemo(function () {
+    const box = new THREE.Box3().setFromObject(root);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    const targetHeight = 2.0;
+    const ratio = size.y > 0 ? targetHeight / size.y : 1;
+
+    return {
+      scale: ratio,
+      centerX: center.x,
+      minY: box.min.y,
+      centerZ: center.z,
+    };
+  }, [root]);
+
+  const meshMaterials = useMemo(function () {
+    const materials = [];
+    root.traverse(function (child) {
+      if (!child.isMesh || Array.isArray(child.material) || !child.material) return;
+      child.material.emissive = emissiveColor;
+      materials.push(child.material);
+    });
+    return materials;
+  }, [root, emissiveColor]);
+
+  useFrame(function (_, delta) {
+    const target = clamp01(bodyShape);
+    shapeRef.current = THREE.MathUtils.lerp(shapeRef.current, target, Math.min(1, delta * 5));
+
+    const s = shapeRef.current;
+    const bulk = THREE.MathUtils.lerp(0.84, 1.22, s);
+    const thighBulk = THREE.MathUtils.lerp(0.86, 1.28, s);
+    const torsoBulk = THREE.MathUtils.lerp(0.9, 1.2, s);
+
+    if (parts.hips) parts.hips.scale.set(bulk * 1.1, 1, bulk * 1.05);
+    if (parts.spine) parts.spine.scale.set(torsoBulk, 1, torsoBulk * 1.03);
+    if (parts.spine1) parts.spine1.scale.set(torsoBulk * 1.05, 1, torsoBulk * 1.06);
+    if (parts.spine2) parts.spine2.scale.set(torsoBulk * 1.02, 1, torsoBulk * 1.02);
+    if (parts.leftUpLeg) parts.leftUpLeg.scale.set(thighBulk, 1, thighBulk);
+    if (parts.rightUpLeg) parts.rightUpLeg.scale.set(thighBulk, 1, thighBulk);
+
+    if (bodyMesh) {
+      const meshBulk = THREE.MathUtils.lerp(0.95, 1.08, s);
+      bodyMesh.scale.set(meshBulk, 1, meshBulk * 1.02);
+    }
+
+    if (groupRef.current) {
+      const simPulse = isSimulating ? (1 + Math.sin(performance.now() * 0.005) * 0.006) : 1;
+      const uniform = normalized.scale * baseHeightScale * simPulse;
+      groupRef.current.scale.set(uniform, uniform, uniform);
+    }
+
+    const emissiveIntensity = 0.03 + thyroidFactor * 0.07;
+    meshMaterials.forEach(function (material) {
+      material.emissiveIntensity = emissiveIntensity;
+    });
+  });
+
+  return (
+    <group ref={groupRef} position={[-normalized.centerX * normalized.scale, -normalized.minY * normalized.scale - 0.44, -normalized.centerZ * normalized.scale]}>
+      <primitive object={root} />
+    </group>
+  );
+}
+
+function FemaleBody(props) {
+  const userHeight = props.userHeight || 165;
+  const userWeight = props.userWeight || 58;
+  const pcosIndex = props.pcosIndex || 0;
+  const insulinResistance = props.insulinResistance || 0;
+  const thyroidFactor = props.thyroidFactor != null ? props.thyroidFactor : 1;
+  const isSimulating = props.isSimulating || false;
+  const hoveredNode = props.hoveredNode;
+  const onNodeHover = props.onNodeHover || function () {};
+
+  const bmi = useMemo(function () {
     if (!userWeight || !userHeight || userHeight < 1) return 22;
     return userWeight / Math.pow(userHeight / 100, 2);
   }, [userWeight, userHeight]);
-  var widthScale = useMemo(function () {
-    if (bmi < 18.5) return Math.max(0.84, 0.84 + (bmi - 15) * 0.028);
-    if (bmi <= 25) return 1.0;
-    return Math.min(1 + (bmi - 25) * 0.024, 1.38);
+
+  const automaticShape = useMemo(function () {
+    if (bmi <= 18.5) return 0.1;
+    if (bmi >= 32) return 1;
+    return (bmi - 18.5) / (32 - 18.5);
   }, [bmi]);
 
-  var abdomenMult = useMemo(function () {
-    return 1 + pcosIndex * 0.028 + insulinResistance * 0.022;
-  }, [pcosIndex, insulinResistance]);
-  var thighMult = useMemo(function () {
-    return 1 + pcosIndex * 0.018;
-  }, [pcosIndex]);
-  var glowBase = useMemo(function () {
-    return 0.04 + thyroidFactor * 0.14;
-  }, [thyroidFactor]);
+  const bodyShape = props.bodyShape != null ? clamp01(props.bodyShape) : automaticShape;
 
-  /* Simulation pulse */
-  var bodyGroupRef = useRef();
-  var simPulseRef = useRef(0);
-
-  useFrame(function (state) {
-    if (!bodyGroupRef.current) return;
-    var t = state.clock.elapsedTime;
-    if (isSimulating) {
-      simPulseRef.current = Math.min(simPulseRef.current + 0.02, 1);
-    } else {
-      simPulseRef.current = Math.max(simPulseRef.current - 0.01, 0);
-    }
-    /* Idle breathing */
-    var breathe = 1 + Math.sin(t * 1.2) * 0.004;
-    var sx = widthScale * breathe;
-    var sy = heightScale;
-    bodyGroupRef.current.scale.set(sx, sy, sx * 0.95);
-  });
-
-  /* Body material color (slightly purple-tinted for digital look) */
-  var skinColor = '#d0bfea';
-  var emissiveColor = '#6d28d9';
-
-  /* Render parts */
-  var parts = useMemo(function () {
-    return BASE_PARTS.map(function (part) {
-      var sc = part.s ? part.s.slice() : [1, 1, 1];
-      if (part.dynamic === 'abdomen') {
-        sc[0] *= abdomenMult;
-        sc[2] *= abdomenMult * 0.9;
-      }
-      if (part.dynamic === 'thigh') {
-        sc[0] *= thighMult;
-        sc[2] *= thighMult * 0.95;
-      }
-      return { key: part.n, geom: part.g, pos: part.p, args: part.a, scale: sc, rot: part.r || [0, 0, 0] };
-    });
-  }, [abdomenMult, thighMult]);
+  const heightScale = useMemo(function () {
+    return Math.min(1.15, Math.max(0.84, userHeight / 165));
+  }, [userHeight]);
 
   return (
-    <group ref={bodyGroupRef}>
-      {/* Body parts */}
-      {parts.map(function (p) {
-        return (
-          <mesh key={p.key} position={p.pos} scale={p.scale} rotation={p.rot}>
-            {p.geom === 'sphere' ? (
-              <sphereGeometry args={p.args} />
-            ) : (
-              <capsuleGeometry args={p.args} />
-            )}
-            <meshStandardMaterial
-              color={skinColor}
-              emissive={emissiveColor}
-              emissiveIntensity={glowBase + simPulseRef.current * 0.18}
-              metalness={0.12}
-              roughness={0.52}
-              transparent
-              opacity={0.9}
-            />
-          </mesh>
-        );
-      })}
+    <group>
+      <FbxCharacter
+        bodyShape={bodyShape}
+        baseHeightScale={heightScale}
+        isSimulating={isSimulating}
+        thyroidFactor={thyroidFactor}
+      />
 
-      {/* Hormone nodes */}
       {HORMONE_NODES.map(function (node) {
-        var color = getNodeColor(node.id, pcosIndex, insulinResistance, thyroidFactor, isSimulating);
-        var status = getNodeStatus(node.id, pcosIndex, insulinResistance, thyroidFactor);
-        var intensity = isSimulating ? 2.0 : 1.2;
+        const color = getNodeColor(node.id, pcosIndex, insulinResistance, thyroidFactor, isSimulating);
+        const status = getNodeStatus(node.id, pcosIndex, insulinResistance, thyroidFactor);
+        const intensity = isSimulating ? 2.0 : 1.2;
         return (
           <HormoneNode
             key={node.id}
@@ -265,50 +297,37 @@ function FemaleBody(props) {
             intensity={intensity}
             isHovered={hoveredNode === node.id}
             onHover={onNodeHover}
-            statusText={isSimulating ? 'Simulating\u2026' : status}
+            statusText={isSimulating ? 'Simulating…' : status}
           />
         );
       })}
 
-      {/* Contact shadow below feet */}
-      <ContactShadows
-        position={[0, -0.44, 0]}
-        opacity={0.35}
-        scale={1.6}
-        blur={2.2}
-        far={1}
-        color="#4c1d95"
-      />
+      <ContactShadows position={[0, -0.44, 0]} opacity={0.35} scale={2} blur={2.5} far={1.2} color="#4c1d95" />
     </group>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   SCENE LIGHTING — ambient + directional + hemisphere for depth
-   ═══════════════════════════════════════════════════════════════════════════ */
 function SceneLights() {
   return (
     <>
-      <ambientLight intensity={0.5} color="#e0d4f5" />
-      <directionalLight position={[4, 8, 6]} intensity={0.9} color="#f0e6ff" />
+      <ambientLight intensity={0.6} color="#e0d4f5" />
+      <directionalLight position={[4, 8, 6]} intensity={1.05} color="#f0e6ff" castShadow />
       <directionalLight position={[-3, 4, -5]} intensity={0.25} color="#c084fc" />
       <hemisphereLight skyColor="#ddd6fe" groundColor="#3b0764" intensity={0.45} />
-      <pointLight position={[0, 2.2, 2]} intensity={0.3} color="#a78bfa" distance={5} />
+      <pointLight position={[0, 2.2, 2]} intensity={0.35} color="#a78bfa" distance={5} />
     </>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   SCENE CONTENT — assembled inside Canvas
-   ═══════════════════════════════════════════════════════════════════════════ */
 function SceneContent(props) {
   return (
     <>
       <SceneLights />
-      <Float speed={1.4} rotationIntensity={0} floatIntensity={0.3} floatingRange={[-0.04, 0.04]}>
+      <Float speed={1.4} rotationIntensity={0} floatIntensity={0.2} floatingRange={[-0.03, 0.03]}>
         <FemaleBody
           userHeight={props.userHeight}
           userWeight={props.userWeight}
+          bodyShape={props.bodyShape}
           pcosIndex={props.pcosIndex}
           insulinResistance={props.insulinResistance}
           thyroidFactor={props.thyroidFactor}
@@ -331,11 +350,8 @@ function SceneContent(props) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   LOADING FALLBACK (inside Canvas)
-   ═══════════════════════════════════════════════════════════════════════════ */
 function LoadingFallback() {
-  var ref = useRef();
+  const ref = useRef();
   useFrame(function (state) {
     if (ref.current) ref.current.rotation.y = state.clock.elapsedTime * 1.5;
   });
@@ -347,27 +363,25 @@ function LoadingFallback() {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   BODY3D — main exported component with Canvas
-   ═══════════════════════════════════════════════════════════════════════════ */
 function Body3D(props) {
-  var width  = props.width  || '100%';
-  var height = props.height || '100%';
-  var style  = props.style  || {};
+  const width = props.width || '100%';
+  const height = props.height || '100%';
+  const style = props.style || {};
 
-  var userHeight       = props.userHeight || 165;
-  var userWeight       = props.userWeight || 58;
-  var pcosIndex        = props.pcosIndex || 0;
-  var insulinResistance = props.insulinResistance || 0;
-  var thyroidFactor    = props.thyroidFactor != null ? props.thyroidFactor : 1;
-  var isSimulating     = props.isSimulating || false;
-  var hoveredNode      = props.hoveredNode != null ? props.hoveredNode : null;
-  var onNodeHover      = props.onNodeHover || function () {};
+  const userHeight = props.userHeight || 165;
+  const userWeight = props.userWeight || 58;
+  const bodyShape = props.bodyShape;
+  const pcosIndex = props.pcosIndex || 0;
+  const insulinResistance = props.insulinResistance || 0;
+  const thyroidFactor = props.thyroidFactor != null ? props.thyroidFactor : 1;
+  const isSimulating = props.isSimulating || false;
+  const hoveredNode = props.hoveredNode != null ? props.hoveredNode : null;
+  const onNodeHover = props.onNodeHover || function () {};
 
   return (
     <div style={Object.assign({ width: width, height: height, position: 'relative', overflow: 'hidden' }, style)}>
       <Canvas
-        camera={{ position: [0, 0.7, 3.2], fov: 38, near: 0.1, far: 50 }}
+        camera={{ position: [0, 0.85, 3.4], fov: 36, near: 0.1, far: 50 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         dpr={[1, 1.5]}
         style={{ background: 'transparent' }}
@@ -376,6 +390,7 @@ function Body3D(props) {
           <SceneContent
             userHeight={userHeight}
             userWeight={userWeight}
+            bodyShape={bodyShape}
             pcosIndex={pcosIndex}
             insulinResistance={insulinResistance}
             thyroidFactor={thyroidFactor}

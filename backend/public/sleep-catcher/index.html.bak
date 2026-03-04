@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Healthy Snake Challenge — choose a character, stay healthy, and survive.">
+    <title>🐍 Healthy Snake Challenge | HormoneLens</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/libs/fflate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/curves/NURBSCurve.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/loaders/FBXLoader.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0b1020;
+            color: #e2e8f0;
+            font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #game-shell {
+            position: relative;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #0f172a;
+        }
+
+        #gc {
+            display: block;
+            background: #0f172a;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.82);
+            z-index: 10;
+            padding: 16px;
+        }
+        .overlay.show { display: flex; }
+
+        .card {
+            width: min(780px, 100%);
+            background: #111c33;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 800;
+            text-align: center;
+            color: #c4b5fd;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #cbd5e1;
+            text-align: center;
+            margin-bottom: 14px;
+        }
+
+        .characters {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .character-btn {
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: #17253f;
+            border-radius: 10px;
+            color: #e2e8f0;
+            cursor: pointer;
+            padding: 10px;
+            text-align: left;
+            min-height: 144px;
+        }
+        .character-btn.active {
+            border-color: #818cf8;
+            background: #1f2f52;
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.35) inset;
+        }
+        .char-art {
+            width: 100%;
+            height: 66px;
+            border-radius: 8px;
+            background: #0f172a;
+            margin-bottom: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        .char-art .head {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            background: #f8fafc;
+            border-radius: 50%;
+        }
+        .char-art .body {
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            background: #60a5fa;
+            border-radius: 12px;
+        }
+        .char-fit .body { width: 18px; }
+        .char-bulky .body { width: 28px; }
+        .char-fat .body { width: 40px; }
+
+        .char-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 2px;
+        }
+        .char-desc {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 10px 0 8px;
+        }
+
+        .btn {
+            border: 0;
+            cursor: pointer;
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 10px 14px;
+            font-size: 13px;
+        }
+        .btn-primary { background: #7c3aed; color: #fff; }
+        .btn-primary:disabled { background: #475569; cursor: not-allowed; }
+        .btn-secondary { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
+
+        .custom-panel {
+            display: none;
+            background: #0f172a;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+        .custom-panel.show { display: block; }
+        .custom-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .custom-grid label {
+            font-size: 11px;
+            color: #cbd5e1;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .custom-grid input {
+            width: 100%;
+            background: #0b1220;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px;
+            outline: none;
+        }
+        .small-note { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+
+        .overlay-panel {
+            width: min(520px, 100%);
+            background: #111c33;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+        .overlay-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: #f8fafc;
+            margin-bottom: 8px;
+        }
+        .overlay-text { color: #cbd5e1; font-size: 14px; line-height: 1.5; }
+        .warn-list { text-align: left; margin: 8px auto; width: max-content; }
+        .warn-list li { margin: 4px 0; }
+
+        #char3d-container {
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        @media (max-width: 860px) {
+            .characters { grid-template-columns: 1fr; }
+            .card { max-height: 95vh; overflow: auto; }
+        }
+    </style>
+</head>
+<body>
+<div id="game-shell">
+    <canvas id="gc"></canvas>
+    <div id="char3d-container"></div>
+
+    <div id="start-overlay" class="overlay show">
+        <div class="card">
+            <div class="title">Healthy Snake Challenge</div>
+            <div class="subtitle">Choose a preset character or customize your own before starting.</div>
+
+            <div class="characters">
+                <button class="character-btn" data-character="fit">
+                    <div class="char-art char-fit"><div class="head"></div><div class="body"></div></div>
+                    <div class="char-name">Fit Character</div>
+                    <div class="char-desc">Lean / Athletic</div>
+                </button>
+                <button class="character-btn" data-character="bulky">
+                    <div class="char-art char-bulky"><div class="head"></div><div class="body"></div></div>
+                    <div class="char-name">Slightly Bulky Character</div>
+                    <div class="char-desc">Medium build</div>
+                </button>
+                <button class="character-btn" data-character="fat">
+                    <div class="char-art char-fat"><div class="head"></div><div class="body"></div></div>
+                    <div class="char-name">Fat Character</div>
+                    <div class="char-desc">Overweight</div>
+                </button>
+            </div>
+
+            <div class="row">
+                <button id="open-customize" class="btn btn-secondary">Customize Your Character</button>
+                <button id="start-game-btn" class="btn btn-primary" disabled>START GAME</button>
+            </div>
+
+            <div id="custom-panel" class="custom-panel">
+                <div style="font-size:12px;color:#e2e8f0;font-weight:700;">Custom Character</div>
+                <div class="custom-grid">
+                    <div>
+                        <label for="height-input">Height (cm)</label>
+                        <input id="height-input" type="number" min="80" max="250" placeholder="170">
+                    </div>
+                    <div>
+                        <label for="weight-input">Weight (kg)</label>
+                        <input id="weight-input" type="number" min="20" max="300" placeholder="80">
+                    </div>
+                </div>
+                <div id="bmi-result" class="small-note">BMI will determine body type: Fit / Bulky / Fat.</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pause-overlay" class="overlay">
+        <div class="overlay-panel">
+            <div class="overlay-title">GAME PAUSED</div>
+            <div class="overlay-text">Press SPACE to Resume</div>
+        </div>
+    </div>
+
+    <div id="warning-overlay" class="overlay">
+        <div class="overlay-panel">
+            <div class="overlay-title" style="font-size:26px;color:#fda4af;">Health Warning</div>
+            <div class="overlay-text">Consuming too many processed foods can increase the risk of:</div>
+            <ul class="warn-list">
+                <li>• insulin resistance</li>
+                <li>• obesity</li>
+                <li>• metabolic disorders</li>
+            </ul>
+            <div class="overlay-text">Choose healthy foods to stay fit.</div>
+            <div class="overlay-text" style="margin-top:8px;font-weight:700;">Press SPACE to Continue</div>
+        </div>
+    </div>
+
+    <div id="gameover-overlay" class="overlay">
+        <div class="overlay-panel">
+            <div class="overlay-title">GAME OVER</div>
+            <div id="go-reason" class="overlay-text" style="margin-bottom:8px;"></div>
+            <div id="go-score" class="overlay-text"></div>
+            <div id="go-foods" class="overlay-text"></div>
+            <div id="go-ratio" class="overlay-text" style="margin-bottom:12px;"></div>
+            <div class="row" style="justify-content:center;">
+                <button id="restart-btn" class="btn btn-primary">Restart Game</button>
+                <button id="return-select-btn" class="btn btn-secondary">Return to Character Selection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────────────────────────
+//  Enhanced Healthy Snake Game
+//  Modules: CharacterSystem, FoodSystem, PauseSystem,
+//           HealthWarningSystem, UISystem, GameEngine
+// ──────────────────────────────────────────────────────────────
+
+const Config = {
+    CELL: 24,
+    COLS: 20,
+    ROWS: 20,
+    HUD_H: 72,
+    PANEL_W: 270,
+    SPEED_BASE: 145,
+    SPEED_STEP: 12,
+    FOOD_SIZE: 0.8,
+    LIVES_START: 5,
+};
+Config.BOARD_W = Config.CELL * Config.COLS;
+Config.BOARD_H = Config.CELL * Config.ROWS;
+Config.W = Config.BOARD_W + Config.PANEL_W;
+Config.H = Config.HUD_H + Config.BOARD_H;
+
+const canvas = document.getElementById('gc');
+const ctx = canvas.getContext('2d');
+const shell = document.getElementById('game-shell');
+canvas.width = Config.W;
+canvas.height = Config.H;
+
+const overlays = {
+    start: document.getElementById('start-overlay'),
+    pause: document.getElementById('pause-overlay'),
+    warning: document.getElementById('warning-overlay'),
+    gameover: document.getElementById('gameover-overlay'),
+};
+
+const goUI = {
+    reason: document.getElementById('go-reason'),
+    score: document.getElementById('go-score'),
+    foods: document.getElementById('go-foods'),
+    ratio: document.getElementById('go-ratio'),
+};
+
+function fitCanvas() {
+    const scale = Math.min(window.innerWidth / Config.W, window.innerHeight / Config.H, 1);
+    canvas.style.width = (Config.W * scale) + 'px';
+    canvas.style.height = (Config.H * scale) + 'px';
+    shell.style.width = canvas.style.width;
+    shell.style.height = canvas.style.height;
+}
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
+
+const CharacterSystem = {
+    types: {
+        fit:   { label: 'Fit', bodyWidth: 30, color: '#22c55e' },
+        bulky: { label: 'Bulky', bodyWidth: 44, color: '#f59e0b' },
+        fat:   { label: 'Fat', bodyWidth: 60, color: '#ef4444' },
+    },
+
+    selectedPreset: null,
+    customMode: false,
+    customHeight: null,
+    customWeight: null,
+
+    resolveTypeFromBMI(heightCm, weightKg) {
+        if (!heightCm || !weightKg) return null;
+        const m = heightCm / 100;
+        const bmi = weightKg / (m * m);
+        if (bmi < 22) return { key: 'fit', bmi };
+        if (bmi <= 27) return { key: 'bulky', bmi };
+        return { key: 'fat', bmi };
+    },
+
+    getInitialType() {
+        if (this.customMode) {
+            const result = this.resolveTypeFromBMI(this.customHeight, this.customWeight);
+            return result ? result.key : null;
+        }
+        return this.selectedPreset;
+    },
+
+    // 2D avatar removed — replaced by Character3DSystem
+};
+
+const FoodSystem = {
+    healthyFoods: [
+        { name: 'Apple', emoji: '🍎' },
+        { name: 'Carrot', emoji: '🥕' },
+        { name: 'Broccoli', emoji: '🥦' },
+        { name: 'Spinach', emoji: '🥬' },
+    ],
+    junkFoods: [
+        { name: 'Burger', emoji: '🍔' },
+        { name: 'Pizza', emoji: '🍕' },
+        { name: 'Fries', emoji: '🍟' },
+        { name: 'Donut', emoji: '🍩' },
+    ],
+    junkChance: 0.34,
+
+    spawn(state) {
+        let pos;
+        do {
+            pos = {
+                x: Math.floor(Math.random() * Config.COLS),
+                y: Math.floor(Math.random() * Config.ROWS),
+            };
+        } while (state.snake.some(s => s.x === pos.x && s.y === pos.y));
+
+        const isJunk = Math.random() < this.junkChance;
+        const list = isJunk ? this.junkFoods : this.healthyFoods;
+        const item = list[Math.floor(Math.random() * list.length)];
+
+        state.food = { ...pos, ...item, isJunk };
+    },
+
+    applyConsumption(state) {
+        if (!state.food) return;
+
+        state.totalFoods += 1;
+
+        if (state.food.isJunk) {
+            state.score = Math.max(0, state.score - 5);
+            state.junkFoods += 1;
+            state.snakeFat = Math.min(2, state.snakeFat + 1);
+            state.avatarTypeIndex = Math.min(2, state.avatarTypeIndex + 1); // Fit → Bulky → Fat
+            state.banner = 'Warning: Unhealthy food consumed!';
+            state.bannerUntil = performance.now() + 1400;
+            HealthWarningSystem.trigger();
+        } else {
+            state.score += 10;
+            state.healthyFoods += 1;
+            state.snakeFat = Math.max(0, state.snakeFat - 1);
+            state.avatarTypeIndex = Math.max(0, state.avatarTypeIndex - 1); // Fat → Bulky → Fit
+            state.banner = 'Great! Healthy food consumed.';
+            state.bannerUntil = performance.now() + 900;
+        }
+    },
+
+    draw(food) {
+        if (!food) return;
+
+        const ox = food.x * Config.CELL;
+        const oy = Config.HUD_H + food.y * Config.CELL;
+        const pad = Config.CELL * ((1 - Config.FOOD_SIZE) / 2);
+        const size = Config.CELL - pad * 2; // ~80% cell
+
+        const fill = food.isJunk ? '#b91c1c' : '#16a34a';
+        const border = food.isJunk ? '#facc15' : '#fb7185';
+
+        ctx.fillStyle = fill;
+        roundedRectPath(ox + pad, oy + pad, size, size, 5);
+        ctx.fill();
+
+        ctx.strokeStyle = border;
+        ctx.lineWidth = 2;
+        roundedRectPath(ox + pad, oy + pad, size, size, 5);
+        ctx.stroke();
+
+        ctx.font = 'bold 17px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(food.emoji, ox + Config.CELL / 2, oy + Config.CELL / 2 + 0.5);
+    },
+};
+
+const PauseSystem = {
+    toggle() {
+        if (GameEngine.state.phase === 'playing') {
+            GameEngine.state.phase = 'paused';
+            overlays.pause.classList.add('show');
+            try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
+            return;
+        }
+        if (GameEngine.state.phase === 'paused') {
+            overlays.pause.classList.remove('show');
+            GameEngine.state.phase = 'playing';
+            GameEngine.state.lastTick = performance.now();
+            try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch (_) {}
+        }
+    },
+};
+
+const HealthWarningSystem = {
+    trigger() {
+        if (GameEngine.state.phase !== 'playing') return;
+        GameEngine.state.phase = 'warning';
+        overlays.warning.classList.add('show');
+        try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
+    },
+
+    continue() {
+        if (GameEngine.state.phase !== 'warning') return;
+        overlays.warning.classList.remove('show');
+        GameEngine.state.phase = 'playing';
+        GameEngine.state.lastTick = performance.now();
+        try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch (_) {}
+    },
+};
+
+const UISystem = {
+    drawFrame() {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, Config.W, Config.H);
+
+        this.drawHud();
+        this.drawGrid();
+        this.drawSidePanel();
+
+        if (GameEngine.state.banner && performance.now() < GameEngine.state.bannerUntil) {
+            this.drawBanner(GameEngine.state.banner);
+        }
+    },
+
+    drawHud() {
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(0, 0, Config.W, Config.HUD_H);
+
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, Config.HUD_H - 1, Config.W, 1);
+
+        ctx.font = '10px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'left';
+        ctx.fillText('SCORE', 16, 18);
+        ctx.font = 'bold 24px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#a78bfa';
+        ctx.fillText(GameEngine.state.score, 16, 48);
+
+        ctx.font = '10px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('LIVES', Config.BOARD_W / 2, 18);
+        ctx.font = 'bold 24px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#f87171';
+        ctx.fillText('♥'.repeat(GameEngine.state.lives), Config.BOARD_W / 2, 48);
+
+        ctx.font = '10px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'right';
+        ctx.fillText('CONTROLS', Config.BOARD_W - 12, 18);
+        ctx.font = 'bold 12px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillText('Arrows / WASD • Space Pause', Config.BOARD_W - 12, 43);
+    },
+
+    drawGrid() {
+        ctx.fillStyle = '#0b1220';
+        ctx.fillRect(0, Config.HUD_H, Config.BOARD_W, Config.BOARD_H);
+
+        ctx.strokeStyle = 'rgba(148,163,184,0.12)';
+        ctx.lineWidth = 1;
+
+        for (let c = 0; c <= Config.COLS; c++) {
+            const x = c * Config.CELL;
+            ctx.beginPath();
+            ctx.moveTo(x, Config.HUD_H);
+            ctx.lineTo(x, Config.H);
+            ctx.stroke();
+        }
+
+        for (let r = 0; r <= Config.ROWS; r++) {
+            const y = Config.HUD_H + r * Config.CELL;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(Config.BOARD_W, y);
+            ctx.stroke();
+        }
+    },
+
+    drawSidePanel() {
+        const x0 = Config.BOARD_W;
+        ctx.fillStyle = '#101a30';
+        ctx.fillRect(x0, Config.HUD_H, Config.PANEL_W, Config.BOARD_H);
+
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x0, Config.HUD_H, 1, Config.BOARD_H);
+
+        const st = GameEngine.state;
+        const avatarType = ['fit', 'bulky', 'fat'][st.avatarTypeIndex];
+
+        ctx.font = 'bold 20px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#e2e8f0';
+        ctx.textAlign = 'left';
+        ctx.fillText('Character Status', x0 + 16, Config.HUD_H + 32);
+
+        const cardX = x0 + 16;
+        const cardY = Config.HUD_H + 48;
+        const cardW = Config.PANEL_W - 32;
+        const cardH = 170;
+        ctx.fillStyle = '#17253f';
+        roundedRectPath(cardX, cardY, cardW, cardH, 12);
+        ctx.fill();
+
+        // 3D character is rendered by Character3DSystem overlay — just draw placeholder bg
+        ctx.fillStyle = '#0f172a';
+        roundedRectPath(cardX + 4, cardY + 4, cardW - 8, cardH - 50, 8);
+        ctx.fill();
+
+        ctx.font = 'bold 14px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#c4b5fd';
+        ctx.textAlign = 'center';
+        ctx.fillText('Body State: ' + CharacterSystem.types[avatarType].label, x0 + Config.PANEL_W / 2, cardY + 150);
+
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 14px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText('Lives: ' + st.lives, x0 + 20, cardY + cardH + 34);
+        ctx.fillText('Score: ' + st.score, x0 + 20, cardY + cardH + 58);
+        ctx.fillText('Foods: ' + st.totalFoods, x0 + 20, cardY + cardH + 82);
+
+        ctx.font = '12px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('Healthy: ' + st.healthyFoods, x0 + 20, cardY + cardH + 106);
+        ctx.fillText('Junk: ' + st.junkFoods, x0 + 20, cardY + cardH + 126);
+    },
+
+    drawSnake() {
+        const st = GameEngine.state;
+        const segSize = [18, 20, 22][st.snakeFat];
+        const pad = (Config.CELL - segSize) / 2;
+
+        st.snake.forEach((s, i) => {
+            const px = s.x * Config.CELL + pad;
+            const py = Config.HUD_H + s.y * Config.CELL + pad;
+
+            ctx.fillStyle = i === 0 ? '#86efac' : (st.snakeFat === 2 ? '#f97316' : st.snakeFat === 1 ? '#84cc16' : '#22c55e');
+            roundedRectPath(px, py, segSize, segSize, 6);
+            ctx.fill();
+        });
+
+        const head = st.snake[0];
+        const hx = head.x * Config.CELL + Config.CELL / 2;
+        const hy = Config.HUD_H + head.y * Config.CELL + Config.CELL / 2;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(hx - 4, hy - 3, 2, 0, Math.PI * 2);
+        ctx.arc(hx + 4, hy - 3, 2, 0, Math.PI * 2);
+        ctx.fill();
+    },
+
+    drawBanner(text) {
+        ctx.fillStyle = 'rgba(30,41,59,0.95)';
+        roundedRectPath(12, Config.HUD_H + 8, Config.BOARD_W - 24, 36, 8);
+        ctx.fill();
+
+        ctx.font = 'bold 14px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#fca5a5';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, Config.BOARD_W / 2, Config.HUD_H + 26);
+        ctx.textBaseline = 'alphabetic';
+    },
+};
+
+const GameEngine = {
+    state: null,
+
+    createState(initialAvatar) {
+        const centerX = Math.floor(Config.COLS / 2);
+        const centerY = Math.floor(Config.ROWS / 2);
+
+        const avatarTypeIndex = initialAvatar === 'fit' ? 0 : initialAvatar === 'bulky' ? 1 : 2;
+
+        return {
+            phase: 'playing', // playing | paused | warning | gameover | select
+            snake: [
+                { x: centerX, y: centerY },
+                { x: centerX - 1, y: centerY },
+                { x: centerX - 2, y: centerY },
+            ],
+            dir: { x: 1, y: 0 },
+            nextDir: { x: 1, y: 0 },
+            score: 0,
+            lives: Config.LIVES_START,
+            food: null,
+            snakeFat: Math.min(2, avatarTypeIndex),
+            avatarTypeIndex,
+            healthyFoods: 0,
+            junkFoods: 0,
+            totalFoods: 0,
+            gameOverReason: '',
+            speed: Config.SPEED_BASE + avatarTypeIndex * Config.SPEED_STEP,
+            lastTick: performance.now(),
+            banner: '',
+            bannerUntil: 0,
+            startedAvatar: initialAvatar,
+        };
+    },
+
+    startNewGame(initialAvatar) {
+        this.state = this.createState(initialAvatar);
+        FoodSystem.spawn(this.state);
+        overlays.pause.classList.remove('show');
+        overlays.warning.classList.remove('show');
+        overlays.gameover.classList.remove('show');
+        try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch (_) {}
+    },
+
+    resetSnakeToCenter() {
+        const centerX = Math.floor(Config.COLS / 2);
+        const centerY = Math.floor(Config.ROWS / 2);
+        this.state.snake = [
+            { x: centerX, y: centerY },
+            { x: centerX - 1, y: centerY },
+            { x: centerX - 2, y: centerY },
+        ];
+        this.state.dir = { x: 1, y: 0 };
+        this.state.nextDir = { x: 1, y: 0 };
+    },
+
+    gameOver(reason) {
+        this.state.phase = 'gameover';
+        this.state.gameOverReason = reason;
+
+        const healthy = this.state.healthyFoods;
+        const junk = this.state.junkFoods;
+        const total = healthy + junk;
+        const ratio = total === 0 ? 'N/A' : `${Math.round((healthy / total) * 100)}% healthy / ${Math.round((junk / total) * 100)}% junk`;
+
+        goUI.reason.textContent = 'Reason: ' + reason;
+        goUI.score.textContent = 'Final Score: ' + this.state.score;
+        goUI.foods.textContent = 'Foods Consumed: ' + this.state.totalFoods;
+        goUI.ratio.textContent = 'Healthy vs Junk Ratio: ' + ratio;
+
+        overlays.gameover.classList.add('show');
+        try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
+    },
+
+    update() {
+        const st = this.state;
+        if (!st || st.phase !== 'playing') return;
+
+        st.dir = st.nextDir;
+
+        const head = st.snake[0];
+        const nx = head.x + st.dir.x;
+        const ny = head.y + st.dir.y;
+
+        if (nx < 0 || nx >= Config.COLS || ny < 0 || ny >= Config.ROWS) {
+            st.lives -= 1;
+            st.banner = 'Warning: You hit the wall!';
+            st.bannerUntil = performance.now() + 1300;
+
+            if (st.lives <= 0) {
+                this.gameOver('You ran out of lives');
+                return;
+            }
+
+            this.resetSnakeToCenter();
+            return;
+        }
+
+        if (st.snake.slice(0, -1).some(s => s.x === nx && s.y === ny)) {
+            this.gameOver('Snake collided with itself');
+            return;
+        }
+
+        const ateFood = st.food && nx === st.food.x && ny === st.food.y;
+        st.snake.unshift({ x: nx, y: ny });
+        if (!ateFood) st.snake.pop();
+
+        if (ateFood) {
+            FoodSystem.applyConsumption(st);
+            st.speed = Config.SPEED_BASE + st.snakeFat * Config.SPEED_STEP;
+            FoodSystem.spawn(st);
+        }
+    },
+
+    render() {
+        UISystem.drawFrame();
+        FoodSystem.draw(this.state.food);
+        UISystem.drawSnake();
+    },
+};
+
+function roundedRectPath(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+}
+
+let rafId = 0;
+function loop(ts) {
+    rafId = requestAnimationFrame(loop);
+
+    const st = GameEngine.state;
+    if (!st) return;
+
+    if (st.phase === 'playing' && ts - st.lastTick >= st.speed) {
+        st.lastTick = ts;
+        GameEngine.update();
+    }
+
+    if (st.phase !== 'select') {
+        GameEngine.render();
+    }
+}
+
+function setPhaseSelect() {
+    overlays.start.classList.add('show');
+    overlays.pause.classList.remove('show');
+    overlays.warning.classList.remove('show');
+    overlays.gameover.classList.remove('show');
+
+    GameEngine.state = {
+        phase: 'select',
+        score: 0,
+        lives: Config.LIVES_START,
+        snake: [],
+        food: null,
+        avatarTypeIndex: 0,
+        snakeFat: 0,
+        healthyFoods: 0,
+        junkFoods: 0,
+        totalFoods: 0,
+        banner: '',
+        bannerUntil: 0,
+        lastTick: performance.now(),
+    };
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, Config.W, Config.H);
+}
+
+// ──────────────────────────────────────────────────────────────
+// Start / Selection UI wiring
+// ──────────────────────────────────────────────────────────────
+const characterButtons = Array.from(document.querySelectorAll('.character-btn'));
+const openCustomizeBtn = document.getElementById('open-customize');
+const startGameBtn = document.getElementById('start-game-btn');
+const customPanel = document.getElementById('custom-panel');
+const heightInput = document.getElementById('height-input');
+const weightInput = document.getElementById('weight-input');
+const bmiResult = document.getElementById('bmi-result');
+
+const restartBtn = document.getElementById('restart-btn');
+const returnSelectBtn = document.getElementById('return-select-btn');
+
+function updateStartButtonState() {
+    const hasPreset = !!CharacterSystem.selectedPreset;
+    const customOk = CharacterSystem.customMode && Number(heightInput.value) > 0 && Number(weightInput.value) > 0;
+    startGameBtn.disabled = !(hasPreset || customOk);
+}
+
+function clearPresetSelection() {
+    characterButtons.forEach(btn => btn.classList.remove('active'));
+}
+
+characterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        clearPresetSelection();
+        btn.classList.add('active');
+        CharacterSystem.selectedPreset = btn.dataset.character;
+        CharacterSystem.customMode = false;
+        customPanel.classList.remove('show');
+        updateStartButtonState();
+    });
+});
+
+openCustomizeBtn.addEventListener('click', () => {
+    clearPresetSelection();
+    CharacterSystem.selectedPreset = null;
+    CharacterSystem.customMode = true;
+    customPanel.classList.toggle('show');
+    updateStartButtonState();
+});
+
+function refreshBMIResult() {
+    const h = Number(heightInput.value);
+    const w = Number(weightInput.value);
+    if (!(h > 0 && w > 0)) {
+        bmiResult.textContent = 'BMI will determine body type: Fit / Bulky / Fat.';
+        updateStartButtonState();
+        return;
+    }
+
+    CharacterSystem.customHeight = h;
+    CharacterSystem.customWeight = w;
+    const result = CharacterSystem.resolveTypeFromBMI(h, w);
+
+    if (!result) {
+        bmiResult.textContent = 'Enter valid numbers for height and weight.';
+        updateStartButtonState();
+        return;
+    }
+
+    const label = CharacterSystem.types[result.key].label;
+    bmiResult.textContent = `BMI: ${result.bmi.toFixed(1)} → ${label} Character`;
+    CharacterSystem.customMode = true;
+    updateStartButtonState();
+}
+heightInput.addEventListener('input', refreshBMIResult);
+weightInput.addEventListener('input', refreshBMIResult);
+
+startGameBtn.addEventListener('click', () => {
+    const initialType = CharacterSystem.getInitialType();
+    if (!initialType) return;
+
+    overlays.start.classList.remove('show');
+    GameEngine.startNewGame(initialType);
+});
+
+restartBtn.addEventListener('click', () => {
+    overlays.gameover.classList.remove('show');
+    const initialType = ['fit', 'bulky', 'fat'][GameEngine.state.avatarTypeIndex] || CharacterSystem.getInitialType() || 'fit';
+    GameEngine.startNewGame(initialType);
+});
+
+returnSelectBtn.addEventListener('click', () => {
+    setPhaseSelect();
+});
+
+// ──────────────────────────────────────────────────────────────
+// Input handling
+// ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+    const st = GameEngine.state;
+    if (!st) return;
+
+    if (e.key === ' ') {
+        e.preventDefault();
+        if (st.phase === 'warning') {
+            HealthWarningSystem.continue();
+            return;
+        }
+        if (st.phase === 'playing' || st.phase === 'paused') {
+            PauseSystem.toggle();
+        }
+        return;
+    }
+
+    if (st.phase !== 'playing') return;
+
+    const d = st.dir;
+    if ((e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') && d.y !== 1) st.nextDir = { x: 0, y: -1 };
+    if ((e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') && d.y !== -1) st.nextDir = { x: 0, y: 1 };
+    if ((e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') && d.x !== 1) st.nextDir = { x: -1, y: 0 };
+    if ((e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') && d.x !== -1) st.nextDir = { x: 1, y: 0 };
+
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+    }
+});
+
+let touchX = 0;
+let touchY = 0;
+canvas.addEventListener('touchstart', (e) => {
+    touchX = e.touches[0].clientX;
+    touchY = e.touches[0].clientY;
+}, { passive: true });
+
+canvas.addEventListener('touchend', (e) => {
+    const st = GameEngine.state;
+    if (!st || st.phase !== 'playing') return;
+
+    const dx = e.changedTouches[0].clientX - touchX;
+    const dy = e.changedTouches[0].clientY - touchY;
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+
+    const d = st.dir;
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0 && d.x !== -1) st.nextDir = { x: 1, y: 0 };
+        else if (dx < 0 && d.x !== 1) st.nextDir = { x: -1, y: 0 };
+    } else {
+        if (dy > 0 && d.y !== -1) st.nextDir = { x: 0, y: 1 };
+        else if (dy < 0 && d.y !== 1) st.nextDir = { x: 0, y: -1 };
+    }
+}, { passive: true });
+
+// Keep iframe page from scrolling while interacting with game
+window.addEventListener('focus', () => {
+    try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch (_) {}
+});
+window.addEventListener('blur', () => {
+    try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
+});
+document.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+// ──────────────────────────────────────────────────────────────
+// Character3DSystem — loads FBX model and applies slim / fat
+// ──────────────────────────────────────────────────────────────
+const Character3DSystem = {
+    scene: null,
+    camera: null,
+    renderer: null,
+    model: null,
+    mixer: null,
+    clock: null,
+    ready: false,
+    currentType: null,       // 'fit' | 'bulky' | 'fat'
+    targetScaleX: 1,
+    currentScaleX: 1,
+
+    // Body X-scale per type: fit = slim, bulky = medium, fat = wide
+    scaleMap: { fit: 0.85, bulky: 1.1, fat: 1.5 },
+
+    init() {
+        if (typeof THREE === 'undefined') {
+            console.warn('Three.js not loaded — 3D character disabled');
+            return;
+        }
+
+        const container = document.getElementById('char3d-container');
+        this.clock = new THREE.Clock();
+
+        // Scene
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x0f172a);
+
+        // Camera
+        this.camera = new THREE.PerspectiveCamera(32, 1, 0.1, 2000);
+        this.camera.position.set(0, 100, 280);
+        this.camera.lookAt(0, 85, 0);
+
+        // Renderer
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setSize(200, 160);
+        if (this.renderer.outputColorSpace !== undefined) {
+            this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        } else {
+            this.renderer.outputEncoding = THREE.sRGBEncoding;
+        }
+        container.appendChild(this.renderer.domElement);
+
+        // Lights
+        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+        this.scene.add(ambient);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(80, 200, 150);
+        this.scene.add(dirLight);
+
+        const fillLight = new THREE.DirectionalLight(0xc4b5fd, 0.4);
+        fillLight.position.set(-60, 100, -50);
+        this.scene.add(fillLight);
+
+        // Load FBX
+        const loader = new THREE.FBXLoader();
+        loader.load(
+            'models/character.fbx',
+            (fbx) => {
+                this.model = fbx;
+                fbx.scale.setScalar(1.0);
+
+                // Center model based on its bounding box
+                const box = new THREE.Box3().setFromObject(fbx);
+                const center = box.getCenter(new THREE.Vector3());
+                const size   = box.getSize(new THREE.Vector3());
+                fbx.position.sub(center);
+                fbx.position.y += size.y * 0.5;
+
+                // Adjust camera to fit model
+                const maxDim = Math.max(size.x, size.y, size.z);
+                this.camera.position.set(0, size.y * 0.55, maxDim * 1.6);
+                this.camera.lookAt(0, size.y * 0.45, 0);
+
+                // Play first animation if available
+                if (fbx.animations && fbx.animations.length > 0) {
+                    this.mixer = new THREE.AnimationMixer(fbx);
+                    const action = this.mixer.clipAction(fbx.animations[0]);
+                    action.play();
+                }
+
+                this.scene.add(fbx);
+                this.ready = true;
+                this.setBodyType('fit'); // default
+                this.renderOnce();
+            },
+            undefined,
+            (err) => {
+                console.warn('FBX load error:', err);
+            }
+        );
+    },
+
+    // Position the 3D container over the side-panel card area
+    reposition() {
+        const container = document.getElementById('char3d-container');
+        if (!container) return;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const scaleX = canvasRect.width / Config.W;
+        const scaleY = canvasRect.height / Config.H;
+
+        // Card area in canvas-space (matches drawSidePanel cardX/cardY)
+        const cardX = Config.BOARD_W + 16 + 4;         // x0 + 16 + 4 padding
+        const cardY = Config.HUD_H + 48 + 4;            // card top + 4
+        const cardW = Config.PANEL_W - 32 - 8;          // card width - 8
+        const cardH = 170 - 50;                          // card height - 50 (label area)
+
+        container.style.left   = (canvasRect.left - shell.getBoundingClientRect().left + cardX * scaleX) + 'px';
+        container.style.top    = (canvasRect.top  - shell.getBoundingClientRect().top  + cardY * scaleY) + 'px';
+        container.style.width  = (cardW * scaleX) + 'px';
+        container.style.height = (cardH * scaleY) + 'px';
+
+        if (this.renderer) {
+            this.renderer.domElement.style.width  = '100%';
+            this.renderer.domElement.style.height = '100%';
+        }
+    },
+
+    setBodyType(typeKey) {
+        if (!this.model || !typeKey) return;
+        this.currentType = typeKey;
+        this.targetScaleX = this.scaleMap[typeKey] || 1;
+    },
+
+    // Smooth transition toward target body width
+    updateScale() {
+        if (!this.model) return;
+        const speed = 0.06;
+        this.currentScaleX += (this.targetScaleX - this.currentScaleX) * speed;
+
+        // Apply X-scale (width) to make character slim / fat
+        // Keep Y (height) and Z (depth) at 1, only stretch X
+        this.model.scale.set(this.currentScaleX, 1.0, (this.currentScaleX - 1) * 0.5 + 1);
+    },
+
+    renderOnce() {
+        if (!this.ready) return;
+        if (this.mixer) {
+            const delta = this.clock.getDelta();
+            this.mixer.update(delta);
+        }
+        this.updateScale();
+        this.renderer.render(this.scene, this.camera);
+    },
+};
+
+// ── Initialise everything ──
+setPhaseSelect();
+
+// Init 3D character system after DOM is ready
+Character3DSystem.init();
+
+// Reposition 3D overlay whenever canvas resizes
+const origFitCanvas = fitCanvas;
+fitCanvas = function () {
+    origFitCanvas();
+    Character3DSystem.reposition();
+};
+window.addEventListener('resize', () => Character3DSystem.reposition());
+setTimeout(() => Character3DSystem.reposition(), 100);
+
+// Replace original game loop with one that also drives the 3D model
+loop = function loopWithChar3D(ts) {
+    rafId = requestAnimationFrame(loopWithChar3D);
+
+    const st = GameEngine.state;
+    if (!st) return;
+
+    if (st.phase === 'playing' && ts - st.lastTick >= st.speed) {
+        st.lastTick = ts;
+        GameEngine.update();
+    }
+
+    if (st.phase !== 'select') {
+        GameEngine.render();
+    }
+
+    // Sync 3D model with current avatar type
+    if (Character3DSystem.ready) {
+        const avatarType = ['fit', 'bulky', 'fat'][st.avatarTypeIndex || 0];
+        Character3DSystem.setBodyType(avatarType);
+        Character3DSystem.renderOnce();
+        Character3DSystem.reposition();
+    }
+};
+
+cancelAnimationFrame(rafId);
+rafId = requestAnimationFrame(loop);
+</script>
+</body>
+</html>

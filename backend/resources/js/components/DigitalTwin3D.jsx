@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Body3D from './Body3D';
 
@@ -7,8 +7,11 @@ import Body3D from './Body3D';
 // ─────────────────────────────────────────────────────────────────────────────
 const computeBmi   = (w, h) => (!w || !h || h < 1) ? 22 : w / ((h / 100) * (h / 100));
 const bmiLabel     = (b) => b < 18.5 ? 'Underweight' : b < 25 ? 'Normal' : b < 30 ? 'Overweight' : 'Obese';
-const bmiScaleX    = (b) => b < 18.5 ? Math.max(0.82, 0.82 + (b - 15) * 0.03) : b <= 25 ? 1.0 : Math.min(1 + (b - 25) * 0.022, 1.38);
-const heightScaleY = (h) => !h ? 1 : Math.min(Math.max(h / 170, 0.84), 1.16);
+const bmiToBodyShape = (b) => {
+  if (b <= 18.5) return 0.1;
+  if (b >= 32) return 1;
+  return (b - 18.5) / (32 - 18.5);
+};
 const riskLabel    = (v) => v >= 7 ? 'High' : v >= 4 ? 'Moderate' : 'Low';
 const riskHex      = (v) => v >= 7 ? '#ef4444' : v >= 4 ? '#f59e0b' : '#10b981';
 
@@ -89,6 +92,7 @@ export default function DigitalTwin3D() {
   const [loading,     setLoading]     = useState(true);
   const [hoveredZone, setHoveredZone] = useState(null);
   const [isMobile,    setIsMobile]    = useState(window.innerWidth < 900);
+  const [bodyShape,   setBodyShape]   = useState(0.45);
 
   // Responsive
   useEffect(() => {
@@ -113,18 +117,11 @@ export default function DigitalTwin3D() {
 
   // Computed
   const bmi     = computeBmi(profile?.weight, profile?.height);
-  const scaleX  = bmiScaleX(bmi);
-  const scaleY  = heightScaleY(profile?.height);
+  const bodyShapeAuto = useMemo(() => bmiToBodyShape(bmi), [bmi]);
 
-  // Zone scores map for Body3D
-  const zoneScores = useMemo(() => {
-    if (!twin) return {};
-    const m = {};
-    for (const z of BODY_ZONES) {
-      m[z.id] = twin[z.scoreKey] ?? 0;
-    }
-    return m;
-  }, [twin]);
+  useEffect(() => {
+    setBodyShape(bodyShapeAuto);
+  }, [bodyShapeAuto]);
 
   return (
     <div style={{
@@ -311,6 +308,40 @@ export default function DigitalTwin3D() {
           ↔ Drag to rotate 360° &nbsp;·&nbsp; Hover zones to inspect
         </motion.p>
 
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.15 }}
+          style={{
+            width: '100%',
+            maxWidth: 360,
+            marginBottom: 8,
+            background: 'rgba(255,255,255,.65)',
+            border: '1px solid rgba(255,255,255,.4)',
+            borderRadius: 12,
+            padding: '10px 12px',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#4b5563' }}>Body Shape</span>
+            <span style={{ fontSize: 10, color: '#6b7280' }}>{Math.round(bodyShape * 100)}%</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={Math.round(bodyShape * 100)}
+            onChange={(e) => setBodyShape(Number(e.target.value) / 100)}
+            style={{ width: '100%' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 9, color: '#6b7280' }}>
+            <span>Slim</span>
+            <span>Fat</span>
+          </div>
+        </motion.div>
+
         {/* 3D Body Canvas */}
         <motion.div
           initial={{ scale: .6, opacity: 0, y: 32 }}
@@ -319,11 +350,14 @@ export default function DigitalTwin3D() {
           style={{ position: 'relative', width: '100%', maxWidth: 360 }}
         >
           <Body3D
-            scaleX={scaleX}
-            scaleY={scaleY}
-            hoveredZone={hoveredZone}
-            zoneScores={zoneScores}
-            onZoneHover={setHoveredZone}
+            userHeight={profile?.height || 165}
+            userWeight={profile?.weight || 58}
+            bodyShape={bodyShape}
+            hoveredNode={null}
+            onNodeHover={() => {}}
+            pcosIndex={twin?.metabolic_health_score || 0}
+            insulinResistance={twin?.insulin_resistance_score || 0}
+            thyroidFactor={Math.max(0.3, 1 - ((twin?.sleep_score || 0) / 20))}
             height={isMobile ? 440 : 480}
           />
 

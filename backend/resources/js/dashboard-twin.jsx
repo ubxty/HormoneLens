@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import InteractiveDigitalTwin from './components/InteractiveDigitalTwin';
+import DigitalTwin3D from './components/DigitalTwin3D';
 
 class ErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { error: null }; }
@@ -21,7 +21,7 @@ const el = document.getElementById('twin-root');
 if (el) {
     createRoot(el).render(
         <ErrorBoundary>
-            <InteractiveDigitalTwin />
+            <DigitalTwin3D />
         </ErrorBoundary>
     );
 }

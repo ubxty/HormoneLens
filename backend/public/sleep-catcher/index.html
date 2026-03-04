@@ -3,583 +3,1554 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Healthy Snake — eat healthy food, avoid junk, stay alive. A HormoneLens mini-game.">
-    <title>🐍 Healthy Snake | HormoneLens</title>
+    <meta name="description" content="Healthy Snake Challenge — choose a character, stay healthy, and survive.">
+    <title>🐍 Healthy Snake Challenge | HormoneLens</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/libs/fflate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/curves/NURBSCurve.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/loaders/FBXLoader.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
             width: 100%; height: 100%;
-            background: #0d1117;
+            overflow: hidden;
+            background: #0b1020;
+            color: #e2e8f0;
+            font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+        }
+
+        /* ── Left: 3D Character Panel ── */
+        #character-panel {
+            width: 280px;
+            min-width: 280px;
+            background: linear-gradient(180deg, #0f172a 0%, #111c33 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.18);
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-header {
+            padding: 14px 16px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #c4b5fd;
+            text-align: center;
+            border-bottom: 1px solid rgba(148,163,184,0.12);
+            letter-spacing: 0.4px;
+        }
+        #char3d-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        #char3d-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+        #char-info {
+            padding: 10px 16px 12px;
+            text-align: center;
+            border-top: 1px solid rgba(148,163,184,0.12);
+        }
+        #char-body-state {
+            font-size: 15px;
+            font-weight: 700;
+            color: #22c55e;
+        }
+        #trick-label {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+
+        /* ── Center: Game Shell ── */
+        #game-shell {
+            flex: 1;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            background: #0b1020;
         }
-        canvas { display: block; cursor: pointer; }
+        #gc {
+            display: block;
+            background: #0f172a;
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.4);
+        }
+
+        /* ── Right: Stats Panel ── */
+        #stats-panel {
+            width: 220px;
+            min-width: 220px;
+            background: linear-gradient(180deg, #101a30 0%, #0f172a 100%);
+            border-left: 1px solid rgba(148, 163, 184, 0.18);
+            display: flex;
+            flex-direction: column;
+        }
+        .stats-body {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+        .stat-card {
+            background: #17253f;
+            border: 1px solid rgba(148,163,184,0.12);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .stat-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 0.7px;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        .stat-value.score-val { color: #a78bfa; }
+        .stat-value.lives-val { color: #f87171; font-size: 20px; }
+        .stat-value.foods-val { color: #38bdf8; }
+        .stat-value.body-val  { color: #22c55e; }
+        .stat-sub {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+        .stat-sub .healthy { color: #4ade80; font-weight: 600; }
+        .stat-sub .junk    { color: #fb7185; font-weight: 600; }
+        .controls-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(148,163,184,0.10);
+        }
+        .control-hint {
+            font-size: 11px;
+            color: #475569;
+            line-height: 1.8;
+        }
+        .key {
+            display: inline-block;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 10px;
+            color: #cbd5e1;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        /* ── Overlays ── */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.82);
+            z-index: 10;
+            padding: 16px;
+        }
+        .overlay.show { display: flex; }
+
+        /* Full-page start overlay */
+        #start-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: linear-gradient(135deg, #0b1020 0%, #111c33 40%, #0f172a 100%);
+            padding: 32px;
+            overflow-y: auto;
+        }
+        #start-overlay .card {
+            width: min(900px, 96%);
+            max-height: none;
+            background: rgba(17, 28, 51, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 28px;
+        }
+        #start-overlay .title {
+            font-size: 36px;
+            margin-bottom: 6px;
+        }
+        #start-overlay .subtitle {
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+        #start-overlay .characters {
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        #start-overlay .character-btn {
+            min-height: 200px;
+            padding: 16px;
+            border-radius: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #start-overlay .character-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        #start-overlay .char-art {
+            height: 90px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+        }
+        #start-overlay .char-name {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        #start-overlay .char-desc {
+            font-size: 13px;
+        }
+        #start-overlay .btn {
+            padding: 12px 20px;
+            font-size: 14px;
+        }
+        #start-overlay .row {
+            margin: 16px 0 12px;
+        }
+
+        .card {
+            width: min(740px, 96%);
+            background: #111c33;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+        }
+        .title {
+            font-size: 28px;
+            font-weight: 800;
+            text-align: center;
+            color: #c4b5fd;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #cbd5e1;
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .characters {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .character-btn {
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: #17253f;
+            border-radius: 10px;
+            color: #e2e8f0;
+            cursor: pointer;
+            padding: 10px;
+            text-align: left;
+            min-height: 144px;
+        }
+        .character-btn.active {
+            border-color: #818cf8;
+            background: #1f2f52;
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.35) inset;
+        }
+        .char-art {
+            width: 100%;
+            height: 66px;
+            border-radius: 8px;
+            background: #0f172a;
+            margin-bottom: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        .char-art .head {
+            position: absolute;
+            top: 8px; left: 50%;
+            transform: translateX(-50%);
+            width: 14px; height: 14px;
+            background: #f8fafc;
+            border-radius: 50%;
+        }
+        .char-art .body {
+            position: absolute;
+            top: 24px; left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            background: #60a5fa;
+            border-radius: 12px;
+        }
+        .char-fit .body   { width: 18px; }
+        .char-bulky .body { width: 28px; }
+        .char-fat .body   { width: 40px; }
+        .char-name { font-size: 13px; font-weight: 700; color: #f8fafc; margin-bottom: 2px; }
+        .char-desc { font-size: 11px; color: #94a3b8; }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 10px 0 8px;
+        }
+        .btn {
+            border: 0;
+            cursor: pointer;
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 10px 14px;
+            font-size: 13px;
+        }
+        .btn-primary { background: #7c3aed; color: #fff; }
+        .btn-primary:disabled { background: #475569; cursor: not-allowed; }
+        .btn-secondary { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
+
+        .custom-panel {
+            display: none;
+            background: #0f172a;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+        .custom-panel.show { display: block; }
+        .custom-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .custom-grid label { font-size: 11px; color: #cbd5e1; display: block; margin-bottom: 4px; }
+        .custom-grid input {
+            width: 100%;
+            background: #0b1220;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px;
+            outline: none;
+        }
+        .small-note { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+
+        .overlay-panel {
+            width: min(520px, 96%);
+            background: #111c33;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+        .overlay-title { font-size: 30px; font-weight: 800; color: #f8fafc; margin-bottom: 8px; }
+        .overlay-text  { color: #cbd5e1; font-size: 14px; line-height: 1.5; }
+        .warn-list     { text-align: left; margin: 8px auto; width: max-content; }
+        .warn-list li  { margin: 4px 0; }
+
+        /* ── Responsive ── */
+        @media (max-width: 860px) {
+            #character-panel { display: none; }
+            #stats-panel     { display: none; }
+            .characters { grid-template-columns: 1fr; }
+            .card { max-height: 95vh; overflow: auto; }
+        }
     </style>
 </head>
 <body>
-<canvas id="gc"></canvas>
+
+<!-- ── Left: 3D Character ── -->
+<div id="character-panel">
+    <div class="panel-header">3D Character</div>
+    <div id="char3d-container"></div>
+    <div id="char-info">
+        <div id="char-body-state">Body: Fit</div>
+        <div id="trick-label">Idle</div>
+    </div>
+</div>
+
+<!-- Full-page character selection overlay -->
+<div id="start-overlay" class="overlay show">
+    <div class="card">
+        <div class="title">Healthy Snake Challenge</div>
+        <div class="subtitle">Choose your character size or customize your own before starting.</div>
+
+        <div class="characters">
+            <button class="character-btn" data-character="fit">
+                <div class="char-art char-fit"><div class="head"></div><div class="body"></div></div>
+                <div class="char-name">Small</div>
+                <div class="char-desc">Lean &amp; Athletic build</div>
+            </button>
+            <button class="character-btn" data-character="bulky">
+                <div class="char-art char-bulky"><div class="head"></div><div class="body"></div></div>
+                <div class="char-name">Medium</div>
+                <div class="char-desc">Average build</div>
+            </button>
+            <button class="character-btn" data-character="fat">
+                <div class="char-art char-fat"><div class="head"></div><div class="body"></div></div>
+                <div class="char-name">Large</div>
+                <div class="char-desc">Heavy build</div>
+            </button>
+        </div>
+
+        <div class="row">
+            <button id="open-customize" class="btn btn-secondary">Customize Your Character</button>
+            <button id="start-game-btn" class="btn btn-primary" disabled>START GAME</button>
+        </div>
+
+        <div id="custom-panel" class="custom-panel">
+            <div style="font-size:12px;color:#e2e8f0;font-weight:700;">Custom Character</div>
+            <div class="custom-grid">
+                <div>
+                    <label for="height-input">Height (cm)</label>
+                    <input id="height-input" type="number" min="80" max="250" placeholder="170">
+                </div>
+                <div>
+                    <label for="weight-input">Weight (kg)</label>
+                    <input id="weight-input" type="number" min="20" max="300" placeholder="80">
+                </div>
+            </div>
+            <div id="bmi-result" class="small-note">BMI will determine body type: Small / Medium / Large.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Center: Game ── -->
+<div id="game-shell">
+    <canvas id="gc"></canvas>
+
+    <div id="pause-overlay" class="overlay">
+        <div class="overlay-panel">
+            <div class="overlay-title">GAME PAUSED</div>
+            <div class="overlay-text">Press SPACE to Resume</div>
+        </div>
+    </div>
+
+    <div id="warning-overlay" class="overlay">
+        <div class="overlay-panel">
+            <div class="overlay-title" style="font-size:26px;color:#fda4af;">Health Warning</div>
+            <div class="overlay-text">Consuming too many processed foods can increase the risk of:</div>
+            <ul class="warn-list">
+                <li>&bull; insulin resistance</li>
+                <li>&bull; obesity</li>
+                <li>&bull; metabolic disorders</li>
+            </ul>
+            <div class="overlay-text">Choose healthy foods to stay fit.</div>
+            <div class="overlay-text" style="margin-top:8px;font-weight:700;">Press SPACE to Continue</div>
+        </div>
+    </div>
+
+    <div id="gameover-overlay" class="overlay">
+        <div class="overlay-panel">
+            <div class="overlay-title">GAME OVER</div>
+            <div id="go-reason" class="overlay-text" style="margin-bottom:8px;"></div>
+            <div id="go-score" class="overlay-text"></div>
+            <div id="go-foods" class="overlay-text"></div>
+            <div id="go-ratio" class="overlay-text" style="margin-bottom:12px;"></div>
+            <div class="row" style="justify-content:center;">
+                <button id="restart-btn" class="btn btn-primary">Restart Game</button>
+                <button id="return-select-btn" class="btn btn-secondary">Return to Character Selection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Right: Stats Panel ── -->
+<div id="stats-panel">
+    <div class="panel-header">Game Stats</div>
+    <div class="stats-body">
+        <div class="stat-card">
+            <div class="stat-label">Score</div>
+            <div class="stat-value score-val" id="stat-score">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Lives</div>
+            <div class="stat-value lives-val" id="stat-lives">&hearts;&hearts;&hearts;&hearts;&hearts;</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Foods Eaten</div>
+            <div class="stat-value foods-val" id="stat-foods">0</div>
+            <div class="stat-sub">
+                <span class="healthy" id="stat-healthy">Healthy: 0</span> &middot;
+                <span class="junk" id="stat-junk">Junk: 0</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Body State</div>
+            <div class="stat-value body-val" id="stat-body">Fit</div>
+        </div>
+    </div>
+    <div class="controls-footer">
+        <div class="control-hint">
+            <span class="key">&uarr;&darr;&larr;&rarr;</span> / <span class="key">WASD</span> Move<br>
+            <span class="key">SPACE</span> Pause / Resume
+        </div>
+    </div>
+</div>
+
 <script>
-// ══════════════════════════════════════════════════════
-//  HEALTHY SNAKE GAME  —  HormoneLens Mini‑Game
-//  Eat healthy food to grow. Avoid junk food.
-//  3 junk food strikes → snake dies.
-// ══════════════════════════════════════════════════════
+// ──────────────────────────────────────────────────────────────
+//  Healthy Snake Game — Full-Width 3-Panel Layout
+//  Left: Full-height 3D Character with Tricks
+//  Center: Snake Game Canvas
+//  Right: HTML Stats Panel
+// ──────────────────────────────────────────────────────────────
 
-// ── Constants ─────────────────────────────────────────
-const CELL      = 20;          // grid cell size (px)
-const COLS      = 30;          // grid columns
-const ROWS      = 23;          // grid rows
-const HUD_H     = 60;          // top HUD height (px)
-const W         = COLS * CELL; // canvas width  = 600
-const H         = ROWS * CELL + HUD_H; // canvas height = 520
+const Config = {
+    CELL: 24,
+    COLS: 28,
+    ROWS: 22,
+    HUD_H: 56,
+    SPEED_BASE: 145,
+    SPEED_STEP: 12,
+    FOOD_SIZE: 0.8,
+    LIVES_START: 5,
+};
+Config.BOARD_W = Config.CELL * Config.COLS;
+Config.BOARD_H = Config.CELL * Config.ROWS;
+Config.W = Config.BOARD_W;
+Config.H = Config.HUD_H + Config.BOARD_H;
 
-// Speed (ms per tick). Increases (slower) as snake gets fatter.
-const SPEEDS    = [145, 160, 182]; // index = fatLevel (0 / 1 / 2)
-
-const HEALTHY_FOODS = ['🍎', '🥕', '🥦', '🍇'];
-const JUNK_FOODS    = ['🍔', '🍟', '🍕', '🍩'];
-const JUNK_CHANCE   = 0.30; // 30% chance each food spawn is junk
-
-// Segment pixel size per fat level (cell = 20px)
-const SEG_SZ    = [16, 18, 20]; // slim / chubby / fat
-
-// Snake body colours per fat level: [even-segment colour, odd-segment colour]
-const SEG_COL   = [
-    ['#4ade80', '#22c55e'], // healthy green
-    ['#a3e635', '#84cc16'], // yellow-green (slightly fat)
-    ['#fb923c', '#f97316'], // orange (fat)
-];
-
-// ── Canvas setup ──────────────────────────────────────
 const canvas = document.getElementById('gc');
-const ctx    = canvas.getContext('2d');
-canvas.width  = W;
-canvas.height = H;
+const ctx = canvas.getContext('2d');
+canvas.width = Config.W;
+canvas.height = Config.H;
 
+const overlays = {
+    start:    document.getElementById('start-overlay'),
+    pause:    document.getElementById('pause-overlay'),
+    warning:  document.getElementById('warning-overlay'),
+    gameover: document.getElementById('gameover-overlay'),
+};
+
+const goUI = {
+    reason: document.getElementById('go-reason'),
+    score:  document.getElementById('go-score'),
+    foods:  document.getElementById('go-foods'),
+    ratio:  document.getElementById('go-ratio'),
+};
+
+// ── Canvas scaling to fit center panel ──
 function fitCanvas() {
-    const s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
-    canvas.style.width  = (W * s) + 'px';
-    canvas.style.height = (H * s) + 'px';
+    const shell = document.getElementById('game-shell');
+    const maxW = shell.clientWidth;
+    const maxH = shell.clientHeight;
+    const pad = 24;
+    const scale = Math.min((maxW - pad) / Config.W, (maxH - pad) / Config.H);
+    canvas.style.width  = Math.floor(Config.W * scale) + 'px';
+    canvas.style.height = Math.floor(Config.H * scale) + 'px';
 }
 fitCanvas();
 window.addEventListener('resize', fitCanvas);
 
-// ── Game state ────────────────────────────────────────
-let S; // single mutable state object; recreated on each new game
+// ──────────────────────────────────────────────────────────────
+// CharacterSystem — selection / BMI logic
+// ──────────────────────────────────────────────────────────────
+const CharacterSystem = {
+    types: {
+        fit:   { label: 'Small',  bodyWidth: 30, color: '#22c55e' },
+        bulky: { label: 'Medium', bodyWidth: 44, color: '#f59e0b' },
+        fat:   { label: 'Large',  bodyWidth: 60, color: '#ef4444' },
+    },
+    selectedPreset: null,
+    customMode: false,
+    customHeight: null,
+    customWeight: null,
 
-function newState() {
-    const mx = (COLS / 2) | 0;
-    const my = (ROWS / 2) | 0;
-    return {
-        screen       : 'menu',  // 'menu' | 'playing' | 'gameover'
-        snake        : [{ x: mx, y: my }, { x: mx - 1, y: my }, { x: mx - 2, y: my }],
-        dir          : { x: 1, y: 0 },
-        nextDir      : { x: 1, y: 0 },
-        food         : null,
-        score        : 0,
-        junkAttempts : 0,       // 0–3; at 3 → game over
-        fatLevel     : 0,       // 0–2 (visual + speed tier)
-        speed        : SPEEDS[0],
-        warnEnd      : 0,       // performance.now() timestamp when warning fades
-        gameOverReason : '',
-        isNewBest    : false,
-        lastTick     : 0,
-        highScore    : parseInt(localStorage.getItem('hl_snake_hs') || '0'),
-    };
-}
-S = newState();
+    resolveTypeFromBMI(heightCm, weightKg) {
+        if (!heightCm || !weightKg) return null;
+        const m = heightCm / 100;
+        const bmi = weightKg / (m * m);
+        if (bmi < 22) return { key: 'fit', bmi };
+        if (bmi <= 27) return { key: 'bulky', bmi };
+        return { key: 'fat', bmi };
+    },
 
-// ── Food helpers ──────────────────────────────────────
-function spawnFood() {
-    let pos;
-    // Ensure food never spawns on a snake body segment
-    do {
-        pos = { x: (Math.random() * COLS) | 0, y: (Math.random() * ROWS) | 0 };
-    } while (S.snake.some(s => s.x === pos.x && s.y === pos.y));
-
-    const isJunk = Math.random() < JUNK_CHANCE;
-    const list   = isJunk ? JUNK_FOODS : HEALTHY_FOODS;
-    S.food = { ...pos, isJunk, emoji: list[(Math.random() * list.length) | 0] };
-}
-
-// ── Game flow ─────────────────────────────────────────
-function startGame() {
-    const hs = S.highScore;
-    S           = newState();
-    S.highScore = hs;
-    S.screen    = 'playing';
-    S.lastTick  = performance.now();
-    spawnFood();
-}
-
-function triggerGameOver(reason) {
-    S.screen         = 'gameover';
-    S.gameOverReason = reason;
-    S.isNewBest      = false;
-    if (S.score > 0 && S.score > S.highScore) {
-        S.isNewBest = true;
-        S.highScore = S.score;
-        localStorage.setItem('hl_snake_hs', S.highScore);
-    }
-    try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
-}
-
-// ── Tick — one step of game logic ─────────────────────
-function tick() {
-    S.dir = S.nextDir;
-
-    const head = S.snake[0];
-    const nx   = head.x + S.dir.x;
-    const ny   = head.y + S.dir.y;
-
-    // Wall collision
-    if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) {
-        return triggerGameOver('Snake hit the wall!');
-    }
-    // Self-collision — exclude tail because it moves away this same tick
-    if (S.snake.slice(0, -1).some(s => s.x === nx && s.y === ny)) {
-        return triggerGameOver('Snake hit itself!');
-    }
-
-    const ateFood = S.food && nx === S.food.x && ny === S.food.y;
-
-    // Advance snake
-    S.snake.unshift({ x: nx, y: ny });
-    if (!ateFood) S.snake.pop(); // remove tail unless food eaten (grow)
-
-    // Process food effects
-    if (ateFood) {
-        if (S.food.isJunk) {
-            S.score        = Math.max(0, S.score - 5);
-            S.junkAttempts++;
-            S.fatLevel     = Math.min(S.junkAttempts, 2);
-            S.speed        = SPEEDS[S.fatLevel];
-            S.warnEnd      = performance.now() + 2200;
-            if (S.junkAttempts >= 3) {
-                return triggerGameOver('unhealthy');
-            }
-        } else {
-            S.score += 10;
+    getInitialType() {
+        if (this.customMode) {
+            const result = this.resolveTypeFromBMI(this.customHeight, this.customWeight);
+            return result ? result.key : null;
         }
-        spawnFood();
-    }
-}
+        return this.selectedPreset;
+    },
+};
 
-// ── Main game loop ────────────────────────────────────
-function loop(ts) {
-    requestAnimationFrame(loop);
-    if (S.screen === 'playing' && ts - S.lastTick >= S.speed) {
-        S.lastTick = ts;
-        tick();
-    }
-    render(ts);
-}
-requestAnimationFrame(loop);
+// ──────────────────────────────────────────────────────────────
+// FoodSystem
+// ──────────────────────────────────────────────────────────────
+const FoodSystem = {
+    healthyFoods: [
+        { name: 'Apple',    emoji: '🍎' },
+        { name: 'Carrot',   emoji: '🥕' },
+        { name: 'Broccoli', emoji: '🥦' },
+        { name: 'Spinach',  emoji: '🥬' },
+    ],
+    junkFoods: [
+        { name: 'Burger', emoji: '🍔' },
+        { name: 'Pizza',  emoji: '🍕' },
+        { name: 'Fries',  emoji: '🍟' },
+        { name: 'Donut',  emoji: '🍩' },
+    ],
+    junkChance: 0.34,
 
-// ══════════════════════════════════════════════════════
-//  RENDERING
-// ══════════════════════════════════════════════════════
+    spawn(state) {
+        let pos;
+        do {
+            pos = {
+                x: Math.floor(Math.random() * Config.COLS),
+                y: Math.floor(Math.random() * Config.ROWS),
+            };
+        } while (state.snake.some(s => s.x === pos.x && s.y === pos.y));
 
-function render(ts) {
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = '#0d1117';
-    ctx.fillRect(0, 0, W, H);
+        const isJunk = Math.random() < this.junkChance;
+        const list = isJunk ? this.junkFoods : this.healthyFoods;
+        const item = list[Math.floor(Math.random() * list.length)];
+        state.food = { ...pos, ...item, isJunk };
+    },
 
-    if (S.screen === 'menu') { drawMenu(); return; }
+    applyConsumption(state) {
+        if (!state.food) return;
+        state.totalFoods += 1;
 
-    drawGrid();
-    drawFood(ts);
-    drawSnake();
-    drawHUD();
-    if (ts < S.warnEnd) drawWarningBanner(S.warnEnd - ts);
-    if (S.screen === 'gameover') drawGameOver();
-}
+        if (state.food.isJunk) {
+            state.score = Math.max(0, state.score - 5);
+            state.junkFoods += 1;
+            state.snakeFat = Math.min(2, state.snakeFat + 1);
+            state.avatarTypeIndex = Math.min(2, state.avatarTypeIndex + 1);
+            state.banner = 'Warning: Unhealthy food consumed!';
+            state.bannerUntil = performance.now() + 1400;
+            TrickSystem.onJunkFood();
+            HealthWarningSystem.trigger();
+        } else {
+            state.score += 10;
+            state.healthyFoods += 1;
+            state.snakeFat = Math.max(0, state.snakeFat - 1);
+            state.avatarTypeIndex = Math.max(0, state.avatarTypeIndex - 1);
+            state.banner = 'Great! Healthy food consumed.';
+            state.bannerUntil = performance.now() + 900;
+            TrickSystem.onHealthyFood();
+        }
+    },
 
-// ── Grid ──────────────────────────────────────────────
-function drawGrid() {
-    ctx.strokeStyle = 'rgba(255,255,255,0.035)';
-    ctx.lineWidth   = 0.5;
-    for (let c = 0; c <= COLS; c++) {
-        ctx.beginPath();
-        ctx.moveTo(c * CELL, HUD_H);
-        ctx.lineTo(c * CELL, H);
-        ctx.stroke();
-    }
-    for (let r = 0; r <= ROWS; r++) {
-        ctx.beginPath();
-        ctx.moveTo(0, HUD_H + r * CELL);
-        ctx.lineTo(W, HUD_H + r * CELL);
-        ctx.stroke();
-    }
-}
+    draw(food) {
+        if (!food) return;
+        const ox = food.x * Config.CELL;
+        const oy = Config.HUD_H + food.y * Config.CELL;
+        const pad = Config.CELL * ((1 - Config.FOOD_SIZE) / 2);
+        const size = Config.CELL - pad * 2;
 
-// ── Snake ─────────────────────────────────────────────
-function drawSnake() {
-    const fat        = Math.min(S.fatLevel, 2);
-    const seg        = SEG_SZ[fat];
-    const pad        = (CELL - seg) / 2;
-    const [c1, c2]   = SEG_COL[fat];
-    const cornerRad  = Math.max(3, seg * 0.28);
-
-    S.snake.forEach((cell, i) => {
-        const px = cell.x * CELL + pad;
-        const py = HUD_H + cell.y * CELL + pad;
-        ctx.fillStyle = i === 0 ? '#86efac' : (i % 2 === 0 ? c1 : c2);
-        rrect(px, py, seg, seg, cornerRad);
+        ctx.fillStyle = food.isJunk ? '#b91c1c' : '#16a34a';
+        roundedRectPath(ox + pad, oy + pad, size, size, 5);
         ctx.fill();
-    });
 
-    drawSnakeEyes(S.snake[0], seg, pad);
-}
+        ctx.strokeStyle = food.isJunk ? '#facc15' : '#fb7185';
+        ctx.lineWidth = 2;
+        roundedRectPath(ox + pad, oy + pad, size, size, 5);
+        ctx.stroke();
 
-function drawSnakeEyes(head, seg, pad) {
-    const ox = head.x * CELL + pad;
-    const oy = HUD_H + head.y * CELL + pad;
-    const d  = S.dir;
-    const er = Math.max(1.5, seg * 0.1); // eye radius
-    const f  = seg * 0.66;               // forward distance from segment edge
-    const t  = seg * 0.25;               // lateral offset from segment edge
-
-    let p1, p2;
-    if      (d.x ===  1) { p1 = [ox + f,       oy + t      ]; p2 = [ox + f,       oy + seg - t]; }
-    else if (d.x === -1) { p1 = [ox + seg - f,  oy + t      ]; p2 = [ox + seg - f, oy + seg - t]; }
-    else if (d.y === -1) { p1 = [ox + t,         oy + seg - f]; p2 = [ox + seg - t, oy + seg - f]; }
-    else                 { p1 = [ox + t,         oy + f      ]; p2 = [ox + seg - t, oy + f      ]; }
-
-    [p1, p2].forEach(([ex, ey]) => {
+        ctx.font = 'bold 17px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillStyle = '#ffffff';
-        ctx.beginPath(); ctx.arc(ex, ey, er + 1.2, 0, 6.28); ctx.fill();
-        ctx.fillStyle = '#0d1117';
-        ctx.beginPath(); ctx.arc(ex, ey, er,       0, 6.28); ctx.fill();
-    });
-}
+        ctx.fillText(food.emoji, ox + Config.CELL / 2, oy + Config.CELL / 2 + 0.5);
+    },
+};
 
-// ── Food ──────────────────────────────────────────────
-function drawFood(ts) {
-    if (!S.food) return;
-    const { x, y, isJunk, emoji } = S.food;
+// ──────────────────────────────────────────────────────────────
+// PauseSystem / HealthWarningSystem
+// ──────────────────────────────────────────────────────────────
+const PauseSystem = {
+    toggle() {
+        if (GameEngine.state.phase === 'playing') {
+            GameEngine.state.phase = 'paused';
+            overlays.pause.classList.add('show');
+            try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
+            return;
+        }
+        if (GameEngine.state.phase === 'paused') {
+            overlays.pause.classList.remove('show');
+            GameEngine.state.phase = 'playing';
+            GameEngine.state.lastTick = performance.now();
+            try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch (_) {}
+        }
+    },
+};
 
-    // Cell origin (top-left of the grid cell)
-    const ox = x * CELL;
-    const oy = HUD_H + y * CELL;
+const HealthWarningSystem = {
+    trigger() {
+        if (GameEngine.state.phase !== 'playing') return;
+        GameEngine.state.phase = 'warning';
+        overlays.warning.classList.add('show');
+        try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
+    },
+    continue() {
+        if (GameEngine.state.phase !== 'warning') return;
+        overlays.warning.classList.remove('show');
+        GameEngine.state.phase = 'playing';
+        GameEngine.state.lastTick = performance.now();
+        try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch (_) {}
+    },
+};
 
-    // Solid background tile — 80% of cell, centered
-    const pad   = CELL * 0.10;          // 2px inset on each side
-    const tileW = CELL - pad * 2;       // 16px
-    const bgColor = isJunk ? '#D32F2F' : '#2E7D32';
-    ctx.fillStyle = bgColor;
-    rrect(ox + pad, oy + pad, tileW, tileW, 4);
-    ctx.fill();
+// ──────────────────────────────────────────────────────────────
+// UISystem — canvas drawing (game board + HUD only)
+// ──────────────────────────────────────────────────────────────
+const UISystem = {
+    drawFrame() {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, Config.W, Config.H);
+        this.drawHud();
+        this.drawGrid();
 
-    // Thin solid border for contrast against dark grid
-    const borderColor = isJunk ? '#FFC107' : '#A5D6A7';
-    ctx.strokeStyle = borderColor;
-    ctx.lineWidth   = 1.5;
-    rrect(ox + pad, oy + pad, tileW, tileW, 4);
-    ctx.stroke();
+        if (GameEngine.state.banner && performance.now() < GameEngine.state.bannerUntil) {
+            this.drawBanner(GameEngine.state.banner);
+        }
+    },
 
-    // Emoji at 16px — fills the tile without overflow
-    ctx.font         = '16px serif';
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(emoji, ox + CELL / 2, oy + CELL / 2 + 1);
-}
+    drawHud() {
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(0, 0, Config.W, Config.HUD_H);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, Config.HUD_H - 1, Config.W, 1);
 
-// ── HUD ───────────────────────────────────────────────
-function drawHUD() {
-    ctx.fillStyle = '#161b22';
-    ctx.fillRect(0, 0, W, HUD_H);
-    // Bottom border line
-    ctx.fillStyle = 'rgba(99,102,241,0.55)';
-    ctx.fillRect(0, HUD_H - 1, W, 1);
+        const st = GameEngine.state;
 
-    // — Score (left) —
-    ctx.font         = '9px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle    = '#64748b';
-    ctx.textAlign    = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('SCORE', 18, 12);
-    ctx.font      = 'bold 20px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#818cf8';
-    ctx.fillText(S.score, 18, 28);
+        ctx.font = '10px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'left';
+        ctx.fillText('SCORE', 16, 16);
+        ctx.font = 'bold 24px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#a78bfa';
+        ctx.fillText(st.score, 16, 42);
 
-    // — Junk Attempts (centre) —
-    ctx.font         = '9px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle    = '#64748b';
-    ctx.textAlign    = 'center';
-    ctx.fillText('JUNK ATTEMPTS', W / 2, 12);
-    ctx.font      = 'bold 18px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = S.junkAttempts >= 2 ? '#f87171' : '#fb923c';
-    ctx.fillText(`${S.junkAttempts} / 3`, W / 2, 30);
+        ctx.font = '10px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('LIVES', Config.W / 2, 16);
+        ctx.font = 'bold 22px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#f87171';
+        ctx.fillText('\u2665'.repeat(st.lives), Config.W / 2, 42);
 
-    // — Health hearts (right) —
-    ctx.font         = '9px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle    = '#64748b';
-    ctx.textAlign    = 'right';
-    ctx.fillText('HEALTH', W - 18, 12);
-    ctx.font      = '22px serif';
-    ctx.fillStyle = '#f87171';
-    const hearts = Math.max(0, 3 - S.junkAttempts);
-    ctx.fillText('♥'.repeat(hearts) + '♡'.repeat(3 - hearts), W - 18, 28);
-}
+        ctx.font = '10px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'right';
+        ctx.fillText('FOODS', Config.W - 16, 16);
+        ctx.font = 'bold 24px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText(st.totalFoods, Config.W - 16, 42);
+    },
 
-// ── Warning banner ────────────────────────────────────
-function drawWarningBanner(remaining) {
-    const alpha = Math.min(1, remaining / 500);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = 'rgba(239,68,68,0.2)';
-    ctx.fillRect(0, HUD_H, W, 28);
-    ctx.font         = 'bold 12px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle    = '#fca5a5';
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('⚠️  Warning: Unhealthy Food Consumed!', W / 2, HUD_H + 14);
-    ctx.restore();
-}
+    drawGrid() {
+        ctx.fillStyle = '#0b1220';
+        ctx.fillRect(0, Config.HUD_H, Config.BOARD_W, Config.BOARD_H);
 
-// ── Menu screen ───────────────────────────────────────
-function drawMenu() {
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
+        ctx.strokeStyle = 'rgba(148,163,184,0.10)';
+        ctx.lineWidth = 1;
+        for (let c = 0; c <= Config.COLS; c++) {
+            const x = c * Config.CELL;
+            ctx.beginPath(); ctx.moveTo(x, Config.HUD_H); ctx.lineTo(x, Config.H); ctx.stroke();
+        }
+        for (let r = 0; r <= Config.ROWS; r++) {
+            const y = Config.HUD_H + r * Config.CELL;
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(Config.BOARD_W, y); ctx.stroke();
+        }
+    },
 
-    ctx.font = '54px serif';
-    ctx.fillText('🐍', W / 2, 100);
+    drawSnake() {
+        const st = GameEngine.state;
+        const segSize = [18, 20, 22][st.snakeFat];
+        const pad = (Config.CELL - segSize) / 2;
 
-    ctx.font      = 'bold 34px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#a78bfa';
-    ctx.fillText('Healthy Snake', W / 2, 158);
+        st.snake.forEach((s, i) => {
+            const px = s.x * Config.CELL + pad;
+            const py = Config.HUD_H + s.y * Config.CELL + pad;
+            ctx.fillStyle = i === 0 ? '#86efac' : (st.snakeFat === 2 ? '#f97316' : st.snakeFat === 1 ? '#84cc16' : '#22c55e');
+            roundedRectPath(px, py, segSize, segSize, 6);
+            ctx.fill();
+        });
 
-    ctx.font      = '14px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('Eat healthy food. Avoid junk food. Stay alive!', W / 2, 188);
+        const head = st.snake[0];
+        const hx = head.x * Config.CELL + Config.CELL / 2;
+        const hy = Config.HUD_H + head.y * Config.CELL + Config.CELL / 2;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(hx - 4, hy - 3, 2, 0, Math.PI * 2);
+        ctx.arc(hx + 4, hy - 3, 2, 0, Math.PI * 2);
+        ctx.fill();
+    },
 
-    ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#64748b';
-    ctx.fillText('Arrow Keys or WASD to move', W / 2, 216);
+    drawBanner(text) {
+        ctx.fillStyle = 'rgba(30,41,59,0.95)';
+        roundedRectPath(12, Config.HUD_H + 8, Config.BOARD_W - 24, 36, 8);
+        ctx.fill();
+        ctx.font = 'bold 14px "Segoe UI",sans-serif';
+        ctx.fillStyle = '#fca5a5';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, Config.BOARD_W / 2, Config.HUD_H + 26);
+        ctx.textBaseline = 'alphabetic';
+    },
+};
 
-    drawMenuLegend();
+// ──────────────────────────────────────────────────────────────
+// GameEngine
+// ──────────────────────────────────────────────────────────────
+const GameEngine = {
+    state: null,
 
-    drawButton(W / 2 - 85, 368, 170, 44, '▶  Start Game');
+    createState(initialAvatar) {
+        const centerX = Math.floor(Config.COLS / 2);
+        const centerY = Math.floor(Config.ROWS / 2);
+        const avatarTypeIndex = initialAvatar === 'fit' ? 0 : initialAvatar === 'bulky' ? 1 : 2;
 
-    if (S.highScore > 0) {
-        ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
-        ctx.fillStyle = '#64748b';
-        ctx.fillText(`Best: ${S.highScore} pts`, W / 2, 428);
-    }
-    ctx.font      = '11px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#475569';
-    ctx.fillText('Press Enter or Space to start', W / 2, 450);
-}
+        return {
+            phase: 'playing',
+            snake: [
+                { x: centerX, y: centerY },
+                { x: centerX - 1, y: centerY },
+                { x: centerX - 2, y: centerY },
+            ],
+            dir: { x: 1, y: 0 },
+            nextDir: { x: 1, y: 0 },
+            score: 0,
+            lives: Config.LIVES_START,
+            food: null,
+            snakeFat: Math.min(2, avatarTypeIndex),
+            avatarTypeIndex,
+            healthyFoods: 0,
+            junkFoods: 0,
+            totalFoods: 0,
+            gameOverReason: '',
+            speed: Config.SPEED_BASE + avatarTypeIndex * Config.SPEED_STEP,
+            lastTick: performance.now(),
+            banner: '',
+            bannerUntil: 0,
+            startedAvatar: initialAvatar,
+        };
+    },
 
-function drawMenuLegend() {
-    const bx = W / 2 - 190;
-    const by = 243;
-    const bw = 380;
-    const bh = 96;
+    startNewGame(initialAvatar) {
+        this.state = this.createState(initialAvatar);
+        FoodSystem.spawn(this.state);
+        overlays.pause.classList.remove('show');
+        overlays.warning.classList.remove('show');
+        overlays.gameover.classList.remove('show');
+        try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch (_) {}
+    },
 
-    ctx.fillStyle   = 'rgba(255,255,255,0.04)';
-    rrect(bx, by, bw, bh, 10); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.09)';
-    ctx.lineWidth   = 1;
-    rrect(bx, by, bw, bh, 10); ctx.stroke();
+    resetSnakeToCenter() {
+        const cx = Math.floor(Config.COLS / 2);
+        const cy = Math.floor(Config.ROWS / 2);
+        this.state.snake = [
+            { x: cx, y: cy },
+            { x: cx - 1, y: cy },
+            { x: cx - 2, y: cy },
+        ];
+        this.state.dir     = { x: 1, y: 0 };
+        this.state.nextDir = { x: 1, y: 0 };
+    },
 
-    const cy1 = by + 28;
-    const cy2 = by + 66;
+    gameOver(reason) {
+        this.state.phase = 'gameover';
+        this.state.gameOverReason = reason;
 
-    // Healthy food row
-    ctx.font         = '15px serif';
-    ctx.fillStyle    = '#e2e8f0';
-    ctx.textAlign    = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🍎  🥕  🥦  🍇', bx + 16, cy1);
-    ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#4ade80';
-    ctx.textAlign = 'right';
-    ctx.fillText('+10 pts  •  snake grows  •  stays healthy', bx + bw - 16, cy1);
+        const healthy = this.state.healthyFoods;
+        const junk    = this.state.junkFoods;
+        const total   = healthy + junk;
+        const ratio   = total === 0 ? 'N/A' : `${Math.round((healthy / total) * 100)}% healthy / ${Math.round((junk / total) * 100)}% junk`;
 
-    // Junk food row
-    ctx.font         = '15px serif';
-    ctx.fillStyle    = '#e2e8f0';
-    ctx.textAlign    = 'left';
-    ctx.fillText('🍔  🍟  🍕  🍩', bx + 16, cy2);
-    ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#fb923c';
-    ctx.textAlign = 'right';
-    ctx.fillText('−5 pts  •  gets fat & slower  •  3 strikes = death', bx + bw - 16, cy2);
-}
+        goUI.reason.textContent = 'Reason: ' + reason;
+        goUI.score.textContent  = 'Final Score: ' + this.state.score;
+        goUI.foods.textContent  = 'Foods Consumed: ' + this.state.totalFoods;
+        goUI.ratio.textContent  = 'Healthy vs Junk Ratio: ' + ratio;
 
-function drawButton(bx, by, bw, bh, text) {
-    const g = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
-    g.addColorStop(0, '#7c3aed');
-    g.addColorStop(1, '#6d28d9');
-    ctx.fillStyle = g;
-    rrect(bx, by, bw, bh, 10);
-    ctx.fill();
-    ctx.font         = 'bold 16px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle    = '#ffffff';
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, bx + bw / 2, by + bh / 2);
-}
+        overlays.gameover.classList.add('show');
+        try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
+    },
 
-// ── Game Over screen ──────────────────────────────────
-function drawGameOver() {
-    ctx.fillStyle = 'rgba(0,0,0,0.72)';
-    ctx.fillRect(0, 0, W, H);
+    update() {
+        const st = this.state;
+        if (!st || st.phase !== 'playing') return;
 
-    const pw = 390, ph = 295;
-    const px = W / 2 - pw / 2;
-    const py = H / 2 - ph / 2;
+        st.dir = st.nextDir;
+        const head = st.snake[0];
+        const nx = head.x + st.dir.x;
+        const ny = head.y + st.dir.y;
 
-    ctx.fillStyle = '#1e293b';
-    rrect(px, py, pw, ph, 16); ctx.fill();
-    ctx.strokeStyle = 'rgba(99,102,241,0.6)';
-    ctx.lineWidth   = 1.5;
-    rrect(px, py, pw, ph, 16); ctx.stroke();
+        if (nx < 0 || nx >= Config.COLS || ny < 0 || ny >= Config.ROWS) {
+            st.lives -= 1;
+            st.banner = 'Warning: You hit the wall!';
+            st.bannerUntil = performance.now() + 1300;
+            TrickSystem.onWallHit();
 
-    const cx = W / 2;
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
+            if (st.lives <= 0) {
+                this.gameOver('You ran out of lives');
+                return;
+            }
+            this.resetSnakeToCenter();
+            return;
+        }
 
-    const isUnhealthyDeath = S.gameOverReason === 'unhealthy';
+        if (st.snake.slice(0, -1).some(s => s.x === nx && s.y === ny)) {
+            this.gameOver('Snake collided with itself');
+            return;
+        }
 
-    ctx.font = '32px serif';
-    ctx.fillText(isUnhealthyDeath ? '💀' : '💥', cx, py + 52);
+        const ateFood = st.food && nx === st.food.x && ny === st.food.y;
+        st.snake.unshift({ x: nx, y: ny });
+        if (!ateFood) st.snake.pop();
 
-    ctx.font      = 'bold 26px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#f87171';
-    ctx.fillText('GAME OVER', cx, py + 94);
+        if (ateFood) {
+            FoodSystem.applyConsumption(st);
+            st.speed = Config.SPEED_BASE + st.snakeFat * Config.SPEED_STEP;
+            FoodSystem.spawn(st);
+        }
+    },
 
-    ctx.font      = '13px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#cbd5e1';
-    ctx.fillText(
-        isUnhealthyDeath ? 'Snake became unhealthy and died.' : S.gameOverReason,
-        cx, py + 122
-    );
+    render() {
+        UISystem.drawFrame();
+        FoodSystem.draw(this.state.food);
+        UISystem.drawSnake();
+    },
+};
 
-    if (isUnhealthyDeath) {
-        ctx.font      = '11px "Segoe UI", system-ui, sans-serif';
-        ctx.fillStyle = '#64748b';
-        ctx.fillText('Reason: Unhealthy diet (3 junk food strikes)', cx, py + 143);
-    }
-
-    ctx.font      = 'bold 20px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(`Final Score: ${S.score}`, cx, py + 168);
-
-    if (S.isNewBest) {
-        ctx.font      = '12px "Segoe UI", system-ui, sans-serif';
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillText('🏆  New Best Score!', cx, py + 191);
-    }
-
-    drawButton(cx - 90, py + 214, 180, 44, '↺  Restart Game');
-
-    ctx.font      = '10px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = '#475569';
-    ctx.fillText('Press R, Enter or Space to restart', cx, py + ph - 10);
-}
-
-// ── Rounded rectangle path helper ────────────────────
-function rrect(x, y, w, h, r) {
+function roundedRectPath(x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.lineTo(x + w - r, y);
-    ctx.arcTo(x + w, y,     x + w, y + r,     r);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
     ctx.lineTo(x + w, y + h - r);
     ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
     ctx.lineTo(x + r, y + h);
-    ctx.arcTo(x, y + h,     x, y + h - r,     r);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
     ctx.lineTo(x, y + r);
-    ctx.arcTo(x, y,         x + r, y,         r);
+    ctx.arcTo(x, y, x + r, y, r);
     ctx.closePath();
 }
 
-// ══════════════════════════════════════════════════════
-//  INPUT HANDLING
-// ══════════════════════════════════════════════════════
+// ──────────────────────────────────────────────────────────────
+// TrickSystem — character tricks / animations
+// ──────────────────────────────────────────────────────────────
+const TrickSystem = {
+    currentTrick: 'idle',
+    trickTimer: 0,
+    trickDuration: 0,
+    scheduledTime: 0,
 
-document.addEventListener('keydown', function (e) {
-    const k = e.key;
+    // Transform outputs applied to 3D model group
+    baseRotY: 0,
+    offsetY: 0,
+    tiltZ: 0,
+    modelScale: 1,
 
-    if (S.screen === 'menu') {
-        if (k === 'Enter' || k === ' ') { e.preventDefault(); startGame(); }
-        return;
-    }
-    if (S.screen === 'gameover') {
-        if (k === 'Enter' || k === ' ' || k === 'r' || k === 'R') {
-            e.preventDefault(); startGame();
+    init() {
+        this.scheduleNext();
+    },
+
+    setModelScale(modelHeight) {
+        this.modelScale = Math.max(0.5, modelHeight / 180);
+    },
+
+    scheduleNext() {
+        this.scheduledTime = performance.now() + 2500 + Math.random() * 4000;
+    },
+
+    triggerTrick(name) {
+        this.currentTrick = name;
+        this.trickTimer = performance.now();
+        var durations = {
+            jump: 900, spin: 1200, wave: 1400, celebrate: 2000,
+            stumble: 800, dance: 2500, headbob: 1600, flex: 1400, twirl: 1800
+        };
+        this.trickDuration = durations[name] || 1000;
+        this.updateLabel();
+    },
+
+    onHealthyFood() { this.triggerTrick('celebrate'); },
+    onJunkFood()    { this.triggerTrick('stumble'); },
+    onWallHit()     { this.triggerTrick('stumble'); },
+
+    updateLabel() {
+        var el = document.getElementById('trick-label');
+        if (!el) return;
+        var labels = {
+            idle: 'Idle',
+            jump: '\u2B06 Jump!',
+            spin: '\uD83D\uDD04 Spin!',
+            wave: '\uD83D\uDC4B Wave!',
+            celebrate: '\uD83C\uDF89 Celebrate!',
+            stumble: '\uD83D\uDE35 Stumble!',
+            dance: '\uD83D\uDD7A Dance!',
+            headbob: '\uD83C\uDFB5 Head Bob!',
+            flex: '\uD83D\uDCAA Flex!',
+            twirl: '\uD83C\uDF00 Twirl!',
+        };
+        el.textContent = labels[this.currentTrick] || 'Idle';
+    },
+
+    update(now) {
+        // Auto-trigger random tricks periodically
+        if (this.currentTrick === 'idle' && now >= this.scheduledTime) {
+            var randoms = ['jump', 'spin', 'wave', 'dance', 'headbob', 'flex', 'twirl'];
+            this.triggerTrick(randoms[Math.floor(Math.random() * randoms.length)]);
         }
+
+        if (this.currentTrick === 'idle') {
+            // Gentle idle: slow sway + breathing
+            this.baseRotY = Math.sin(now * 0.0008) * 0.12;
+            this.offsetY  = Math.sin(now * 0.0015) * 2 * this.modelScale;
+            this.tiltZ    = Math.sin(now * 0.001) * 0.015;
+            return;
+        }
+
+        var elapsed = now - this.trickTimer;
+        var t = Math.min(1, elapsed / this.trickDuration);
+
+        switch (this.currentTrick) {
+            case 'jump':
+                this.offsetY  = Math.sin(t * Math.PI) * 30 * this.modelScale;
+                this.baseRotY = 0;
+                this.tiltZ    = 0;
+                break;
+
+            case 'spin':
+                this.baseRotY = t * Math.PI * 2;
+                this.offsetY  = Math.sin(t * Math.PI) * 8 * this.modelScale;
+                this.tiltZ    = 0;
+                break;
+
+            case 'wave':
+                this.tiltZ    = Math.sin(t * Math.PI * 4) * 0.15;
+                this.baseRotY = Math.sin(t * Math.PI * 2) * 0.2;
+                this.offsetY  = 0;
+                break;
+
+            case 'celebrate':
+                this.baseRotY = t * Math.PI * 4;
+                this.offsetY  = Math.sin(t * Math.PI * 2) * 25 * this.modelScale;
+                this.tiltZ    = Math.sin(t * Math.PI * 6) * 0.08;
+                break;
+
+            case 'stumble':
+                this.tiltZ    = Math.sin(t * Math.PI * 8) * 0.18 * (1 - t);
+                this.baseRotY = Math.sin(t * Math.PI * 6) * 0.1 * (1 - t);
+                this.offsetY  = 0;
+                break;
+
+            case 'dance':
+                // Side-to-side sway with bouncing
+                this.tiltZ    = Math.sin(t * Math.PI * 6) * 0.12;
+                this.baseRotY = Math.sin(t * Math.PI * 4) * 0.3;
+                this.offsetY  = Math.abs(Math.sin(t * Math.PI * 8)) * 15 * this.modelScale;
+                break;
+
+            case 'headbob':
+                // Rhythmic head bob
+                this.offsetY  = Math.sin(t * Math.PI * 6) * 8 * this.modelScale;
+                this.tiltZ    = Math.sin(t * Math.PI * 3) * 0.06;
+                this.baseRotY = Math.sin(t * Math.PI * 2) * 0.08;
+                break;
+
+            case 'flex':
+                // Lean back then forward like flexing
+                this.tiltZ    = Math.sin(t * Math.PI) * 0.12;
+                this.offsetY  = Math.sin(t * Math.PI) * 10 * this.modelScale;
+                this.baseRotY = Math.sin(t * Math.PI * 2) * 0.15;
+                break;
+
+            case 'twirl':
+                // Graceful slower twirl with lift
+                this.baseRotY = t * Math.PI * 3;
+                this.offsetY  = Math.sin(t * Math.PI) * 18 * this.modelScale;
+                this.tiltZ    = Math.sin(t * Math.PI * 2) * 0.06;
+                break;
+        }
+
+        if (t >= 1) {
+            this.currentTrick = 'idle';
+            this.baseRotY = 0;
+            this.offsetY  = 0;
+            this.tiltZ    = 0;
+            this.scheduleNext();
+            this.updateLabel();
+        }
+    },
+};
+
+// ──────────────────────────────────────────────────────────────
+// Character3DSystem — full-height FBX model with trick animations
+// ──────────────────────────────────────────────────────────────
+const Character3DSystem = {
+    scene: null,
+    camera: null,
+    renderer: null,
+    modelGroup: null,
+    model: null,
+    mixer: null,
+    clock: null,
+    ready: false,
+    currentType: null,
+    targetScaleX: 1,
+    currentScaleX: 1,
+    baseScale: 1,
+    modelBaseY: 0,
+    modelHeight: 180,
+
+    scaleMap: { fit: 0.85, bulky: 1.1, fat: 1.5 },
+
+    init() {
+        if (typeof THREE === 'undefined') {
+            console.warn('Three.js not loaded — 3D character disabled');
+            return;
+        }
+
+        var container = document.getElementById('char3d-container');
+        if (!container) return;
+
+        this.clock = new THREE.Clock();
+
+        // Scene
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x0f172a);
+
+        // Camera
+        this.camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
+
+        // Renderer
+        var w = container.clientWidth  || 280;
+        var h = container.clientHeight || 600;
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setSize(w, h);
+        if (typeof THREE.SRGBColorSpace !== 'undefined') {
+            this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        } else if (typeof THREE.sRGBEncoding !== 'undefined') {
+            this.renderer.outputEncoding = THREE.sRGBEncoding;
+        }
+        container.appendChild(this.renderer.domElement);
+
+        // Lights
+        this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+        var keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        keyLight.position.set(100, 200, 200);
+        this.scene.add(keyLight);
+
+        var fillLight = new THREE.DirectionalLight(0xc4b5fd, 0.4);
+        fillLight.position.set(-80, 100, -60);
+        this.scene.add(fillLight);
+
+        var rimLight = new THREE.DirectionalLight(0x38bdf8, 0.25);
+        rimLight.position.set(0, 50, -200);
+        this.scene.add(rimLight);
+
+        // Group wrapper — trick transforms go here (won't conflict with animation mixer)
+        this.modelGroup = new THREE.Group();
+        this.scene.add(this.modelGroup);
+
+        // Ground disc
+        var groundGeo = new THREE.CircleGeometry(60, 48);
+        var groundMat = new THREE.MeshBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.4 });
+        var ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = 0.5;
+        this.scene.add(ground);
+
+        // Load FBX
+        if (typeof THREE.FBXLoader === 'undefined') {
+            console.warn('FBXLoader not available');
+            return;
+        }
+
+        var self = this;
+        var loader = new THREE.FBXLoader();
+        loader.load(
+            'models/character.fbx',
+            function(fbx) {
+                self.model = fbx;
+                self.baseScale = 1.0;
+                fbx.scale.setScalar(self.baseScale);
+
+                var box    = new THREE.Box3().setFromObject(fbx);
+                var center = box.getCenter(new THREE.Vector3());
+                var size   = box.getSize(new THREE.Vector3());
+
+                // Feet on ground, centered
+                fbx.position.x = -center.x;
+                fbx.position.y = -box.min.y;
+                fbx.position.z = -center.z;
+                self.modelBaseY  = fbx.position.y;
+                self.modelHeight = size.y;
+
+                TrickSystem.setModelScale(size.y);
+
+                // Lower the arms — find arm bones and rotate down
+                self.lowerArms(fbx);
+
+                // Fit camera to see full model
+                self.fitCamera(size);
+
+                // Play first animation clip (if available and not a T-pose)
+                if (fbx.animations && fbx.animations.length > 0) {
+                    self.mixer = new THREE.AnimationMixer(fbx);
+                    var action = self.mixer.clipAction(fbx.animations[0]);
+                    action.play();
+                }
+
+                self.modelGroup.add(fbx);
+                self.ready = true;
+                self.setBodyType('fit');
+            },
+            undefined,
+            function(err) { console.warn('FBX load error:', err); }
+        );
+    },
+
+    lowerArms(fbx) {
+        // Rotate upper arm bones downward so arms rest at sides
+        fbx.traverse(function(child) {
+            if (!child.isBone) return;
+            var name = child.name.toLowerCase();
+            // Match Mixamo naming: mixamorig:LeftArm, mixamorig6:LeftArm, etc
+            if (name.indexOf('leftarm') !== -1 && name.indexOf('fore') === -1) {
+                child.rotation.z += 1.1;  // rotate left arm down
+            } else if (name.indexOf('rightarm') !== -1 && name.indexOf('fore') === -1) {
+                child.rotation.z -= 1.1;  // rotate right arm down
+            }
+        });
+    },
+
+    fitCamera(size) {
+        var container = document.getElementById('char3d-container');
+        var cw = container.clientWidth  || 280;
+        var ch = container.clientHeight || 600;
+        var aspect = cw / ch;
+
+        this.camera.aspect = aspect;
+        var vFov   = this.camera.fov * (Math.PI / 180);
+        var margin = 1.15;
+        var distH  = (size.y * margin / 2) / Math.tan(vFov / 2);
+        var hFov   = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+        var distW  = (size.x * margin * 2 / 2) / Math.tan(hFov / 2);
+        var dist   = Math.max(distH, distW);
+
+        this.camera.position.set(0, size.y * 0.45, dist);
+        this.camera.lookAt(0, size.y * 0.40, 0);
+        this.camera.updateProjectionMatrix();
+    },
+
+    handleResize() {
+        var container = document.getElementById('char3d-container');
+        if (!container || !this.renderer) return;
+        var w = container.clientWidth;
+        var h = container.clientHeight;
+        if (w === 0 || h === 0) return;
+
+        this.renderer.setSize(w, h);
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+    },
+
+    setBodyType(typeKey) {
+        if (!this.model || !typeKey) return;
+        this.currentType = typeKey;
+        this.targetScaleX = this.scaleMap[typeKey] || 1;
+    },
+
+    updateScale() {
+        if (!this.model) return;
+        this.currentScaleX += (this.targetScaleX - this.currentScaleX) * 0.06;
+        this.model.scale.set(
+            this.baseScale * this.currentScaleX,
+            this.baseScale,
+            this.baseScale * ((this.currentScaleX - 1) * 0.5 + 1)
+        );
+    },
+
+    applyTricks() {
+        if (!this.modelGroup) return;
+        this.modelGroup.rotation.y = TrickSystem.baseRotY;
+        this.modelGroup.rotation.z = TrickSystem.tiltZ;
+        if (this.model) {
+            this.model.position.y = this.modelBaseY + TrickSystem.offsetY;
+        }
+    },
+
+    renderFrame() {
+        if (!this.ready) return;
+        if (this.mixer) {
+            var delta = this.clock.getDelta();
+            this.mixer.update(delta);
+        }
+        this.updateScale();
+        this.applyTricks();
+        this.renderer.render(this.scene, this.camera);
+    },
+};
+
+// ──────────────────────────────────────────────────────────────
+// Stats Panel Update
+// ──────────────────────────────────────────────────────────────
+var statEls = {
+    score:    document.getElementById('stat-score'),
+    lives:    document.getElementById('stat-lives'),
+    foods:    document.getElementById('stat-foods'),
+    healthy:  document.getElementById('stat-healthy'),
+    junk:     document.getElementById('stat-junk'),
+    body:     document.getElementById('stat-body'),
+    charBody: document.getElementById('char-body-state'),
+};
+
+function updateStatsPanel(st) {
+    if (!st) return;
+    statEls.score.textContent   = st.score;
+    statEls.lives.textContent   = '\u2665'.repeat(st.lives);
+    statEls.foods.textContent   = st.totalFoods;
+    statEls.healthy.textContent = 'Healthy: ' + st.healthyFoods;
+    statEls.junk.textContent    = 'Junk: ' + st.junkFoods;
+
+    var typeKey = ['fit', 'bulky', 'fat'][st.avatarTypeIndex || 0];
+    var label   = CharacterSystem.types[typeKey].label;
+    var colors  = { fit: '#22c55e', bulky: '#f59e0b', fat: '#ef4444' };
+
+    statEls.body.textContent     = label;
+    statEls.body.style.color     = colors[typeKey];
+    statEls.charBody.textContent = 'Body: ' + label;
+    statEls.charBody.style.color = colors[typeKey];
+}
+
+// ──────────────────────────────────────────────────────────────
+// Game Loop
+// ──────────────────────────────────────────────────────────────
+var rafId = 0;
+
+function gameLoop(ts) {
+    rafId = requestAnimationFrame(gameLoop);
+
+    var st = GameEngine.state;
+    if (!st) return;
+
+    // Game tick
+    if (st.phase === 'playing' && ts - st.lastTick >= st.speed) {
+        st.lastTick = ts;
+        GameEngine.update();
+    }
+
+    // Render 2D canvas
+    if (st.phase !== 'select') {
+        GameEngine.render();
+    }
+
+    // Update HTML stats panel
+    updateStatsPanel(st);
+
+    // Update trick system
+    TrickSystem.update(ts);
+
+    // Sync & render 3D character
+    if (Character3DSystem.ready) {
+        var avatarType = ['fit', 'bulky', 'fat'][st.avatarTypeIndex || 0];
+        Character3DSystem.setBodyType(avatarType);
+        Character3DSystem.renderFrame();
+    }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Phase select / init
+// ──────────────────────────────────────────────────────────────
+function setPhaseSelect() {
+    overlays.start.classList.add('show');
+    overlays.pause.classList.remove('show');
+    overlays.warning.classList.remove('show');
+    overlays.gameover.classList.remove('show');
+
+    GameEngine.state = {
+        phase: 'select',
+        score: 0,
+        lives: Config.LIVES_START,
+        snake: [],
+        food: null,
+        avatarTypeIndex: 0,
+        snakeFat: 0,
+        healthyFoods: 0,
+        junkFoods: 0,
+        totalFoods: 0,
+        banner: '',
+        bannerUntil: 0,
+        lastTick: performance.now(),
+    };
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, Config.W, Config.H);
+}
+
+// ──────────────────────────────────────────────────────────────
+// Selection / UI wiring
+// ──────────────────────────────────────────────────────────────
+var characterButtons = Array.from(document.querySelectorAll('.character-btn'));
+var openCustomizeBtn = document.getElementById('open-customize');
+var startGameBtn     = document.getElementById('start-game-btn');
+var customPanel      = document.getElementById('custom-panel');
+var heightInput      = document.getElementById('height-input');
+var weightInput      = document.getElementById('weight-input');
+var bmiResult        = document.getElementById('bmi-result');
+var restartBtn       = document.getElementById('restart-btn');
+var returnSelectBtn  = document.getElementById('return-select-btn');
+
+function updateStartButtonState() {
+    var hasPreset = !!CharacterSystem.selectedPreset;
+    var customOk  = CharacterSystem.customMode && Number(heightInput.value) > 0 && Number(weightInput.value) > 0;
+    startGameBtn.disabled = !(hasPreset || customOk);
+}
+
+function clearPresetSelection() {
+    characterButtons.forEach(function(btn) { btn.classList.remove('active'); });
+}
+
+characterButtons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        clearPresetSelection();
+        btn.classList.add('active');
+        CharacterSystem.selectedPreset = btn.dataset.character;
+        CharacterSystem.customMode = false;
+        customPanel.classList.remove('show');
+        updateStartButtonState();
+    });
+});
+
+openCustomizeBtn.addEventListener('click', function() {
+    clearPresetSelection();
+    CharacterSystem.selectedPreset = null;
+    CharacterSystem.customMode = true;
+    customPanel.classList.toggle('show');
+    updateStartButtonState();
+});
+
+function refreshBMIResult() {
+    var h = Number(heightInput.value);
+    var w = Number(weightInput.value);
+    if (!(h > 0 && w > 0)) {
+        bmiResult.textContent = 'BMI will determine body type: Small / Medium / Large.';
+        updateStartButtonState();
+        return;
+    }
+    CharacterSystem.customHeight = h;
+    CharacterSystem.customWeight = w;
+    var result = CharacterSystem.resolveTypeFromBMI(h, w);
+    if (!result) {
+        bmiResult.textContent = 'Enter valid numbers for height and weight.';
+        updateStartButtonState();
+        return;
+    }
+    bmiResult.textContent = 'BMI: ' + result.bmi.toFixed(1) + ' \u2192 ' + CharacterSystem.types[result.key].label + ' Character';
+    CharacterSystem.customMode = true;
+    updateStartButtonState();
+}
+heightInput.addEventListener('input', refreshBMIResult);
+weightInput.addEventListener('input', refreshBMIResult);
+
+startGameBtn.addEventListener('click', function() {
+    var initialType = CharacterSystem.getInitialType();
+    if (!initialType) return;
+    overlays.start.classList.remove('show');
+    GameEngine.startNewGame(initialType);
+});
+
+restartBtn.addEventListener('click', function() {
+    overlays.gameover.classList.remove('show');
+    var initialType = ['fit', 'bulky', 'fat'][GameEngine.state.avatarTypeIndex] || CharacterSystem.getInitialType() || 'fit';
+    GameEngine.startNewGame(initialType);
+});
+
+returnSelectBtn.addEventListener('click', function() { setPhaseSelect(); });
+
+// ──────────────────────────────────────────────────────────────
+// Input handling
+// ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+    var st = GameEngine.state;
+    if (!st) return;
+
+    if (e.key === ' ') {
+        e.preventDefault();
+        if (st.phase === 'warning') { HealthWarningSystem.continue(); return; }
+        if (st.phase === 'playing' || st.phase === 'paused') PauseSystem.toggle();
         return;
     }
 
-    // Playing — change direction (prevent 180° reversal)
-    const { dir } = S;
-    if ((k === 'ArrowUp'    || k === 'w' || k === 'W') && dir.y !==  1) S.nextDir = { x:  0, y: -1 };
-    if ((k === 'ArrowDown'  || k === 's' || k === 'S') && dir.y !== -1) S.nextDir = { x:  0, y:  1 };
-    if ((k === 'ArrowLeft'  || k === 'a' || k === 'A') && dir.x !==  1) S.nextDir = { x: -1, y:  0 };
-    if ((k === 'ArrowRight' || k === 'd' || k === 'D') && dir.x !== -1) S.nextDir = { x:  1, y:  0 };
+    if (st.phase !== 'playing') return;
 
-    if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(k)) {
-        e.preventDefault();
-    }
+    var d = st.dir;
+    if ((e.key === 'ArrowUp'    || e.key === 'w' || e.key === 'W') && d.y !== 1)  st.nextDir = { x: 0,  y: -1 };
+    if ((e.key === 'ArrowDown'  || e.key === 's' || e.key === 'S') && d.y !== -1) st.nextDir = { x: 0,  y: 1 };
+    if ((e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') && d.x !== 1)  st.nextDir = { x: -1, y: 0 };
+    if ((e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') && d.x !== -1) st.nextDir = { x: 1,  y: 0 };
+
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
 });
 
-// Click — button hit-testing (scaled canvas aware)
-canvas.addEventListener('click', function (e) {
-    const rect = canvas.getBoundingClientRect();
-    const mx   = (e.clientX - rect.left) * (W / rect.width);
-    const my   = (e.clientY - rect.top)  * (H / rect.height);
-
-    if (S.screen === 'menu') {
-        // Start button bounds
-        if (mx >= W / 2 - 85 && mx <= W / 2 + 85 && my >= 368 && my <= 412) startGame();
-    } else if (S.screen === 'gameover') {
-        // Restart button bounds
-        const py = H / 2 - 295 / 2;
-        if (mx >= W / 2 - 90 && mx <= W / 2 + 90 && my >= py + 214 && my <= py + 258) startGame();
-    }
-});
-
-// Touch — swipe to steer, tap to advance non-playing screens
-let tcX = 0, tcY = 0;
-canvas.addEventListener('touchstart', function (e) {
-    tcX = e.touches[0].clientX;
-    tcY = e.touches[0].clientY;
+var touchX = 0, touchY = 0;
+canvas.addEventListener('touchstart', function(e) {
+    touchX = e.touches[0].clientX;
+    touchY = e.touches[0].clientY;
 }, { passive: true });
 
-canvas.addEventListener('touchend', function (e) {
-    const t  = e.changedTouches[0];
-    const dx = t.clientX - tcX;
-    const dy = t.clientY - tcY;
+canvas.addEventListener('touchend', function(e) {
+    var st = GameEngine.state;
+    if (!st || st.phase !== 'playing') return;
 
-    if (S.screen === 'menu')     { startGame(); return; }
-    if (S.screen === 'gameover') { startGame(); return; }
+    var dx = e.changedTouches[0].clientX - touchX;
+    var dy = e.changedTouches[0].clientY - touchY;
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
 
-    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; // ignore taps
-
-    const { dir } = S;
+    var d = st.dir;
     if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 0 && dir.x !== -1) S.nextDir = { x:  1, y: 0 };
-        else if (dx < 0 && dir.x !==  1) S.nextDir = { x: -1, y: 0 };
+        if (dx > 0 && d.x !== -1) st.nextDir = { x: 1, y: 0 };
+        else if (dx < 0 && d.x !== 1)  st.nextDir = { x: -1, y: 0 };
     } else {
-        if (dy > 0 && dir.y !== -1) S.nextDir = { x: 0, y:  1 };
-        else if (dy < 0 && dir.y !==  1) S.nextDir = { x: 0, y: -1 };
+        if (dy > 0 && d.y !== -1) st.nextDir = { x: 0, y: 1 };
+        else if (dy < 0 && d.y !== 1)  st.nextDir = { x: 0, y: -1 };
     }
 }, { passive: true });
 
-// ── Parent page communication (scroll lock) ───────────
-window.addEventListener('focus', () => {
+window.addEventListener('focus', function() {
     try { window.parent.postMessage({ type: 'GAME_FOCUS' }, '*'); } catch (_) {}
 });
-window.addEventListener('blur', () => {
-    try { window.parent.postMessage({ type: 'GAME_BLUR'  }, '*'); } catch (_) {}
+window.addEventListener('blur', function() {
+    try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
 });
-document.addEventListener('wheel',     e => e.preventDefault(), { passive: false });
-document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('wheel', function(e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+
+// ──────────────────────────────────────────────────────────────
+// Init
+// ──────────────────────────────────────────────────────────────
+setPhaseSelect();
+TrickSystem.init();
+Character3DSystem.init();
+
+window.addEventListener('resize', function() {
+    fitCanvas();
+    Character3DSystem.handleResize();
+});
+
+// Delay initial resize so layout settles
+setTimeout(function() {
+    fitCanvas();
+    Character3DSystem.handleResize();
+}, 150);
+
+rafId = requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>

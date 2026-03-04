@@ -21,6 +21,7 @@
         "framer-motion": "^12.34.3",
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
-        "three": "^0.183.2"
+        "three": "^0.183.2",
+        "three-stdlib": "^2.35.6"
     }
 }
