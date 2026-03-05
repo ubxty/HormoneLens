@@ -26,8 +26,8 @@
 
         /* ── Left: 3D Character Panel ── */
         #character-panel {
-            width: 280px;
-            min-width: 280px;
+            width: 240px;
+            min-width: 240px;
             background: linear-gradient(180deg, #0f172a 0%, #111c33 100%);
             border-right: 1px solid rgba(148, 163, 184, 0.18);
             display: flex;
@@ -88,8 +88,8 @@
 
         /* ── Right: Stats Panel ── */
         #stats-panel {
-            width: 220px;
-            min-width: 220px;
+            width: 200px;
+            min-width: 200px;
             background: linear-gradient(180deg, #101a30 0%, #0f172a 100%);
             border-left: 1px solid rgba(148, 163, 184, 0.18);
             display: flex;
@@ -347,21 +347,52 @@
 
         .overlay-panel {
             width: min(520px, 96%);
-            background: #111c33;
+            background: linear-gradient(180deg, #121e38 0%, #111c33 100%);
             border: 1px solid rgba(148, 163, 184, 0.35);
-            border-radius: 14px;
-            padding: 16px;
+            border-radius: 16px;
+            padding: 20px 24px;
             text-align: center;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.45);
         }
         .overlay-title { font-size: 30px; font-weight: 800; color: #f8fafc; margin-bottom: 8px; }
         .overlay-text  { color: #cbd5e1; font-size: 14px; line-height: 1.5; }
-        .warn-list     { text-align: left; margin: 8px auto; width: max-content; }
-        .warn-list li  { margin: 4px 0; }
+        .warn-list     { text-align: left; margin: 12px auto; width: max-content; list-style: none; padding: 0; }
+        .warn-list li  { margin: 6px 0; font-size: 15px; line-height: 1.7; color: #e2e8f0; letter-spacing: 0.2px; }
+
+        /* ── Left panel: HormoneLens feature list ── */
+        #character-panel .panel-header {
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            padding: 11px 14px;
+        }
+        .hl-logo-icon { font-size: 18px; line-height: 1; }
+        .hl-logo-name { font-size: 13px; font-weight: 800; color: #c4b5fd; letter-spacing: 0.6px; }
+        #feature-list {
+            padding: 8px 8px 6px;
+            display: flex; flex-direction: column; gap: 5px;
+            border-bottom: 1px solid rgba(148,163,184,0.10);
+        }
+        .feature-item {
+            display: flex; align-items: flex-start; gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(148,163,184,0.09);
+            border-radius: 8px; padding: 6px 8px;
+            transition: background 0.2s;
+        }
+        .feature-item:hover { background: rgba(196,181,253,0.07); }
+        .feat-icon  { font-size: 15px; line-height: 1.2; flex-shrink: 0; }
+        .feat-title { font-size: 11px; font-weight: 700; color: #e2e8f0; }
+        .feat-desc  { font-size: 10px; color: #64748b; margin-top: 1px; line-height: 1.3; }
 
         /* ── Responsive ── */
+        @media (max-width: 1100px) {
+            #character-panel { width: 200px; min-width: 200px; }
+            #stats-panel     { width: 180px; min-width: 180px; }
+        }
         @media (max-width: 860px) {
+            body { flex-direction: column; overflow-y: auto; }
             #character-panel { display: none; }
             #stats-panel     { display: none; }
+            #game-shell      { min-height: 70vh; }
             .characters { grid-template-columns: 1fr; }
             .card { max-height: 95vh; overflow: auto; }
         }
@@ -371,7 +402,28 @@
 
 <!-- ── Left: 3D Character ── -->
 <div id="character-panel">
-    <div class="panel-header">3D Character</div>
+    <div class="panel-header">
+        <span class="hl-logo-icon">🧬</span>
+        <span class="hl-logo-name">HormoneLens</span>
+    </div>
+    <div id="feature-list">
+        <div class="feature-item">
+            <span class="feat-icon">👤</span>
+            <div><div class="feat-title">Digital Twin</div><div class="feat-desc">Live 3D body that mirrors your health data</div></div>
+        </div>
+        <div class="feature-item">
+            <span class="feat-icon">🔬</span>
+            <div><div class="feat-title">Simulation Center</div><div class="feat-desc">Predict future health outcomes</div></div>
+        </div>
+        <div class="feature-item">
+            <span class="feat-icon">⚠️</span>
+            <div><div class="feat-title">Risk Analysis</div><div class="feat-desc">Detect hormonal imbalances early</div></div>
+        </div>
+        <div class="feature-item">
+            <span class="feat-icon">📊</span>
+            <div><div class="feat-title">Health Profile</div><div class="feat-desc">Track vitals &amp; biomarkers over time</div></div>
+        </div>
+    </div>
     <div id="char3d-container"></div>
     <div id="char-info">
         <div id="char-body-state">Body: Fit</div>
@@ -438,15 +490,11 @@
 
     <div id="warning-overlay" class="overlay">
         <div class="overlay-panel">
-            <div class="overlay-title" style="font-size:26px;color:#fda4af;">Health Warning</div>
-            <div class="overlay-text">Consuming too many processed foods can increase the risk of:</div>
-            <ul class="warn-list">
-                <li>&bull; insulin resistance</li>
-                <li>&bull; obesity</li>
-                <li>&bull; metabolic disorders</li>
-            </ul>
-            <div class="overlay-text">Choose healthy foods to stay fit.</div>
-            <div class="overlay-text" style="margin-top:8px;font-weight:700;">Press SPACE to Continue</div>
+            <div class="overlay-title" id="warn-title" style="font-size:22px;color:#fda4af;margin-bottom:10px;">⚠️ Health Warning</div>
+            <div class="overlay-text" id="warn-intro" style="margin-bottom:6px;line-height:1.6;"></div>
+            <ul class="warn-list" id="warn-list"></ul>
+            <div class="overlay-text" id="warn-tip" style="margin-top:10px;font-style:italic;color:#86efac;font-size:13px;"></div>
+            <div class="overlay-text" style="margin-top:12px;font-weight:700;color:#c4b5fd;">Press SPACE to Continue</div>
         </div>
     </div>
 
@@ -507,13 +555,13 @@
 // ──────────────────────────────────────────────────────────────
 
 const Config = {
-    CELL: 24,
-    COLS: 28,
-    ROWS: 22,
+    CELL: 30,
+    COLS: 26,
+    ROWS: 20,
     HUD_H: 56,
     SPEED_BASE: 145,
     SPEED_STEP: 12,
-    FOOD_SIZE: 0.8,
+    FOOD_SIZE: 0.92,
     LIVES_START: 5,
 };
 Config.BOARD_W = Config.CELL * Config.COLS;
@@ -545,7 +593,7 @@ function fitCanvas() {
     const shell = document.getElementById('game-shell');
     const maxW = shell.clientWidth;
     const maxH = shell.clientHeight;
-    const pad = 24;
+    const pad = 12;
     const scale = Math.min((maxW - pad) / Config.W, (maxH - pad) / Config.H);
     canvas.style.width  = Math.floor(Config.W * scale) + 'px';
     canvas.style.height = Math.floor(Config.H * scale) + 'px';
@@ -603,26 +651,35 @@ const FoodSystem = {
     ],
     junkChance: 0.34,
 
-    spawn(state) {
-        let pos;
+    spawnAll(state) {
+        state.foods = [];
+        const count = 2 + Math.floor(Math.random() * 2); // 2 or 3 foods
+        for (let i = 0; i < count; i++) this.spawnOne(state);
+    },
+
+    spawnOne(state) {
+        let pos, attempts = 0;
         do {
             pos = {
                 x: Math.floor(Math.random() * Config.COLS),
                 y: Math.floor(Math.random() * Config.ROWS),
             };
-        } while (state.snake.some(s => s.x === pos.x && s.y === pos.y));
+            attempts++;
+        } while (attempts < 200 && (
+            state.snake.some(s => s.x === pos.x && s.y === pos.y) ||
+            (state.foods || []).some(f => f.x === pos.x && f.y === pos.y)
+        ));
 
         const isJunk = Math.random() < this.junkChance;
         const list = isJunk ? this.junkFoods : this.healthyFoods;
         const item = list[Math.floor(Math.random() * list.length)];
-        state.food = { ...pos, ...item, isJunk };
+        state.foods.push({ ...pos, ...item, isJunk });
     },
 
-    applyConsumption(state) {
-        if (!state.food) return;
+    applyConsumption(state, food) {
         state.totalFoods += 1;
 
-        if (state.food.isJunk) {
+        if (food.isJunk) {
             state.score = Math.max(0, state.score - 5);
             state.junkFoods += 1;
             state.snakeFat = Math.min(2, state.snakeFat + 1);
@@ -642,27 +699,38 @@ const FoodSystem = {
         }
     },
 
-    draw(food) {
-        if (!food) return;
-        const ox = food.x * Config.CELL;
-        const oy = Config.HUD_H + food.y * Config.CELL;
-        const pad = Config.CELL * ((1 - Config.FOOD_SIZE) / 2);
-        const size = Config.CELL - pad * 2;
+    draw(foods) {
+        if (!foods || !foods.length) return;
+        foods.forEach(food => {
+            const ox = food.x * Config.CELL;
+            const oy = Config.HUD_H + food.y * Config.CELL;
+            const pad = Config.CELL * ((1 - Config.FOOD_SIZE) / 2);
+            const size = Config.CELL - pad * 2;
 
-        ctx.fillStyle = food.isJunk ? '#b91c1c' : '#16a34a';
-        roundedRectPath(ox + pad, oy + pad, size, size, 5);
-        ctx.fill();
+            ctx.save();
+            if (!food.isJunk) {
+                ctx.shadowColor = '#22c55e';
+                ctx.shadowBlur = 12;
+            } else {
+                ctx.shadowColor = '#ef4444';
+                ctx.shadowBlur = 10;
+            }
+            ctx.fillStyle = food.isJunk ? '#7f1d1d' : '#14532d';
+            roundedRectPath(ox + pad, oy + pad, size, size, 6);
+            ctx.fill();
+            ctx.restore();
 
-        ctx.strokeStyle = food.isJunk ? '#facc15' : '#fb7185';
-        ctx.lineWidth = 2;
-        roundedRectPath(ox + pad, oy + pad, size, size, 5);
-        ctx.stroke();
+            ctx.strokeStyle = food.isJunk ? '#fbbf24' : '#4ade80';
+            ctx.lineWidth = 2;
+            roundedRectPath(ox + pad, oy + pad, size, size, 6);
+            ctx.stroke();
 
-        ctx.font = 'bold 17px serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(food.emoji, ox + Config.CELL / 2, oy + Config.CELL / 2 + 0.5);
+            ctx.font = 'bold 20px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(food.emoji, ox + Config.CELL / 2, oy + Config.CELL / 2 + 0.5);
+        });
     },
 };
 
@@ -687,12 +755,68 @@ const PauseSystem = {
 };
 
 const HealthWarningSystem = {
+    _lastIdx: -1,
+    warnings: [
+        {
+            title: '🍬 Sugar Spike Alert',
+            intro: 'Excess sugar consumption can trigger:',
+            risks: ['Insulin resistance & pre-diabetes', 'Rapid energy crashes & brain fog', 'Increased visceral fat storage'],
+            tip: '💡 Swap sugary snacks for fruit, nuts, or dark chocolate.',
+        },
+        {
+            title: '🧈 Trans-Fat Warning',
+            intro: 'Processed fats found in junk food cause:',
+            risks: ['Elevated LDL cholesterol & heart disease', 'Chronic inflammatory response', 'Disruption of hormonal signalling'],
+            tip: '💡 Choose foods with healthy fats like avocado or olive oil.',
+        },
+        {
+            title: '🧂 Sodium Overload',
+            intro: 'High sodium intake is linked to:',
+            risks: ['Elevated blood pressure & stroke risk', 'Kidney strain & reduced filtration', 'Water retention & bloating'],
+            tip: '💡 Stay under 2,300 mg of sodium per day.',
+        },
+        {
+            title: '🧪 Hormonal Disruption',
+            intro: 'Ultra-processed foods interfere with:',
+            risks: ['Cortisol & stress hormone regulation', 'Thyroid function & metabolism', 'Estrogen & testosterone balance'],
+            tip: '💡 Balanced nutrition is the foundation of hormonal health.',
+        },
+        {
+            title: '🦠 Gut Microbiome Damage',
+            intro: 'Junk food actively harms:',
+            risks: ['Gut bacteria diversity & richness', 'Digestive enzyme & absorption activity', 'Immune resilience (70% gut-based)'],
+            tip: '💡 Add probiotics & dietary fibre to restore gut health.',
+        },
+        {
+            title: '🧠 Brain & Mood Alert',
+            intro: 'Poor nutrition directly impacts:',
+            risks: ['Cognitive performance & focus', 'Serotonin & dopamine regulation', 'Sleep quality & recovery cycles'],
+            tip: '💡 Omega-3 rich foods like salmon boost brain function.',
+        },
+    ],
+
     trigger() {
         if (GameEngine.state.phase !== 'playing') return;
+
+        // Pick a different warning each time
+        let idx;
+        do { idx = Math.floor(Math.random() * this.warnings.length); }
+        while (idx === this._lastIdx && this.warnings.length > 1);
+        this._lastIdx = idx;
+        const w = this.warnings[idx];
+
+        // Update overlay content dynamically
+        document.getElementById('warn-title').textContent = w.title;
+        document.getElementById('warn-intro').textContent = w.intro;
+        const list = document.getElementById('warn-list');
+        list.innerHTML = w.risks.map(r => `<li>• ${r}</li>`).join('');
+        document.getElementById('warn-tip').textContent = w.tip;
+
         GameEngine.state.phase = 'warning';
         overlays.warning.classList.add('show');
         try { window.parent.postMessage({ type: 'GAME_BLUR' }, '*'); } catch (_) {}
     },
+
     continue() {
         if (GameEngine.state.phase !== 'warning') return;
         overlays.warning.classList.remove('show');
@@ -754,8 +878,9 @@ const UISystem = {
         ctx.fillStyle = '#0b1220';
         ctx.fillRect(0, Config.HUD_H, Config.BOARD_W, Config.BOARD_H);
 
-        ctx.strokeStyle = 'rgba(148,163,184,0.10)';
-        ctx.lineWidth = 1;
+        // Faint grid lines for clarity
+        ctx.strokeStyle = 'rgba(148,163,184,0.08)';
+        ctx.lineWidth = 0.5;
         for (let c = 0; c <= Config.COLS; c++) {
             const x = c * Config.CELL;
             ctx.beginPath(); ctx.moveTo(x, Config.HUD_H); ctx.lineTo(x, Config.H); ctx.stroke();
@@ -764,11 +889,21 @@ const UISystem = {
             const y = Config.HUD_H + r * Config.CELL;
             ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(Config.BOARD_W, y); ctx.stroke();
         }
+
+        // Subtle dotted intersections for cell visibility
+        ctx.fillStyle = 'rgba(148,163,184,0.12)';
+        for (let c = 0; c <= Config.COLS; c++) {
+            for (let r = 0; r <= Config.ROWS; r++) {
+                ctx.beginPath();
+                ctx.arc(c * Config.CELL, Config.HUD_H + r * Config.CELL, 1, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
     },
 
     drawSnake() {
         const st = GameEngine.state;
-        const segSize = [18, 20, 22][st.snakeFat];
+        const segSize = [22, 25, 28][st.snakeFat];
         const pad = (Config.CELL - segSize) / 2;
 
         st.snake.forEach((s, i) => {
@@ -824,7 +959,7 @@ const GameEngine = {
             nextDir: { x: 1, y: 0 },
             score: 0,
             lives: Config.LIVES_START,
-            food: null,
+            foods: [],
             snakeFat: Math.min(2, avatarTypeIndex),
             avatarTypeIndex,
             healthyFoods: 0,
@@ -841,7 +976,7 @@ const GameEngine = {
 
     startNewGame(initialAvatar) {
         this.state = this.createState(initialAvatar);
-        FoodSystem.spawn(this.state);
+        FoodSystem.spawnAll(this.state);
         overlays.pause.classList.remove('show');
         overlays.warning.classList.remove('show');
         overlays.gameover.classList.remove('show');
@@ -863,6 +998,7 @@ const GameEngine = {
     gameOver(reason) {
         this.state.phase = 'gameover';
         this.state.gameOverReason = reason;
+        TrickSystem.onGameOver();
 
         const healthy = this.state.healthyFoods;
         const junk    = this.state.junkFoods;
@@ -906,20 +1042,22 @@ const GameEngine = {
             return;
         }
 
-        const ateFood = st.food && nx === st.food.x && ny === st.food.y;
+        const eatenIdx = st.foods.findIndex(f => f.x === nx && f.y === ny);
+        const ateFood = eatenIdx !== -1;
         st.snake.unshift({ x: nx, y: ny });
         if (!ateFood) st.snake.pop();
 
         if (ateFood) {
-            FoodSystem.applyConsumption(st);
+            const eaten = st.foods.splice(eatenIdx, 1)[0];
+            FoodSystem.applyConsumption(st, eaten);
             st.speed = Config.SPEED_BASE + st.snakeFat * Config.SPEED_STEP;
-            FoodSystem.spawn(st);
+            FoodSystem.spawnOne(st);
         }
     },
 
     render() {
         UISystem.drawFrame();
-        FoodSystem.draw(this.state.food);
+        FoodSystem.draw(this.state.foods);
         UISystem.drawSnake();
     },
 };
@@ -939,19 +1077,27 @@ function roundedRectPath(x, y, w, h, r) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// TrickSystem — character tricks / animations
+// TrickSystem — calm idle + occasional playful animations
 // ──────────────────────────────────────────────────────────────
 const TrickSystem = {
     currentTrick: 'idle',
     trickTimer: 0,
     trickDuration: 0,
     scheduledTime: 0,
+    // Whether this is a gameplay reaction (higher priority)
+    isReaction: false,
 
     // Transform outputs applied to 3D model group
     baseRotY: 0,
     offsetY: 0,
     tiltZ: 0,
     modelScale: 1,
+
+    // Smooth blending: current values ease toward target
+    _targetRotY: 0,
+    _targetOffY: 0,
+    _targetTiltZ: 0,
+    _blendSpeed: 0.06,
 
     init() {
         this.scheduleNext();
@@ -962,128 +1108,175 @@ const TrickSystem = {
     },
 
     scheduleNext() {
-        this.scheduledTime = performance.now() + 2500 + Math.random() * 4000;
+        // 8–12 seconds between random actions
+        this.scheduledTime = performance.now() + 8000 + Math.random() * 4000;
     },
 
-    triggerTrick(name) {
+    triggerTrick(name, reaction) {
+        // Gameplay reactions override idle/random; don't override another reaction
+        if (reaction && this.isReaction && this.currentTrick !== 'idle') return;
+
         this.currentTrick = name;
+        this.isReaction = !!reaction;
         this.trickTimer = performance.now();
+
+        // Slower durations for natural feel (0.5–0.7x speed)
         var durations = {
-            jump: 900, spin: 1200, wave: 1400, celebrate: 2000,
-            stumble: 800, dance: 2500, headbob: 1600, flex: 1400, twirl: 1800
+            wave: 2800,
+            spin: 2400,
+            dance: 3200,
+            bounce: 2000,
+            clap: 2200,
+            // Reaction animations
+            celebrate: 2600,
+            worried: 2000,
+            disappointed: 3000,
         };
-        this.trickDuration = durations[name] || 1000;
+        this.trickDuration = durations[name] || 2000;
         this.updateLabel();
     },
 
-    onHealthyFood() { this.triggerTrick('celebrate'); },
-    onJunkFood()    { this.triggerTrick('stumble'); },
-    onWallHit()     { this.triggerTrick('stumble'); },
+    onHealthyFood() {
+        this.triggerTrick('celebrate', true);
+        Character3DSystem.showReaction('happy');
+    },
+    onJunkFood() {
+        this.triggerTrick('worried', true);
+        Character3DSystem.showReaction('sad');
+    },
+    onWallHit() {
+        this.triggerTrick('worried', true);
+        Character3DSystem.showReaction('sad');
+    },
+    onGameOver() {
+        this.triggerTrick('disappointed', true);
+        Character3DSystem.showReaction('disappointed');
+    },
 
     updateLabel() {
         var el = document.getElementById('trick-label');
         if (!el) return;
         var labels = {
             idle: 'Idle',
-            jump: '\u2B06 Jump!',
-            spin: '\uD83D\uDD04 Spin!',
-            wave: '\uD83D\uDC4B Wave!',
-            celebrate: '\uD83C\uDF89 Celebrate!',
-            stumble: '\uD83D\uDE35 Stumble!',
-            dance: '\uD83D\uDD7A Dance!',
-            headbob: '\uD83C\uDFB5 Head Bob!',
-            flex: '\uD83D\uDCAA Flex!',
-            twirl: '\uD83C\uDF00 Twirl!',
+            wave: '\uD83D\uDC4B Wave',
+            spin: '\uD83D\uDD04 Spin',
+            dance: '\uD83D\uDD7A Dance',
+            bounce: '\u2B06 Bounce',
+            clap: '\uD83D\uDC4F Clap',
+            celebrate: '\uD83C\uDF89 Happy!',
+            worried: '\uD83D\uDE1F Worried',
+            disappointed: '\uD83D\uDE1E Disappointed',
         };
         el.textContent = labels[this.currentTrick] || 'Idle';
     },
 
+    // Smooth ease-in-out curve
+    easeInOut(t) {
+        return t < 0.5
+            ? 2 * t * t
+            : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    },
+
+    // Blend-out: ramp down in last 20% of animation for smooth return to idle
+    fadeOut(t) {
+        if (t > 0.8) return 1 - (t - 0.8) / 0.2;
+        return 1;
+    },
+
     update(now) {
-        // Auto-trigger random tricks periodically
+        // Auto-trigger random actions periodically (only when idle)
         if (this.currentTrick === 'idle' && now >= this.scheduledTime) {
-            var randoms = ['jump', 'spin', 'wave', 'dance', 'headbob', 'flex', 'twirl'];
-            this.triggerTrick(randoms[Math.floor(Math.random() * randoms.length)]);
+            var randoms = ['wave', 'spin', 'dance', 'bounce', 'clap'];
+            this.triggerTrick(randoms[Math.floor(Math.random() * randoms.length)], false);
         }
 
         if (this.currentTrick === 'idle') {
-            // Gentle idle: slow sway + breathing
-            this.baseRotY = Math.sin(now * 0.0008) * 0.12;
-            this.offsetY  = Math.sin(now * 0.0015) * 2 * this.modelScale;
-            this.tiltZ    = Math.sin(now * 0.001) * 0.015;
-            return;
+            // Very subtle idle: gentle breathing only
+            this._targetRotY  = Math.sin(now * 0.0004) * 0.03;
+            this._targetOffY  = Math.sin(now * 0.001) * 1.2 * this.modelScale;
+            this._targetTiltZ = Math.sin(now * 0.0006) * 0.005;
+        } else {
+            var elapsed = now - this.trickTimer;
+            var rawT = Math.min(1, elapsed / this.trickDuration);
+            var t = this.easeInOut(rawT);
+            var fade = this.fadeOut(rawT);
+
+            switch (this.currentTrick) {
+                case 'wave':
+                    // Gentle side-to-side tilt like waving
+                    this._targetTiltZ = Math.sin(t * Math.PI * 3) * 0.08 * fade;
+                    this._targetRotY  = Math.sin(t * Math.PI) * 0.15 * fade;
+                    this._targetOffY  = 0;
+                    break;
+
+                case 'spin':
+                    // Smooth 360° rotation with slight lift
+                    this._targetRotY  = t * Math.PI * 2;
+                    this._targetOffY  = Math.sin(t * Math.PI) * 5 * this.modelScale * fade;
+                    this._targetTiltZ = 0;
+                    break;
+
+                case 'dance':
+                    // Gentle sway side to side with small bounce
+                    this._targetTiltZ = Math.sin(t * Math.PI * 4) * 0.06 * fade;
+                    this._targetRotY  = Math.sin(t * Math.PI * 3) * 0.12 * fade;
+                    this._targetOffY  = Math.abs(Math.sin(t * Math.PI * 5)) * 6 * this.modelScale * fade;
+                    break;
+
+                case 'bounce':
+                    // Happy bounce: up and down gently
+                    this._targetOffY  = Math.sin(t * Math.PI * 3) * 12 * this.modelScale * fade;
+                    this._targetRotY  = 0;
+                    this._targetTiltZ = Math.sin(t * Math.PI * 2) * 0.02 * fade;
+                    break;
+
+                case 'clap':
+                    // Rhythmic forward tilt (like clapping)
+                    this._targetTiltZ = Math.sin(t * Math.PI * 4) * 0.04 * fade;
+                    this._targetOffY  = Math.sin(t * Math.PI * 4) * 3 * this.modelScale * fade;
+                    this._targetRotY  = 0;
+                    break;
+
+                // Gameplay reactions
+                case 'celebrate':
+                    // Happy: small spin + gentle bounce
+                    this._targetRotY  = t * Math.PI * 2 * fade;
+                    this._targetOffY  = Math.sin(t * Math.PI * 2) * 10 * this.modelScale * fade;
+                    this._targetTiltZ = Math.sin(t * Math.PI * 3) * 0.03 * fade;
+                    break;
+
+                case 'worried':
+                    // Quick subtle head shake that decays
+                    var decay = (1 - rawT);
+                    this._targetTiltZ = Math.sin(t * Math.PI * 6) * 0.09 * decay;
+                    this._targetRotY  = Math.sin(t * Math.PI * 4) * 0.05 * decay;
+                    this._targetOffY  = 0;
+                    break;
+
+                case 'disappointed':
+                    // Slow droop: head/body lowers then comes back up
+                    var droopT = rawT < 0.5 ? rawT * 2 : 2 - rawT * 2;
+                    this._targetOffY  = -droopT * 6 * this.modelScale;
+                    this._targetTiltZ = droopT * 0.06;
+                    this._targetRotY  = 0;
+                    break;
+            }
+
+            if (rawT >= 1) {
+                this.currentTrick = 'idle';
+                this.isReaction = false;
+                this._targetRotY  = 0;
+                this._targetOffY  = 0;
+                this._targetTiltZ = 0;
+                this.scheduleNext();
+                this.updateLabel();
+            }
         }
 
-        var elapsed = now - this.trickTimer;
-        var t = Math.min(1, elapsed / this.trickDuration);
-
-        switch (this.currentTrick) {
-            case 'jump':
-                this.offsetY  = Math.sin(t * Math.PI) * 30 * this.modelScale;
-                this.baseRotY = 0;
-                this.tiltZ    = 0;
-                break;
-
-            case 'spin':
-                this.baseRotY = t * Math.PI * 2;
-                this.offsetY  = Math.sin(t * Math.PI) * 8 * this.modelScale;
-                this.tiltZ    = 0;
-                break;
-
-            case 'wave':
-                this.tiltZ    = Math.sin(t * Math.PI * 4) * 0.15;
-                this.baseRotY = Math.sin(t * Math.PI * 2) * 0.2;
-                this.offsetY  = 0;
-                break;
-
-            case 'celebrate':
-                this.baseRotY = t * Math.PI * 4;
-                this.offsetY  = Math.sin(t * Math.PI * 2) * 25 * this.modelScale;
-                this.tiltZ    = Math.sin(t * Math.PI * 6) * 0.08;
-                break;
-
-            case 'stumble':
-                this.tiltZ    = Math.sin(t * Math.PI * 8) * 0.18 * (1 - t);
-                this.baseRotY = Math.sin(t * Math.PI * 6) * 0.1 * (1 - t);
-                this.offsetY  = 0;
-                break;
-
-            case 'dance':
-                // Side-to-side sway with bouncing
-                this.tiltZ    = Math.sin(t * Math.PI * 6) * 0.12;
-                this.baseRotY = Math.sin(t * Math.PI * 4) * 0.3;
-                this.offsetY  = Math.abs(Math.sin(t * Math.PI * 8)) * 15 * this.modelScale;
-                break;
-
-            case 'headbob':
-                // Rhythmic head bob
-                this.offsetY  = Math.sin(t * Math.PI * 6) * 8 * this.modelScale;
-                this.tiltZ    = Math.sin(t * Math.PI * 3) * 0.06;
-                this.baseRotY = Math.sin(t * Math.PI * 2) * 0.08;
-                break;
-
-            case 'flex':
-                // Lean back then forward like flexing
-                this.tiltZ    = Math.sin(t * Math.PI) * 0.12;
-                this.offsetY  = Math.sin(t * Math.PI) * 10 * this.modelScale;
-                this.baseRotY = Math.sin(t * Math.PI * 2) * 0.15;
-                break;
-
-            case 'twirl':
-                // Graceful slower twirl with lift
-                this.baseRotY = t * Math.PI * 3;
-                this.offsetY  = Math.sin(t * Math.PI) * 18 * this.modelScale;
-                this.tiltZ    = Math.sin(t * Math.PI * 2) * 0.06;
-                break;
-        }
-
-        if (t >= 1) {
-            this.currentTrick = 'idle';
-            this.baseRotY = 0;
-            this.offsetY  = 0;
-            this.tiltZ    = 0;
-            this.scheduleNext();
-            this.updateLabel();
-        }
+        // Smooth interpolation toward targets (blending)
+        this.baseRotY += (this._targetRotY - this.baseRotY) * this._blendSpeed;
+        this.offsetY  += (this._targetOffY - this.offsetY) * this._blendSpeed;
+        this.tiltZ    += (this._targetTiltZ - this.tiltZ) * this._blendSpeed;
     },
 };
 
@@ -1105,8 +1298,10 @@ const Character3DSystem = {
     baseScale: 1,
     modelBaseY: 0,
     modelHeight: 180,
+    // Arm bone references for per-frame correction
+    armBones: [],
 
-    scaleMap: { fit: 0.85, bulky: 1.1, fat: 1.5 },
+    scaleMap: { fit: 0.85, bulky: 1.15, fat: 1.55 },
 
     init() {
         if (typeof THREE === 'undefined') {
@@ -1123,8 +1318,8 @@ const Character3DSystem = {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x0f172a);
 
-        // Camera
-        this.camera = new THREE.PerspectiveCamera(35, 1, 0.1, 5000);
+        // Camera — wider FOV for tighter framing
+        this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 5000);
 
         // Renderer
         var w = container.clientWidth  || 280;
@@ -1139,28 +1334,33 @@ const Character3DSystem = {
         }
         container.appendChild(this.renderer.domElement);
 
-        // Lights
-        this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        // Lights — enhanced for larger character
+        this.scene.add(new THREE.AmbientLight(0xffffff, 0.75));
 
-        var keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
-        keyLight.position.set(100, 200, 200);
+        var keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
+        keyLight.position.set(80, 250, 200);
         this.scene.add(keyLight);
 
-        var fillLight = new THREE.DirectionalLight(0xc4b5fd, 0.4);
-        fillLight.position.set(-80, 100, -60);
+        var fillLight = new THREE.DirectionalLight(0xc4b5fd, 0.5);
+        fillLight.position.set(-100, 120, -40);
         this.scene.add(fillLight);
 
-        var rimLight = new THREE.DirectionalLight(0x38bdf8, 0.25);
-        rimLight.position.set(0, 50, -200);
+        var rimLight = new THREE.DirectionalLight(0x38bdf8, 0.35);
+        rimLight.position.set(0, 80, -200);
         this.scene.add(rimLight);
+
+        // Soft bottom fill so feet/legs aren't too dark
+        var bottomFill = new THREE.DirectionalLight(0x818cf8, 0.2);
+        bottomFill.position.set(0, -100, 100);
+        this.scene.add(bottomFill);
 
         // Group wrapper — trick transforms go here (won't conflict with animation mixer)
         this.modelGroup = new THREE.Group();
         this.scene.add(this.modelGroup);
 
-        // Ground disc
-        var groundGeo = new THREE.CircleGeometry(60, 48);
-        var groundMat = new THREE.MeshBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.4 });
+        // Ground disc (larger to match scaled model)
+        var groundGeo = new THREE.CircleGeometry(100, 48);
+        var groundMat = new THREE.MeshBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.5 });
         var ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
         ground.position.y = 0.5;
@@ -1178,7 +1378,7 @@ const Character3DSystem = {
             'models/character.fbx',
             function(fbx) {
                 self.model = fbx;
-                self.baseScale = 1.0;
+                self.baseScale = 2.0;
                 fbx.scale.setScalar(self.baseScale);
 
                 var box    = new THREE.Box3().setFromObject(fbx);
@@ -1194,13 +1394,10 @@ const Character3DSystem = {
 
                 TrickSystem.setModelScale(size.y);
 
-                // Lower the arms — find arm bones and rotate down
-                self.lowerArms(fbx);
-
                 // Fit camera to see full model
                 self.fitCamera(size);
 
-                // Play first animation clip (if available and not a T-pose)
+                // Play the animation exactly as baked — no track stripping
                 if (fbx.animations && fbx.animations.length > 0) {
                     self.mixer = new THREE.AnimationMixer(fbx);
                     var action = self.mixer.clipAction(fbx.animations[0]);
@@ -1216,36 +1413,24 @@ const Character3DSystem = {
         );
     },
 
-    lowerArms(fbx) {
-        // Rotate upper arm bones downward so arms rest at sides
-        fbx.traverse(function(child) {
-            if (!child.isBone) return;
-            var name = child.name.toLowerCase();
-            // Match Mixamo naming: mixamorig:LeftArm, mixamorig6:LeftArm, etc
-            if (name.indexOf('leftarm') !== -1 && name.indexOf('fore') === -1) {
-                child.rotation.z += 1.1;  // rotate left arm down
-            } else if (name.indexOf('rightarm') !== -1 && name.indexOf('fore') === -1) {
-                child.rotation.z -= 1.1;  // rotate right arm down
-            }
-        });
-    },
-
     fitCamera(size) {
         var container = document.getElementById('char3d-container');
-        var cw = container.clientWidth  || 280;
+        var cw = container.clientWidth  || 240;
         var ch = container.clientHeight || 600;
         var aspect = cw / ch;
 
         this.camera.aspect = aspect;
         var vFov   = this.camera.fov * (Math.PI / 180);
-        var margin = 1.15;
+        // Very tight margin so character fills 75-80% of panel
+        var margin = 0.72;
         var distH  = (size.y * margin / 2) / Math.tan(vFov / 2);
         var hFov   = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
         var distW  = (size.x * margin * 2 / 2) / Math.tan(hFov / 2);
         var dist   = Math.max(distH, distW);
 
+        // Camera at chest height, looking at belly — frames head to feet
         this.camera.position.set(0, size.y * 0.45, dist);
-        this.camera.lookAt(0, size.y * 0.40, 0);
+        this.camera.lookAt(0, size.y * 0.42, 0);
         this.camera.updateProjectionMatrix();
     },
 
@@ -1275,6 +1460,32 @@ const Character3DSystem = {
             this.baseScale,
             this.baseScale * ((this.currentScaleX - 1) * 0.5 + 1)
         );
+    },
+
+    // ── Reaction overlay system (emoji shown on the 3D panel) ──
+    reactionEl: null,
+    reactionTimeout: null,
+
+    showReaction(type) {
+        var container = document.getElementById('char3d-container');
+        if (!container) return;
+        if (!this.reactionEl) {
+            this.reactionEl = document.createElement('div');
+            this.reactionEl.style.cssText = 'position:absolute;top:12px;left:50%;transform:translateX(-50%) scale(0);font-size:36px;z-index:20;pointer-events:none;transition:transform 0.3s cubic-bezier(.4,0,.2,1),opacity 0.3s;opacity:0;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));';
+            container.style.position = 'relative';
+            container.appendChild(this.reactionEl);
+        }
+        var emojis = { happy: '😊', sad: '😟', disappointed: '😞' };
+        this.reactionEl.textContent = emojis[type] || '😐';
+        this.reactionEl.style.transform = 'translateX(-50%) scale(1)';
+        this.reactionEl.style.opacity = '1';
+
+        var self = this;
+        clearTimeout(this.reactionTimeout);
+        this.reactionTimeout = setTimeout(function() {
+            self.reactionEl.style.transform = 'translateX(-50%) scale(0)';
+            self.reactionEl.style.opacity = '0';
+        }, 1200);
     },
 
     applyTricks() {

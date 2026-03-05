@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Body3D from './Body3D';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants & helpers
@@ -183,27 +182,27 @@ export default function DigitalTwin3D() {
         overflowY: isMobile ? 'visible' : 'auto',
       }}>
 
-        <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .55 }} style={{ marginBottom: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#34d399', animation: 'dt3Status 2s ease-in-out infinite' }} />
-            <span style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.08em' }}>AI Metabolic Model</span>
+        <motion.div
+          initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .55 }}
+          style={{ marginBottom: 8, background: 'rgba(255,255,255,.55)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,.45)', borderRadius: 16, padding: '12px 14px', boxShadow: '0 4px 18px rgba(109,40,217,.07)' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399', animation: 'dt3Status 2s ease-in-out infinite', flexShrink: 0 }} />
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.09em' }}>AI Metabolic Model · Live</span>
           </div>
-          <h2 style={{ fontSize: 18, fontWeight: 900, background: 'linear-gradient(135deg,#7c3aed,#a855f7,#ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: 0 }}>
+          <h2 style={{ fontSize: 19, fontWeight: 900, background: 'linear-gradient(135deg,#7c3aed,#a855f7,#ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: '0 0 4px' }}>
             🧬 Digital Twin
           </h2>
           {profile ? (
-            <p style={{ fontSize: 10, color: '#6b7280', marginTop: 3 }}>
-              BMI {bmi.toFixed(1)} · {bmiLabel(bmi)} · {profile.height} cm / {profile.weight} kg
-            </p>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
+              <span style={{ fontSize: 9, fontWeight: 600, color: '#6366f1', background: '#6366f11a', borderRadius: 6, padding: '2px 7px' }}>BMI {bmi.toFixed(1)}</span>
+              <span style={{ fontSize: 9, fontWeight: 600, color: '#7c3aed', background: '#7c3aed1a', borderRadius: 6, padding: '2px 7px' }}>{bmiLabel(bmi)}</span>
+              <span style={{ fontSize: 9, fontWeight: 600, color: '#6b7280', background: 'rgba(0,0,0,.05)', borderRadius: 6, padding: '2px 7px' }}>{profile.height} cm · {profile.weight} kg</span>
+            </div>
           ) : (
-            <p style={{ fontSize: 10, color: '#f59e0b', marginTop: 3 }}>Add Health Profile to enable body model</p>
+            <p style={{ fontSize: 10, color: '#f59e0b', marginTop: 3, fontWeight: 600 }}>⚠ Add Health Profile to enable body model</p>
           )}
         </motion.div>
-
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-          style={{ fontSize: 9, color: '#9ca3af', letterSpacing: '.05em', userSelect: 'none', margin: '-4px 0 2px' }}>
-          ↔ Drag to rotate 360° · Hover zones to inspect
-        </motion.p>
 
         {SCORE_CARDS.map((card, i) => {
           const score = twin?.[card.key] ?? 0;
@@ -219,13 +218,13 @@ export default function DigitalTwin3D() {
               onMouseEnter={() => setHoveredZone(card.zoneId)}
               onMouseLeave={() => setHoveredZone(null)}
               style={{
-                background: isHov ? 'rgba(255,255,255,.82)' : 'rgba(255,255,255,.50)',
+                background: isHov ? 'rgba(255,255,255,.88)' : 'rgba(255,255,255,.52)',
                 backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-                border: isHov ? `1px solid ${zone?.glowColor}55` : '1px solid rgba(255,255,255,.35)',
-                borderRadius: 15, padding: '11px 13px',
-                boxShadow: isHov ? `0 6px 24px ${zone?.glowColor}30` : '0 3px 12px rgba(109,40,217,.06)',
+                border: isHov ? `1px solid ${zone?.glowColor}66` : '1px solid rgba(255,255,255,.40)',
+                borderRadius: 14, padding: '10px 13px',
+                boxShadow: isHov ? `0 8px 28px ${zone?.glowColor}35, 0 2px 6px rgba(0,0,0,.04)` : '0 2px 10px rgba(109,40,217,.05)',
                 cursor: 'pointer', transition: 'all .22s ease',
-                transform: isHov ? 'translateX(4px)' : 'translateX(0)',
+                transform: isHov ? 'translateX(5px)' : 'translateX(0)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -233,18 +232,21 @@ export default function DigitalTwin3D() {
                   {card.icon}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, color: '#374151', lineHeight: 1 }}>{card.label}</span>
-                    <span style={{ fontSize: 14, fontWeight: 900, background: `linear-gradient(135deg,${card.from},${card.to})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1 }}>
-                      {score.toFixed(1)}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: riskHex(score), background: `${riskHex(score)}1a`, borderRadius: 5, padding: '1px 6px', lineHeight: 1.6 }}>{riskLabel(score)}</span>
+                      <span style={{ fontSize: 14, fontWeight: 900, background: `linear-gradient(135deg,${card.from},${card.to})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1 }}>
+                        {score.toFixed(1)}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ height: 4, background: 'rgba(0,0,0,.07)', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: 5, background: 'rgba(0,0,0,.06)', borderRadius: 99, overflow: 'hidden' }}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
                       transition={{ duration: 1.2, delay: i * .12 + .4, ease: 'easeOut' }}
-                      style={{ height: '100%', background: `linear-gradient(90deg,${card.from},${card.to})`, borderRadius: 99 }}
+                      style={{ height: '100%', background: `linear-gradient(90deg,${card.from},${card.to})`, borderRadius: 99, boxShadow: `0 1px 4px ${card.to}60` }}
                     />
                   </div>
                 </div>
@@ -281,13 +283,13 @@ export default function DigitalTwin3D() {
         )}
       </div>
 
-      {/* RIGHT: 3D Body */}
+      {/* RIGHT: SVG Body */}
       <div style={{
         flex: 1,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         position: 'relative', zIndex: 5,
-        padding: isMobile ? '16px' : '16px 24px 16px 0',
+        padding: isMobile ? '8px' : '8px 16px 8px 0',
         minHeight: isMobile ? 520 : 'auto',
       }}>
 
@@ -300,110 +302,47 @@ export default function DigitalTwin3D() {
           </div>
         )}
 
-        {/* Drag hint */}
-        <motion.p
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-          style={{ fontSize: 9, color: '#9ca3af', marginBottom: 6, letterSpacing: '.05em', userSelect: 'none', textAlign: 'center' }}
-        >
-          ↔ Drag to rotate 360° &nbsp;·&nbsp; Hover zones to inspect
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.15 }}
-          style={{
-            width: '100%',
-            maxWidth: 360,
-            marginBottom: 8,
-            background: 'rgba(255,255,255,.65)',
-            border: '1px solid rgba(255,255,255,.4)',
-            borderRadius: 12,
-            padding: '10px 12px',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#4b5563' }}>Body Shape</span>
-            <span style={{ fontSize: 10, color: '#6b7280' }}>{Math.round(bodyShape * 100)}%</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={Math.round(bodyShape * 100)}
-            onChange={(e) => setBodyShape(Number(e.target.value) / 100)}
-            style={{ width: '100%' }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 9, color: '#6b7280' }}>
-            <span>Slim</span>
-            <span>Fat</span>
-          </div>
-        </motion.div>
-
-        {/* 3D Body Canvas */}
+        {/* SVG Body */}
         <motion.div
           initial={{ scale: .6, opacity: 0, y: 32 }}
           animate={{ scale: 1,  opacity: 1, y: 0  }}
           transition={{ duration: 1.2, ease: [.4, 0, .2, 1] }}
-          style={{ position: 'relative', width: '100%', maxWidth: 360 }}
+          style={{ position: 'relative', flex: 1, width: '100%', minHeight: 0, display: 'flex', alignItems: 'stretch' }}
         >
-          <Body3D
-            userHeight={profile?.height || 165}
-            userWeight={profile?.weight || 58}
-            bodyShape={bodyShape}
-            hoveredNode={null}
-            onNodeHover={() => {}}
-            pcosIndex={twin?.metabolic_health_score || 0}
-            insulinResistance={twin?.insulin_resistance_score || 0}
-            thyroidFactor={Math.max(0.3, 1 - ((twin?.sleep_score || 0) / 20))}
-            height={isMobile ? 440 : 480}
+          {/* Body SVG — gender-aware */}
+          <img
+            src={profile?.gender === 'male' ? '/images/men-purple.svg' : '/images/women.svg'}
+            alt="Digital Twin Body"
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 0 28px rgba(124,58,237,.45)) drop-shadow(0 0 8px rgba(168,85,247,.3))' }}
           />
 
-          {/* Zone tooltip overlay */}
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-            <AnimatePresence>
-              {hoveredZone && (() => {
-                const zone  = BODY_ZONES.find(z => z.id === hoveredZone);
-                if (!zone) return null;
-                const score = twin?.[zone.scoreKey] ?? 0;
-                const side  = zone.id === 'waist' || zone.id === 'thighs' ? 'right' : 'left';
-                return <ZoneTooltip key={hoveredZone} zone={zone} score={score} side={side} />;
-              })()}
-            </AnimatePresence>
-          </div>
+          {/* Zone emoji hotspots — no visible box, just emoji */}
+          {BODY_ZONES.map((zone) => {
+            const isHov = hoveredZone === zone.id;
+            return (
+              <div
+                key={zone.id}
+                onMouseEnter={() => setHoveredZone(zone.id)}
+                onMouseLeave={() => setHoveredZone(null)}
+                style={{
+                  position: 'absolute',
+                  top: zone.top, left: zone.left,
+                  width: zone.w, height: zone.h,
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <span style={{ fontSize: isHov ? 18 : 13, transition: 'font-size .18s', filter: isHov ? 'none' : 'saturate(0.4) opacity(0.6)' }}>{zone.icon}</span>
+                {isHov && (
+                  <span style={{ position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)', fontSize: 9, fontWeight: 700, color: zone.glowColor, whiteSpace: 'nowrap', background: 'rgba(255,255,255,.9)', padding: '1px 7px', borderRadius: 8, border: `1px solid ${zone.glowColor}44`, pointerEvents: 'none' }}>
+                    {zone.label}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </motion.div>
 
-        {/* BMI pill */}
-        {profile && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3 }}
-            style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: 'rgba(255,255,255,.65)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,.4)', borderRadius: 20, fontSize: 11 }}
-          >
-            <span style={{ color: '#6b7280' }}>BMI</span>
-            <span style={{ fontWeight: 900, background: 'linear-gradient(135deg,#7c3aed,#ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              {bmi.toFixed(1)}
-            </span>
-            <span style={{ color: '#9ca3af' }}>·</span>
-            <span style={{ color: '#374151', fontWeight: 700 }}>{bmiLabel(bmi)}</span>
-            <span style={{ color: '#9ca3af' }}>·</span>
-            <span style={{ color: '#6b7280' }}>{profile.height} cm</span>
-          </motion.div>
-        )}
-
-        {/* Zone legend dots */}
-        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-          {BODY_ZONES.map((z) => (
-            <div
-              key={z.id}
-              onMouseEnter={() => setHoveredZone(z.id)}
-              onMouseLeave={() => setHoveredZone(null)}
-              title={z.label}
-              style={{ width: 8, height: 8, borderRadius: '50%', background: z.glowColor, opacity: hoveredZone === z.id ? 1 : 0.45, cursor: 'pointer', transition: 'opacity .2s, transform .2s', transform: hoveredZone === z.id ? 'scale(1.7)' : 'scale(1)', boxShadow: hoveredZone === z.id ? `0 0 8px ${z.glowColor}` : 'none' }}
-            />
-          ))}
-        </div>
       </div>
 
       <style>{`

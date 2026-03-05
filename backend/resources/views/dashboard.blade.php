@@ -38,5 +38,6 @@
 @endsection
 
 @push('scripts')
+@viteReactRefresh
 @vite('resources/js/dashboard-twin.jsx')
 @endpush

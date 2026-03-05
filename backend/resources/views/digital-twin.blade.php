@@ -46,15 +46,20 @@
 @endpush
 
 @php
+$_gender  = auth()->user()?->healthProfile?->gender ?? 'female';
+$_isMale  = $_gender === 'male';
+$_svgFile = $_isMale ? 'men-purple.svg' : 'women.svg';
+$_svgSrc  = public_path("images/{$_svgFile}");
+// men-purple.svg is 467×350 with figure centred → crop to figure
+// women.svg is 225×225 full figure → use full canvas
+$_viewBox = $_isMale ? '183 0 96 350' : '0 0 225 225';
+
 $dtBodySvg = '';
-$_svgSrc = public_path('images/men.svg');
 if (file_exists($_svgSrc)) {
     $_raw = file_get_contents($_svgSrc);
-    // Strip white background fill so glassmorphism shows through
-    $_raw = preg_replace('/fill="#FEFEFE"/', 'fill="none"', $_raw, 1);
     $dtBodySvg = preg_replace(
         '/<svg\b[^>]*>/',
-        '<svg viewBox="183 0 96 350" preserveAspectRatio="xMidYMid meet" style="width:90px;height:auto;display:block;position:relative;z-index:2;pointer-events:none;margin:auto">',
+        "<svg viewBox=\"{$_viewBox}\" preserveAspectRatio=\"xMidYMid meet\" style=\"width:auto;height:320px;display:block;position:relative;z-index:2;pointer-events:none;margin:auto\">",
         $_raw,
         1
     );
