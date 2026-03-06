@@ -26,8 +26,8 @@
 
         /* ── Left: 3D Character Panel ── */
         #character-panel {
-            width: 240px;
-            min-width: 240px;
+            width: 25%;
+            min-width: 220px;
             background: linear-gradient(180deg, #0f172a 0%, #111c33 100%);
             border-right: 1px solid rgba(148, 163, 184, 0.18);
             display: flex;
@@ -44,6 +44,7 @@
         }
         #char3d-container {
             flex: 1;
+            min-height: 0;
             width: 100%;
             position: relative;
             overflow: hidden;
@@ -88,8 +89,8 @@
 
         /* ── Right: Stats Panel ── */
         #stats-panel {
-            width: 200px;
-            min-width: 200px;
+            width: 25%;
+            min-width: 180px;
             background: linear-gradient(180deg, #101a30 0%, #0f172a 100%);
             border-left: 1px solid rgba(148, 163, 184, 0.18);
             display: flex;
@@ -367,26 +368,93 @@
         .hl-logo-icon { font-size: 18px; line-height: 1; }
         .hl-logo-name { font-size: 13px; font-weight: 800; color: #c4b5fd; letter-spacing: 0.6px; }
         #feature-list {
-            padding: 8px 8px 6px;
-            display: flex; flex-direction: column; gap: 5px;
+            padding: 6px 6px 4px;
+            display: flex; flex-direction: column; gap: 3px;
             border-bottom: 1px solid rgba(148,163,184,0.10);
+            flex-shrink: 0;
         }
         .feature-item {
-            display: flex; align-items: flex-start; gap: 8px;
+            display: flex; align-items: flex-start; gap: 6px;
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(148,163,184,0.09);
-            border-radius: 8px; padding: 6px 8px;
+            border-radius: 6px; padding: 4px 6px;
             transition: background 0.2s;
         }
         .feature-item:hover { background: rgba(196,181,253,0.07); }
-        .feat-icon  { font-size: 15px; line-height: 1.2; flex-shrink: 0; }
-        .feat-title { font-size: 11px; font-weight: 700; color: #e2e8f0; }
-        .feat-desc  { font-size: 10px; color: #64748b; margin-top: 1px; line-height: 1.3; }
+        .feat-icon  { font-size: 13px; line-height: 1.2; flex-shrink: 0; }
+        .feat-title { font-size: 10px; font-weight: 700; color: #e2e8f0; }
+        .feat-desc  { font-size: 9px; color: #64748b; margin-top: 0; line-height: 1.2; }
+
+        /* ── Gender Selection Screen ── */
+        #gender-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: linear-gradient(135deg, #0b1020 0%, #111c33 40%, #0f172a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+        }
+        #gender-overlay.hidden { display: none; }
+        .gender-card {
+            width: min(860px, 96%);
+            background: rgba(17, 28, 51, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 22px;
+            padding: 48px 44px;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+        }
+        .gender-card .title {
+            font-size: 34px;
+            margin-bottom: 32px;
+        }
+        .gender-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+        .gender-btn {
+            background: #17253f;
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            border-radius: 20px;
+            padding: 36px 24px 30px;
+            cursor: pointer;
+            color: #e2e8f0;
+            transition: transform 0.2s, border-color 0.25s, box-shadow 0.25s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+        .gender-btn:hover {
+            transform: translateY(-5px);
+            border-color: #818cf8;
+            box-shadow: 0 12px 40px rgba(129, 140, 248, 0.22);
+        }
+        .gender-btn .gender-icon {
+            width: 180px;
+            height: 200px;
+        }
+        .gender-btn .gender-label {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        /* SVG character inside size boxes */
+        .char-art svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
 
         /* ── Responsive ── */
         @media (max-width: 1100px) {
-            #character-panel { width: 200px; min-width: 200px; }
-            #stats-panel     { width: 180px; min-width: 180px; }
+            #character-panel { width: 22%; min-width: 180px; }
+            #stats-panel     { width: 22%; min-width: 160px; }
         }
         @media (max-width: 860px) {
             body { flex-direction: column; overflow-y: auto; }
@@ -431,25 +499,63 @@
     </div>
 </div>
 
-<!-- Full-page character selection overlay -->
-<div id="start-overlay" class="overlay show">
+<!-- Gender Selection Overlay -->
+<div id="gender-overlay">
+    <div class="gender-card">
+        <div class="title">Select Gender</div>
+        <div class="gender-options">
+            <button class="gender-btn" data-gender="male">
+                <svg class="gender-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="40" cy="18" r="12" fill="#60a5fa" stroke="#93c5fd" stroke-width="1.5"/>
+                    <rect x="30" y="32" width="20" height="26" rx="4" fill="#3b82f6" stroke="#60a5fa" stroke-width="1"/>
+                    <rect x="26" y="34" width="8" height="20" rx="3" fill="#3b82f6" stroke="#60a5fa" stroke-width="1" transform="rotate(-8 26 34)"/>
+                    <rect x="46" y="34" width="8" height="20" rx="3" fill="#3b82f6" stroke="#60a5fa" stroke-width="1" transform="rotate(8 54 34)"/>
+                    <rect x="32" y="58" width="7" height="18" rx="3" fill="#3b82f6" stroke="#60a5fa" stroke-width="1"/>
+                    <rect x="41" y="58" width="7" height="18" rx="3" fill="#3b82f6" stroke="#60a5fa" stroke-width="1"/>
+                    <circle cx="36" cy="16" r="1.5" fill="#e2e8f0"/>
+                    <circle cx="44" cy="16" r="1.5" fill="#e2e8f0"/>
+                    <path d="M37 22 Q40 25 43 22" stroke="#e2e8f0" stroke-width="1" fill="none" stroke-linecap="round"/>
+                </svg>
+                <div class="gender-label">Male</div>
+            </button>
+            <button class="gender-btn" data-gender="female">
+                <svg class="gender-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="40" cy="18" r="12" fill="#c084fc" stroke="#d8b4fe" stroke-width="1.5"/>
+                    <path d="M28 32 Q28 30 32 30 L48 30 Q52 30 52 32 L50 58 Q50 60 48 60 L32 60 Q30 60 30 58 Z" fill="#a855f7" stroke="#c084fc" stroke-width="1"/>
+                    <rect x="24" y="34" width="7" height="18" rx="3" fill="#a855f7" stroke="#c084fc" stroke-width="1" transform="rotate(-10 24 34)"/>
+                    <rect x="49" y="34" width="7" height="18" rx="3" fill="#a855f7" stroke="#c084fc" stroke-width="1" transform="rotate(10 56 34)"/>
+                    <rect x="33" y="60" width="6" height="16" rx="3" fill="#a855f7" stroke="#c084fc" stroke-width="1"/>
+                    <rect x="41" y="60" width="6" height="16" rx="3" fill="#a855f7" stroke="#c084fc" stroke-width="1"/>
+                    <circle cx="36" cy="16" r="1.5" fill="#f0e2ff"/>
+                    <circle cx="44" cy="16" r="1.5" fill="#f0e2ff"/>
+                    <path d="M37 22 Q40 25 43 22" stroke="#f0e2ff" stroke-width="1" fill="none" stroke-linecap="round"/>
+                    <path d="M30 10 Q32 4 40 3 Q48 4 50 10" stroke="#d8b4fe" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                </svg>
+                <div class="gender-label">Female</div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Full-page character selection overlay (hidden until gender chosen) -->
+<div id="start-overlay" class="overlay">
     <div class="card">
         <div class="title">Healthy Snake Challenge</div>
         <div class="subtitle">Choose your character size or customize your own before starting.</div>
 
         <div class="characters">
             <button class="character-btn" data-character="fit">
-                <div class="char-art char-fit"><div class="head"></div><div class="body"></div></div>
+                <div class="char-art char-fit" id="char-art-fit"></div>
                 <div class="char-name">Small</div>
                 <div class="char-desc">Lean &amp; Athletic build</div>
             </button>
             <button class="character-btn" data-character="bulky">
-                <div class="char-art char-bulky"><div class="head"></div><div class="body"></div></div>
+                <div class="char-art char-bulky" id="char-art-bulky"></div>
                 <div class="char-name">Medium</div>
                 <div class="char-desc">Average build</div>
             </button>
             <button class="character-btn" data-character="fat">
-                <div class="char-art char-fat"><div class="head"></div><div class="body"></div></div>
+                <div class="char-art char-fat" id="char-art-fat"></div>
                 <div class="char-name">Large</div>
                 <div class="char-desc">Heavy build</div>
             </button>
@@ -523,7 +629,7 @@
         </div>
         <div class="stat-card">
             <div class="stat-label">Lives</div>
-            <div class="stat-value lives-val" id="stat-lives">&hearts;&hearts;&hearts;&hearts;&hearts;</div>
+            <div class="stat-value lives-val" id="stat-lives">&hearts;&hearts;&hearts;</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Foods Eaten</div>
@@ -562,7 +668,67 @@ const Config = {
     SPEED_BASE: 145,
     SPEED_STEP: 12,
     FOOD_SIZE: 0.92,
-    LIVES_START: 5,
+    LIVES_START: 3,
+};
+
+// ──────────────────────────────────────────────────────────────
+// GenderSelection — manages gender choice and model paths
+// ──────────────────────────────────────────────────────────────
+const GenderSelection = {
+    selectedGender: null, // 'male' or 'female'
+    modelPaths: {
+        male: 'models/character_male.fbx',
+        female: 'models/character_female.fbx',
+    },
+
+    getModelPath() {
+        return this.modelPaths[this.selectedGender] || 'models/character.fbx';
+    },
+
+    // SVG builders for character silhouettes in size boxes
+    getMaleSVG(bodyWidth) {
+        var headR = 7, bw = bodyWidth, armW = 4;
+        return '<svg viewBox="0 0 60 66" fill="none" xmlns="http://www.w3.org/2000/svg">'
+            + '<circle cx="30" cy="' + headR + '" r="' + headR + '" fill="#60a5fa" stroke="#93c5fd" stroke-width="0.8"/>'
+            + '<rect x="' + (30 - bw/2) + '" y="16" width="' + bw + '" height="' + (bw * 1.1) + '" rx="3" fill="#3b82f6" stroke="#60a5fa" stroke-width="0.6"/>'
+            + '<rect x="' + (30 - bw/2 - armW - 1) + '" y="17" width="' + armW + '" height="' + (bw * 0.8) + '" rx="2" fill="#3b82f6" stroke="#60a5fa" stroke-width="0.5"/>'
+            + '<rect x="' + (30 + bw/2 + 1) + '" y="17" width="' + armW + '" height="' + (bw * 0.8) + '" rx="2" fill="#3b82f6" stroke="#60a5fa" stroke-width="0.5"/>'
+            + '<rect x="' + (30 - bw/4 - 2) + '" y="' + (16 + bw * 1.1) + '" width="' + (bw/4) + '" height="' + (bw * 0.7) + '" rx="2" fill="#3b82f6" stroke="#60a5fa" stroke-width="0.5"/>'
+            + '<rect x="' + (30 + 2) + '" y="' + (16 + bw * 1.1) + '" width="' + (bw/4) + '" height="' + (bw * 0.7) + '" rx="2" fill="#3b82f6" stroke="#60a5fa" stroke-width="0.5"/>'
+            + '<circle cx="27" cy="' + (headR - 1) + '" r="1" fill="#e2e8f0"/>'
+            + '<circle cx="33" cy="' + (headR - 1) + '" r="1" fill="#e2e8f0"/>'
+            + '</svg>';
+    },
+
+    getFemaleSVG(bodyWidth) {
+        var headR = 7, bw = bodyWidth, armW = 3.5;
+        var torsoH = bw * 1.2;
+        return '<svg viewBox="0 0 60 66" fill="none" xmlns="http://www.w3.org/2000/svg">'
+            + '<circle cx="30" cy="' + headR + '" r="' + headR + '" fill="#c084fc" stroke="#d8b4fe" stroke-width="0.8"/>'
+            + '<path d="M' + (30 - bw/2 + 1) + ' 16 Q' + (30 - bw/2) + ' 15 ' + (30 - bw/2 + 2) + ' 15 L' + (30 + bw/2 - 2) + ' 15 Q' + (30 + bw/2) + ' 15 ' + (30 + bw/2 - 1) + ' 16 L' + (30 + bw/2 + 1) + ' ' + (16 + torsoH) + ' Q30 ' + (18 + torsoH) + ' ' + (30 - bw/2 - 1) + ' ' + (16 + torsoH) + ' Z" fill="#a855f7" stroke="#c084fc" stroke-width="0.6"/>'
+            + '<rect x="' + (30 - bw/2 - armW - 1) + '" y="17" width="' + armW + '" height="' + (bw * 0.75) + '" rx="2" fill="#a855f7" stroke="#c084fc" stroke-width="0.5"/>'
+            + '<rect x="' + (30 + bw/2 + 1) + '" y="17" width="' + armW + '" height="' + (bw * 0.75) + '" rx="2" fill="#a855f7" stroke="#c084fc" stroke-width="0.5"/>'
+            + '<rect x="' + (30 - bw/4 - 1) + '" y="' + (16 + torsoH) + '" width="' + (bw/4) + '" height="' + (bw * 0.65) + '" rx="2" fill="#a855f7" stroke="#c084fc" stroke-width="0.5"/>'
+            + '<rect x="' + (30 + 1) + '" y="' + (16 + torsoH) + '" width="' + (bw/4) + '" height="' + (bw * 0.65) + '" rx="2" fill="#a855f7" stroke="#c084fc" stroke-width="0.5"/>'
+            + '<circle cx="27" cy="' + (headR - 1) + '" r="1" fill="#f0e2ff"/>'
+            + '<circle cx="33" cy="' + (headR - 1) + '" r="1" fill="#f0e2ff"/>'
+            + '<path d="M25 3 Q27 0 30 0 Q33 0 35 3" stroke="#d8b4fe" stroke-width="1" fill="none" stroke-linecap="round"/>'
+            + '</svg>';
+    },
+
+    updateSizeBoxArt() {
+        var fitBox   = document.getElementById('char-art-fit');
+        var bulkyBox = document.getElementById('char-art-bulky');
+        var fatBox   = document.getElementById('char-art-fat');
+        if (!fitBox || !bulkyBox || !fatBox) return;
+
+        var isMale = this.selectedGender === 'male';
+        var getSVG = isMale ? this.getMaleSVG.bind(this) : this.getFemaleSVG.bind(this);
+
+        fitBox.innerHTML   = getSVG(10);
+        bulkyBox.innerHTML = getSVG(16);
+        fatBox.innerHTML   = getSVG(22);
+    },
 };
 Config.BOARD_W = Config.CELL * Config.COLS;
 Config.BOARD_H = Config.CELL * Config.ROWS;
@@ -645,7 +811,7 @@ const FoodSystem = {
     ],
     junkFoods: [
         { name: 'Burger', emoji: '🍔' },
-        { name: 'Pizza',  emoji: '🍕' },
+        { name: 'Pizza',  emoji: '�' },
         { name: 'Fries',  emoji: '🍟' },
         { name: 'Donut',  emoji: '🍩' },
     ],
@@ -653,7 +819,7 @@ const FoodSystem = {
 
     spawnAll(state) {
         state.foods = [];
-        const count = 2 + Math.floor(Math.random() * 2); // 2 or 3 foods
+        const count = 5 + Math.floor(Math.random() * 3); // 5 to 7 foods
         for (let i = 0; i < count; i++) this.spawnOne(state);
     },
 
@@ -684,16 +850,21 @@ const FoodSystem = {
             state.junkFoods += 1;
             state.snakeFat = Math.min(2, state.snakeFat + 1);
             state.avatarTypeIndex = Math.min(2, state.avatarTypeIndex + 1);
-            state.banner = 'Warning: Unhealthy food consumed!';
+            state.lives = Math.max(0, state.lives - 1);
+            state.banner = 'Warning: Unhealthy food consumed! (-1 ♥)';
             state.bannerUntil = performance.now() + 1400;
             TrickSystem.onJunkFood();
             HealthWarningSystem.trigger();
+            if (state.lives <= 0) {
+                GameEngine.gameOver('You ran out of lives');
+            }
         } else {
             state.score += 10;
             state.healthyFoods += 1;
             state.snakeFat = Math.max(0, state.snakeFat - 1);
             state.avatarTypeIndex = Math.max(0, state.avatarTypeIndex - 1);
-            state.banner = 'Great! Healthy food consumed.';
+            state.lives = Math.min(Config.LIVES_START + 2, state.lives + 0.5);
+            state.banner = 'Great! Healthy food consumed. (+0.5 ♥)';
             state.bannerUntil = performance.now() + 900;
             TrickSystem.onHealthyFood();
         }
@@ -861,9 +1032,13 @@ const UISystem = {
         ctx.fillStyle = '#94a3b8';
         ctx.textAlign = 'center';
         ctx.fillText('LIVES', Config.W / 2, 16);
-        ctx.font = 'bold 22px "Segoe UI",sans-serif';
+        ctx.font = 'bold 20px "Segoe UI",sans-serif';
         ctx.fillStyle = '#f87171';
-        ctx.fillText('\u2665'.repeat(st.lives), Config.W / 2, 42);
+        // Half-heart display: full hearts + optional half heart
+        var fullHearts = Math.floor(st.lives);
+        var hasHalf = (st.lives % 1) >= 0.25;
+        var heartsStr = '\u2665'.repeat(fullHearts) + (hasHalf ? '\u00BD' : '');
+        ctx.fillText(heartsStr, Config.W / 2, 42);
 
         ctx.font = '10px "Segoe UI",sans-serif';
         ctx.fillStyle = '#94a3b8';
@@ -1020,22 +1195,14 @@ const GameEngine = {
 
         st.dir = st.nextDir;
         const head = st.snake[0];
-        const nx = head.x + st.dir.x;
-        const ny = head.y + st.dir.y;
+        var nx = head.x + st.dir.x;
+        var ny = head.y + st.dir.y;
 
-        if (nx < 0 || nx >= Config.COLS || ny < 0 || ny >= Config.ROWS) {
-            st.lives -= 1;
-            st.banner = 'Warning: You hit the wall!';
-            st.bannerUntil = performance.now() + 1300;
-            TrickSystem.onWallHit();
-
-            if (st.lives <= 0) {
-                this.gameOver('You ran out of lives');
-                return;
-            }
-            this.resetSnakeToCenter();
-            return;
-        }
+        // Wrap around walls
+        if (nx < 0) nx = Config.COLS - 1;
+        else if (nx >= Config.COLS) nx = 0;
+        if (ny < 0) ny = Config.ROWS - 1;
+        else if (ny >= Config.ROWS) ny = 0;
 
         if (st.snake.slice(0, -1).some(s => s.x === nx && s.y === ny)) {
             this.gameOver('Snake collided with itself');
@@ -1051,7 +1218,11 @@ const GameEngine = {
             const eaten = st.foods.splice(eatenIdx, 1)[0];
             FoodSystem.applyConsumption(st, eaten);
             st.speed = Config.SPEED_BASE + st.snakeFat * Config.SPEED_STEP;
-            FoodSystem.spawnOne(st);
+            
+            // Maintain food count
+            while (st.foods.length < 5) {
+                FoodSystem.spawnOne(st);
+            }
         }
     },
 
@@ -1374,11 +1545,12 @@ const Character3DSystem = {
 
         var self = this;
         var loader = new THREE.FBXLoader();
+        var modelPath = GenderSelection.getModelPath();
         loader.load(
-            'models/character.fbx',
+            modelPath,
             function(fbx) {
                 self.model = fbx;
-                self.baseScale = 2.0;
+                self.baseScale = 2.8;
                 fbx.scale.setScalar(self.baseScale);
 
                 var box    = new THREE.Box3().setFromObject(fbx);
@@ -1415,14 +1587,14 @@ const Character3DSystem = {
 
     fitCamera(size) {
         var container = document.getElementById('char3d-container');
-        var cw = container.clientWidth  || 240;
+        var cw = container.clientWidth  || 320;
         var ch = container.clientHeight || 600;
         var aspect = cw / ch;
 
         this.camera.aspect = aspect;
         var vFov   = this.camera.fov * (Math.PI / 180);
-        // Very tight margin so character fills 75-80% of panel
-        var margin = 0.72;
+        // Tight margin so character fills 80-85% of panel
+        var margin = 0.65;
         var distH  = (size.y * margin / 2) / Math.tan(vFov / 2);
         var hFov   = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
         var distW  = (size.x * margin * 2 / 2) / Math.tan(hFov / 2);
@@ -1507,6 +1679,54 @@ const Character3DSystem = {
         this.applyTricks();
         this.renderer.render(this.scene, this.camera);
     },
+
+    reloadModel() {
+        if (!this.modelGroup) return;
+        // Remove old model
+        if (this.model) {
+            this.modelGroup.remove(this.model);
+            this.model = null;
+            this.mixer = null;
+            this.ready = false;
+        }
+        if (typeof THREE.FBXLoader === 'undefined') return;
+        var self = this;
+        var loader = new THREE.FBXLoader();
+        var modelPath = GenderSelection.getModelPath();
+        loader.load(
+            modelPath,
+            function(fbx) {
+                self.model = fbx;
+                self.baseScale = 2.8;
+                fbx.scale.setScalar(self.baseScale);
+
+                var box    = new THREE.Box3().setFromObject(fbx);
+                var center = box.getCenter(new THREE.Vector3());
+                var size   = box.getSize(new THREE.Vector3());
+
+                fbx.position.x = -center.x;
+                fbx.position.y = -box.min.y;
+                fbx.position.z = -center.z;
+                self.modelBaseY  = fbx.position.y;
+                self.modelHeight = size.y;
+
+                TrickSystem.setModelScale(size.y);
+                self.fitCamera(size);
+
+                if (fbx.animations && fbx.animations.length > 0) {
+                    self.mixer = new THREE.AnimationMixer(fbx);
+                    var action = self.mixer.clipAction(fbx.animations[0]);
+                    action.play();
+                }
+
+                self.modelGroup.add(fbx);
+                self.ready = true;
+                self.setBodyType('fit');
+            },
+            undefined,
+            function(err) { console.warn('FBX reload error:', err); }
+        );
+    },
 };
 
 // ──────────────────────────────────────────────────────────────
@@ -1525,7 +1745,10 @@ var statEls = {
 function updateStatsPanel(st) {
     if (!st) return;
     statEls.score.textContent   = st.score;
-    statEls.lives.textContent   = '\u2665'.repeat(st.lives);
+    // Half-heart display for stats panel
+    var fullH = Math.floor(st.lives);
+    var halfH = (st.lives % 1) >= 0.25;
+    statEls.lives.textContent   = '\u2665'.repeat(fullH) + (halfH ? '\u00BD' : '');
     statEls.foods.textContent   = st.totalFoods;
     statEls.healthy.textContent = 'Healthy: ' + st.healthyFoods;
     statEls.junk.textContent    = 'Junk: ' + st.junkFoods;
@@ -1580,7 +1803,10 @@ function gameLoop(ts) {
 // Phase select / init
 // ──────────────────────────────────────────────────────────────
 function setPhaseSelect() {
-    overlays.start.classList.add('show');
+    // Don't show start overlay if gender not yet selected
+    if (GenderSelection.selectedGender) {
+        overlays.start.classList.add('show');
+    }
     overlays.pause.classList.remove('show');
     overlays.warning.classList.remove('show');
     overlays.gameover.classList.remove('show');
@@ -1608,6 +1834,8 @@ function setPhaseSelect() {
 // ──────────────────────────────────────────────────────────────
 // Selection / UI wiring
 // ──────────────────────────────────────────────────────────────
+var genderOverlay    = document.getElementById('gender-overlay');
+var genderButtons    = Array.from(document.querySelectorAll('.gender-btn'));
 var characterButtons = Array.from(document.querySelectorAll('.character-btn'));
 var openCustomizeBtn = document.getElementById('open-customize');
 var startGameBtn     = document.getElementById('start-game-btn');
@@ -1617,6 +1845,16 @@ var weightInput      = document.getElementById('weight-input');
 var bmiResult        = document.getElementById('bmi-result');
 var restartBtn       = document.getElementById('restart-btn');
 var returnSelectBtn  = document.getElementById('return-select-btn');
+
+// ── Gender selection handlers ──
+genderButtons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        GenderSelection.selectedGender = btn.dataset.gender;
+        GenderSelection.updateSizeBoxArt();
+        genderOverlay.classList.add('hidden');
+        overlays.start.classList.add('show');
+    });
+});
 
 function updateStartButtonState() {
     var hasPreset = !!CharacterSystem.selectedPreset;
@@ -1683,7 +1921,12 @@ restartBtn.addEventListener('click', function() {
     GameEngine.startNewGame(initialType);
 });
 
-returnSelectBtn.addEventListener('click', function() { setPhaseSelect(); });
+returnSelectBtn.addEventListener('click', function() {
+    genderOverlay.classList.remove('hidden');
+    overlays.start.classList.remove('show');
+    overlays.gameover.classList.remove('show');
+    setPhaseSelect();
+});
 
 // ──────────────────────────────────────────────────────────────
 // Input handling
@@ -1748,7 +1991,23 @@ document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { pa
 // ──────────────────────────────────────────────────────────────
 setPhaseSelect();
 TrickSystem.init();
-Character3DSystem.init();
+// Defer 3D init until gender is chosen
+function initCharacter3DAfterGender() {
+    if (Character3DSystem.ready) {
+        // Reload with new model if gender changed
+        Character3DSystem.reloadModel();
+    } else {
+        Character3DSystem.init();
+    }
+}
+// Watch for gender selection to trigger 3D init
+var _origGenderClick = genderButtons[0] ? genderButtons[0].onclick : null;
+genderButtons.forEach(function(btn) {
+    var origHandler = btn.onclick;
+    btn.addEventListener('click', function() {
+        setTimeout(initCharacter3DAfterGender, 50);
+    });
+});
 
 window.addEventListener('resize', function() {
     fitCanvas();
