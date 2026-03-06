@@ -26,6 +26,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 // ─── User pages (auth) ──────────────────────────────
 Route::middleware('auth')->group(function () {
+    Route::get('/onboarding',     [PageController::class, 'onboarding'])->name('onboarding');
     Route::get('/dashboard',      [PageController::class, 'dashboard'])->name('dashboard');
     Route::get('/health-profile', [PageController::class, 'healthProfile'])->name('health-profile');
     Route::get('/disease/{slug}',  [PageController::class, 'disease'])->name('disease.show');

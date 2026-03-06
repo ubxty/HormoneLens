@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import DigitalTwin3D from './components/DigitalTwin3D';
 import SimulationCharacter from './components/SimulationCharacter';
+import DashboardTour from './components/tour/DashboardTour';
 
 class ErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { error: null }; }
@@ -32,6 +33,16 @@ if (simEl) {
     createRoot(simEl).render(
         <ErrorBoundary>
             <SimulationCharacter />
+        </ErrorBoundary>
+    );
+}
+
+const tourEl = document.getElementById('dashboard-tour-root');
+if (tourEl) {
+    const userId = tourEl.dataset.userId || '';
+    createRoot(tourEl).render(
+        <ErrorBoundary>
+            <DashboardTour userId={userId} />
         </ErrorBoundary>
     );
 }

@@ -173,7 +173,7 @@ export default function DigitalTwin3D() {
       )}
 
       {/* LEFT: Score Cards */}
-      <div style={{
+      <div data-tour-id="score-cards" style={{
         width: isMobile ? '100%' : '34%',
         padding: isMobile ? '20px 16px 12px' : '20px 12px 20px 20px',
         display: 'flex', flexDirection: 'column',
@@ -183,6 +183,7 @@ export default function DigitalTwin3D() {
       }}>
 
         <motion.div
+          data-tour-id="twin-header"
           initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .55 }}
           style={{ marginBottom: 8, background: 'rgba(255,255,255,.55)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,.45)', borderRadius: 16, padding: '12px 14px', boxShadow: '0 4px 18px rgba(109,40,217,.07)' }}
         >
@@ -284,7 +285,7 @@ export default function DigitalTwin3D() {
       </div>
 
       {/* RIGHT: SVG Body */}
-      <div style={{
+      <div data-tour-id="body-map" style={{
         flex: 1,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',

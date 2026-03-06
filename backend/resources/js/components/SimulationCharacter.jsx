@@ -1,80 +1,54 @@
-import React, { useRef, useMemo, useEffect, useState, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import React, { useRef, useMemo, useEffect, useState, useCallback, Suspense } from 'react';
+import { inspectCharacter }  from './CharacterInspector';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, ContactShadows, Float, Html, useFBX } from '@react-three/drei';
 import * as THREE from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 
-import maleFbxUrl from './Ch09_nonPBR.fbx?url';
+/* ── Asset imports ── */
+import maleFbxUrl   from './Ch09_nonPBR.fbx?url';
 import femaleFbxUrl from './Standing Idle(1).fbx?url';
 
-/* ── Impact Zones ── */
-const IMPACT_ZONES = [
-    { id: 'brain',    label: 'Brain / HPA Axis',   info: 'Stress & appetite regulation',        pos: [0, 1.66, 0.12], r: 0.035 },
-    { id: 'thyroid',  label: 'Thyroid',             info: 'Metabolic rate control',              pos: [0, 1.42, 0.06], r: 0.032 },
-    { id: 'stomach',  label: 'Stomach / Digestion', info: 'Glycemic response & nutrient intake', pos: [0.02, 1.02, 0.12], r: 0.04 },
-    { id: 'pancreas', label: 'Pancreas',            info: 'Insulin & glucagon secretion',        pos: [0.09, 0.93, 0.1], r: 0.032 },
-    { id: 'liver',    label: 'Liver',               info: 'Glucose storage & metabolism',        pos: [-0.08, 1.0, 0.08], r: 0.034 },
-];
+/* Animation FBX files (contain clips, not visible meshes) */
+import idleAnimUrl  from './Standing Idle(1).fbx?url';
+import clapAnimUrl  from './Clapping.fbx?url';
+import sadAnimUrl   from './Sad Idle.fbx?url';
 
-function clamp01(v) { return Math.min(1, Math.max(0, v)); }
+/* ── Constants ── */
+const FADE_DURATION   = 0.3;  // seconds for cross-fade between animations
+const TARGET_HEIGHT   = 1.6;  // normalized model height in scene units
 
-/* ── Pulse Node ── */
-function ImpactNode({ node, color, intensity, label, isHovered, onHover }) {
-    const glowRef = useRef();
-    const coreRef = useRef();
-    const idx = IMPACT_ZONES.indexOf(node);
+/* ── Retarget animation tracks from one FBX skeleton to another ── */
+function retargetClip(clip, targetRoot) {
+    const nodeNames = new Set();
+    targetRoot.traverse((n) => { if (n.name) nodeNames.add(n.name); });
 
-    useFrame((state) => {
-        const t = state.clock.elapsedTime;
-        if (glowRef.current) {
-            glowRef.current.scale.setScalar(1.0 + Math.sin(t * 2.5 + idx * 1.3) * 0.4);
-            glowRef.current.material.opacity = 0.14 + Math.sin(t * 2.5 + idx) * 0.07;
-        }
-        if (coreRef.current) {
-            coreRef.current.material.emissiveIntensity = intensity * (0.7 + Math.sin(t * 3 + idx) * 0.35);
+    const retargeted = clip.clone();
+    const valid = [];
+    retargeted.tracks.forEach((track) => {
+        const lastDot  = track.name.lastIndexOf('.');
+        if (lastDot === -1) return;
+        const nodePath = track.name.substring(0, lastDot);
+        const property = track.name.substring(lastDot + 1);
+
+        if (nodeNames.has(nodePath)) { valid.push(track); return; }
+
+        const parts = nodePath.split('.');
+        for (let i = 1; i < parts.length; i++) {
+            const candidate = parts.slice(i).join('.');
+            if (nodeNames.has(candidate)) {
+                track.name = candidate + '.' + property;
+                valid.push(track);
+                return;
+            }
         }
     });
-
-    return (
-        <group position={node.pos}>
-            <mesh ref={coreRef}
-                  onPointerEnter={(e) => { e.stopPropagation(); onHover(node.id); }}
-                  onPointerLeave={(e) => { e.stopPropagation(); onHover(null); }}>
-                <sphereGeometry args={[node.r, 20, 20]} />
-                <meshStandardMaterial color={color} emissive={color} emissiveIntensity={intensity} toneMapped={false} />
-            </mesh>
-            <mesh ref={glowRef}>
-                <sphereGeometry args={[node.r * 2.8, 16, 16]} />
-                <meshBasicMaterial color={color} transparent opacity={0.14} depthWrite={false} />
-            </mesh>
-            {isHovered && (
-                <Html center distanceFactor={5.5} style={{ pointerEvents: 'none', userSelect: 'none' }}>
-                    <div style={{
-                        background: 'rgba(12,6,22,0.94)', backdropFilter: 'blur(16px)',
-                        border: `1px solid ${color}55`, borderRadius: 14, padding: '12px 16px',
-                        minWidth: 170, maxWidth: 220,
-                        boxShadow: `0 10px 40px ${color}44, 0 2px 8px rgba(0,0,0,0.3)`,
-                        fontFamily: 'system-ui, -apple-system, sans-serif',
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, boxShadow: `0 0 8px ${color}` }} />
-                            <span style={{ fontSize: 12, fontWeight: 800, color: '#e2ddf5' }}>{node.label}</span>
-                        </div>
-                        <p style={{ fontSize: 10, color: '#9b8fc4', margin: '0 0 6px', lineHeight: 1.4 }}>{node.info}</p>
-                        {label && (
-                            <div style={{ padding: '5px 10px', background: `${color}18`, borderRadius: 8, border: `1px solid ${color}30` }}>
-                                <span style={{ fontSize: 11, fontWeight: 700, color }}>{label}</span>
-                            </div>
-                        )}
-                    </div>
-                </Html>
-            )}
-        </group>
-    );
+    retargeted.tracks = valid;
+    return retargeted;
 }
 
-/* ── Character model loader — arms-down for any Mixamo T-pose ── */
-function useCharacter(url, isMale) {
+/* ── Clone & prepare character mesh (no manual arm rotation — idle anim handles pose) ── */
+function useCharacter(url) {
     const source = useFBX(url);
     return useMemo(() => {
         const cloned = SkeletonUtils.clone(source);
@@ -90,58 +64,107 @@ function useCharacter(url, isMale) {
             }
         });
 
-        // Both male and female Mixamo FBX exports are T-pose — bring arms down for both.
-        // Mixamo bone naming variants:
-        //   "mixamorigLeftArm"   — standard Mixamo FBX (most common)
-        //   "mixamorig6:LeftArm" — older/numbered Mixamo exports
-        //   "mixamorig:LeftArm"  — legacy colon-style
-        {
-            const boneMap = {};
-            cloned.traverse((child) => { if (child.name) boneMap[child.name] = child; });
-
-            const get = (...names) => names.reduce((found, n) => found || boneMap[n], null);
-
-            const leftArm   = get('mixamorigLeftArm',   'mixamorig6:LeftArm',   'mixamorig:LeftArm',   'LeftArm');
-            const rightArm  = get('mixamorigRightArm',  'mixamorig6:RightArm',  'mixamorig:RightArm',  'RightArm');
-            const leftFore  = get('mixamorigLeftForeArm',  'mixamorig6:LeftForeArm',  'mixamorig:LeftForeArm',  'LeftForeArm');
-            const rightFore = get('mixamorigRightForeArm', 'mixamorig6:RightForeArm', 'mixamorig:RightForeArm', 'RightForeArm');
-            const leftHand  = get('mixamorigLeftHand',  'mixamorig6:LeftHand',  'mixamorig:LeftHand',  'LeftHand');
-            const rightHand = get('mixamorigRightHand', 'mixamorig6:RightHand', 'mixamorig:RightHand', 'RightHand');
-
-            if (!leftArm) {
-                const found = Object.keys(boneMap).filter(k => /arm|shoulder|hand/i.test(k));
-                console.warn('[SimChar] LeftArm bone not found. Arm-related bones:', found);
-            }
-
-            // T-pose: LeftArm extends +X, RightArm extends -X.
-            // Negative Z on LeftArm and positive Z on RightArm both rotate down.
-            if (leftArm)  leftArm.rotation.z  = -Math.PI * 0.5;
-            if (rightArm) rightArm.rotation.z =  Math.PI * 0.5;
-            if (leftFore)  leftFore.rotation.z  = -Math.PI * 0.06;
-            if (rightFore) rightFore.rotation.z =  Math.PI * 0.06;
-            if (leftHand)  leftHand.rotation.z  = 0;
-            if (rightHand) rightHand.rotation.z  = 0;
-        }
-
-        return cloned;
-    }, [source, isMale]);
+        const capabilities = inspectCharacter(cloned, source.animations ?? []);
+        return { model: cloned, capabilities };
+    }, [source]);
 }
 
-/* ── Character mesh ── */
-function CharacterModel({ url, isSimulating, riskChange, isMale }) {
-    const groupRef = useRef();
-    const root = useCharacter(url, isMale);
+/* ── Character mesh with animation (idle / clap / sad) ── */
+function CharacterModel({ url, isSimulating, riskChange, isMale, onInspected }) {
+    const groupRef    = useRef();
+    const reportedRef = useRef(false);
+    const mixerRef    = useRef(null);
+    const actionsRef  = useRef({});
+    const activeRef   = useRef(null);
+
+    const { model: root, capabilities } = useCharacter(url);
     const emissiveColor = useMemo(() => new THREE.Color('#6d28d9'), []);
 
+    const idleFbx  = useFBX(idleAnimUrl);
+    const clapFbx  = useFBX(clapAnimUrl);
+    const sadFbx   = useFBX(sadAnimUrl);
+
+    useEffect(() => {
+        if (!root) return;
+        const mixer = new THREE.AnimationMixer(root);
+        mixerRef.current = mixer;
+
+        const load = (fbx, loop = true) => {
+            if (!fbx?.animations?.length) return null;
+            const clip   = retargetClip(fbx.animations[0], root);
+            if (!clip.tracks.length) return null;
+            const action = mixer.clipAction(clip);
+            action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
+            action.clampWhenFinished = !loop;
+            return action;
+        };
+
+        const actions = {
+            idle: load(idleFbx, true),
+            clap: load(clapFbx, false),
+            sad:  load(sadFbx, true),
+        };
+        actionsRef.current = actions;
+
+        if (actions.idle) { actions.idle.play(); activeRef.current = actions.idle; }
+
+        const onFinished = (e) => {
+            if (e.action === actions.clap) crossFade(actions.idle, true);
+        };
+        mixer.addEventListener('finished', onFinished);
+
+        return () => {
+            mixer.removeEventListener('finished', onFinished);
+            mixer.stopAllAction();
+            mixer.uncacheRoot(root);
+        };
+    }, [root]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        if (capabilities && !reportedRef.current) {
+            reportedRef.current = true;
+            onInspected?.(capabilities);
+        }
+    }, [capabilities]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const crossFade = useCallback((nextAction, loop = true) => {
+        if (!nextAction || nextAction === activeRef.current) return;
+        const prev = activeRef.current;
+        nextAction.reset();
+        nextAction.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
+        nextAction.clampWhenFinished = !loop;
+        nextAction.setEffectiveTimeScale(1);
+        nextAction.setEffectiveWeight(1);
+        nextAction.fadeIn(FADE_DURATION);
+        if (prev) prev.fadeOut(FADE_DURATION);
+        nextAction.play();
+        activeRef.current = nextAction;
+    }, []);
+
+    const playSimReaction = useCallback((positive) => {
+        const actions = actionsRef.current;
+        if (positive && actions.clap) crossFade(actions.clap, false);
+        else if (!positive && actions.sad) crossFade(actions.sad, true);
+    }, [crossFade]);
+
+    const returnToIdle = useCallback(() => {
+        if (actionsRef.current.idle) crossFade(actionsRef.current.idle, true);
+    }, [crossFade]);
+
+    useEffect(() => {
+        if (groupRef.current) groupRef.current.userData._anim = { playSimReaction, returnToIdle };
+    }, [playSimReaction, returnToIdle]);
+
+    /* ── Normalise model ── */
     const normalized = useMemo(() => {
-        const box = new THREE.Box3().setFromObject(root);
-        const size = box.getSize(new THREE.Vector3());
+        const box    = new THREE.Box3().setFromObject(root);
+        const size   = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
-        const targetHeight = 2.0;
-        const ratio = size.y > 0 ? targetHeight / size.y : 1;
+        const ratio  = size.y > 0 ? TARGET_HEIGHT / size.y : 1;
         return { scale: ratio, centerX: center.x, minY: box.min.y, centerZ: center.z };
     }, [root]);
 
+    /* ── Material setup ── */
     const meshMaterials = useMemo(() => {
         const mats = [];
         root.traverse((child) => {
@@ -152,13 +175,15 @@ function CharacterModel({ url, isSimulating, riskChange, isMale }) {
         return mats;
     }, [root, emissiveColor]);
 
-    useFrame(() => {
+    /* ── Per-frame: mixer, scale, glow, hover ── */
+    useFrame((_, delta) => {
+        mixerRef.current?.update(delta);
+
         if (!groupRef.current) return;
         const pulse = isSimulating ? (1 + Math.sin(performance.now() * 0.005) * 0.008) : 1;
         const s = normalized.scale * pulse;
         groupRef.current.scale.set(s, s, s);
 
-        // Glow intensity based on risk change
         const baseIntensity = 0.03;
         const riskGlow = riskChange != null ? Math.min(0.15, Math.abs(riskChange) * 0.02) : 0;
         meshMaterials.forEach((mat) => { mat.emissiveIntensity = baseIntensity + riskGlow; });
@@ -166,38 +191,19 @@ function CharacterModel({ url, isSimulating, riskChange, isMale }) {
 
     return (
         <group ref={groupRef}
-               position={[-normalized.centerX * normalized.scale, -normalized.minY * normalized.scale - 0.44, -normalized.centerZ * normalized.scale]}>
+               position={[
+                   -normalized.centerX * normalized.scale,
+                   -normalized.minY * normalized.scale - 0.44,
+                   -normalized.centerZ * normalized.scale,
+               ]}>
             <primitive object={root} />
         </group>
     );
 }
 
 /* ── Scene ── */
-function SceneContent({ gender, isSimulating, riskChange, result, hoveredNode, onNodeHover }) {
+function SceneContent({ gender, isSimulating, result, onInspected }) {
     const url = gender === 'male' ? maleFbxUrl : femaleFbxUrl;
-
-    // Determine node colors based on result
-    const getNodeColor = (id) => {
-        if (!result) return '#8b5cf6'; // default purple
-        if (isSimulating) return '#facc15'; // yellow while simulating
-        const change = result.risk_change ?? 0;
-        if (change > 2) return '#ef4444';  // red = bad
-        if (change > 0) return '#f97316';  // orange = slight bad
-        if (change < -1) return '#10b981'; // green = good
-        return '#8b5cf6';
-    };
-
-    const getNodeLabel = (id) => {
-        if (!result) return null;
-        if (isSimulating) return 'Simulating…';
-        const change = result.risk_change ?? 0;
-        if (id === 'stomach') return change > 0 ? `Risk ↑ ${change.toFixed(2)}` : `Risk ↓ ${Math.abs(change).toFixed(2)}`;
-        if (id === 'pancreas') return change > 1 ? 'Insulin spike detected' : 'Insulin stable';
-        if (id === 'brain') return change > 1 ? 'Stress response elevated' : 'Normal regulation';
-        if (id === 'liver') return change > 1 ? 'Glucose processing ↑' : 'Normal metabolism';
-        if (id === 'thyroid') return 'Metabolic adjustment';
-        return null;
-    };
 
     return (
         <>
@@ -208,21 +214,13 @@ function SceneContent({ gender, isSimulating, riskChange, result, hoveredNode, o
             <pointLight position={[0, 2.2, 2]} intensity={0.35} color="#a78bfa" distance={5} />
 
             <Float speed={1.4} rotationIntensity={0} floatIntensity={0.15} floatingRange={[-0.02, 0.02]}>
-                <CharacterModel url={url} isSimulating={isSimulating} riskChange={result?.risk_change} isMale={gender === 'male'} />
-
-                {result && IMPACT_ZONES.map((node) => (
-                    <ImpactNode
-                        key={node.id}
-                        node={node}
-                        color={getNodeColor(node.id)}
-                        intensity={isSimulating ? 2.2 : 1.4}
-                        label={getNodeLabel(node.id)}
-                        isHovered={hoveredNode === node.id}
-                        onHover={onNodeHover}
-                    />
-                ))}
-
-                <HandResultCard result={result} isSimulating={isSimulating} />
+                <CharacterModel
+                    url={url}
+                    isSimulating={isSimulating}
+                    riskChange={result?.risk_change}
+                    isMale={gender === 'male'}
+                    onInspected={onInspected}
+                />
             </Float>
 
             <ContactShadows position={[0, -0.44, 0]} opacity={0.35} scale={2} blur={2.5} far={1.2} color="#4c1d95" />
@@ -245,114 +243,37 @@ function LoadingFallback() {
     );
 }
 
-/* ── Result Card held in character's hands ── */
-function HandResultCard({ result, isSimulating }) {
-    if (!result && !isSimulating) return null;
-    const change = result?.risk_change ?? 0;
-    const isGood = change <= 0;
-    const color = isGood ? '#10b981' : '#ef4444';
-
-    return (
-        <group position={[0, 0.5, 0.38]}>
-            <Html
-                center
-                distanceFactor={5}
-                transform
-                style={{ pointerEvents: 'none', userSelect: 'none' }}
-            >
-                <div style={{
-                    background: 'rgba(8,3,18,0.97)',
-                    backdropFilter: 'blur(24px)',
-                    border: `1.5px solid ${isSimulating ? '#a78bfa' : color}66`,
-                    borderRadius: 18,
-                    padding: '14px 18px',
-                    minWidth: 180,
-                    textAlign: 'center',
-                    boxShadow: `0 0 40px ${isSimulating ? '#7c3aed' : color}44, 0 8px 24px rgba(0,0,0,0.6)`,
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                    animation: 'cardEntrance 0.4s ease-out',
-                }}>
-                    <style>{`
-                        @keyframes cardEntrance {
-                            from { opacity:0; transform: scale(0.8) translateY(8px); }
-                            to   { opacity:1; transform: scale(1) translateY(0); }
-                        }
-                    `}</style>
-                    {isSimulating ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center', padding: '4px 0' }}>
-                            <div style={{ width: 14, height: 14, border: '2px solid rgba(167,139,250,0.3)', borderTopColor: '#a78bfa', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                            <span style={{ color: '#c4b5fd', fontSize: 12, fontWeight: 700 }}>Analyzing…</span>
-                        </div>
-                    ) : (
-                        <>
-                            <div style={{ color: '#6b5fa6', fontSize: 9, fontWeight: 800, letterSpacing: 2.5, marginBottom: 10, textTransform: 'uppercase' }}>Simulation Result</div>
-                            <div style={{ fontSize: 34, fontWeight: 900, color, lineHeight: 1, marginBottom: 2, textShadow: `0 0 20px ${color}88` }}>
-                                {change > 0 ? '+' : ''}{change.toFixed(2)}
-                            </div>
-                            <div style={{ color: '#6b5fa6', fontSize: 10, marginBottom: 10 }}>risk score change</div>
-                            {result?.risk_category_after && (
-                                <div style={{
-                                    background: `${color}18`, border: `1px solid ${color}33`,
-                                    borderRadius: 10, padding: '5px 12px',
-                                    fontSize: 11, fontWeight: 700, color,
-                                }}>
-                                    {result.risk_category_after}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
-            </Html>
-        </group>
-    );
-}
-
 /* ── Status overlay ── */
-function StatusOverlay({ isSimulating, result }) {
-    if (isSimulating) {
-        return (
+function StatusOverlay({ isSimulating }) {
+    if (!isSimulating) return null;
+    return (
+        <div style={{
+            position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+            background: 'rgba(124,58,237,0.9)', backdropFilter: 'blur(10px)',
+            borderRadius: 20, padding: '8px 20px',
+            display: 'flex', alignItems: 'center', gap: 10, zIndex: 10,
+        }}>
             <div style={{
-                position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-                background: 'rgba(124,58,237,0.9)', backdropFilter: 'blur(10px)',
-                borderRadius: 20, padding: '8px 20px',
-                display: 'flex', alignItems: 'center', gap: 10, zIndex: 10,
-            }}>
-                <div style={{
-                    width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)',
-                    borderTopColor: '#fff', borderRadius: '50%',
-                    animation: 'spin 0.8s linear infinite',
-                }} />
-                <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>Simulating impact…</span>
-            </div>
-        );
-    }
-    if (result) {
-        const change = result.risk_change ?? 0;
-        const isGood = change <= 0;
-        return (
-            <div style={{
-                position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-                background: isGood ? 'rgba(16,185,129,0.9)' : 'rgba(239,68,68,0.9)',
-                backdropFilter: 'blur(10px)', borderRadius: 20, padding: '8px 20px', zIndex: 10,
-            }}>
-                <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>
-                    {isGood ? '✓' : '⚠'} Risk {change > 0 ? '+' : ''}{change.toFixed(2)} — {result.risk_category_after}
-                </span>
-            </div>
-        );
-    }
-    return null;
+                width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)',
+                borderTopColor: '#fff', borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+            }} />
+            <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>Simulating impact…</span>
+        </div>
+    );
 }
 
 /* ── Main Component ── */
 export default function SimulationCharacter() {
-    const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [profile, setProfile]           = useState(null);
+    const [loading, setLoading]           = useState(true);
     const [isSimulating, setIsSimulating] = useState(false);
-    const [result, setResult] = useState(null);
-    const [hoveredNode, setHoveredNode] = useState(null);
-    const [canvasError, setCanvasError] = useState(null);
+    const [result, setResult]             = useState(null);
+    const [canvasError, setCanvasError]   = useState(null);
     const containerRef = useRef(null);
+    const charAnimRef  = useRef(null);
+
+    const handleInspected = useCallback(() => {}, []);
 
     // Fetch health profile
     useEffect(() => {
@@ -370,8 +291,30 @@ export default function SimulationCharacter() {
 
     // Listen for simulation events dispatched from Alpine.js
     useEffect(() => {
-        const handleStart = () => { setIsSimulating(true); setResult(null); };
-        const handleResult = (e) => { setIsSimulating(false); setResult(e.detail); };
+        const handleStart  = () => { setIsSimulating(true); setResult(null); };
+        const handleResult = (e) => {
+            setIsSimulating(false);
+            const detail = e.detail;
+            setResult(detail);
+
+            // Trigger character reaction based on result
+            // We need a small delay to let the Canvas re-render with the new result
+            // so the CharacterModel._anim ref is populated.
+            requestAnimationFrame(() => {
+                // Walk up from the canvas to find the charGroup's _anim handle
+                // stored via userData in CharacterModel's useEffect
+                if (charAnimRef.current) {
+                    const positive = (detail?.risk_change ?? 0) <= 0;
+                    charAnimRef.current.playSimReaction(positive);
+
+                    // If it's a one-shot reaction (clap), mixer 'finished' returns to idle.
+                    // For sad (loop), return to idle after 5 seconds.
+                    if (!positive) {
+                        setTimeout(() => charAnimRef.current?.returnToIdle(), 5000);
+                    }
+                }
+            });
+        };
         const handleReset = () => { setIsSimulating(false); setResult(null); };
 
         window.addEventListener('sim:start', handleStart);
@@ -415,12 +358,32 @@ export default function SimulationCharacter() {
                         gender={gender}
                         isSimulating={isSimulating}
                         result={result}
-                        hoveredNode={hoveredNode}
-                        onNodeHover={setHoveredNode}
+                        onInspected={handleInspected}
                     />
+                    {/* Invisible helper to capture the CharacterModel's imperative anim ref */}
+                    <CharAnimRefCapture targetRef={charAnimRef} />
                 </Suspense>
             </Canvas>
-            <StatusOverlay isSimulating={isSimulating} result={result} />
+
+            <StatusOverlay isSimulating={isSimulating} />
         </div>
     );
+}
+
+/* Helper: captures CharacterModel._anim from the scene graph into a parent ref.
+   Runs once per frame — near-zero cost. */
+function CharAnimRefCapture({ targetRef }) {
+    const { scene } = useThree();
+    const captured = useRef(false);
+
+    useFrame(() => {
+        if (captured.current && targetRef.current) return;
+        scene.traverse((child) => {
+            if (child.userData?._anim) {
+                targetRef.current = child.userData._anim;
+                captured.current  = true;
+            }
+        });
+    });
+    return null;
 }

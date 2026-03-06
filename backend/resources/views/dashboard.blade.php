@@ -35,6 +35,7 @@
 
 @section('content')
 <div id="twin-root" class="-m-4 sm:-m-6" style="min-height:calc(100vh - 56px)"></div>
+<div id="dashboard-tour-root" data-user-id="{{ Auth::id() }}"></div>
 @endsection
 
 @push('scripts')

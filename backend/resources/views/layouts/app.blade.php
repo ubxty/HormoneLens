@@ -96,7 +96,7 @@
                class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ $cur==='dashboard' ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
                 📊 Dashboard</a>
 
-            <a href="{{ route('health-profile') }}"
+            <a href="{{ route('health-profile') }}" data-tour-id="nav-health-profile"
                class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ $cur==='health-profile' ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
                 👤 Health Profile</a>
 
@@ -112,7 +112,7 @@
             <a href="{{ route('digital-twin') }}"
                class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ $cur==='digital-twin' ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
                 🧪 Digital Twin</a>
-            <a href="{{ route('simulations') }}"
+            <a href="{{ route('simulations') }}" data-tour-id="nav-simulations"
                class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ $cur==='simulations' ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
                 ⚡ Simulations</a>
             <a href="{{ route('food-impact') }}"
@@ -123,7 +123,7 @@
             <a href="{{ route('history') }}"
                class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ $cur==='history' ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
                 🕐 History</a>
-            <a href="{{ route('knowledge') }}"
+            <a href="{{ route('knowledge') }}" data-tour-id="nav-knowledge"
                class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ $cur==='knowledge' ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
                 📚 Knowledge Base</a>
 

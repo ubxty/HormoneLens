@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/dashboard-twin.jsx',
+                'resources/js/onboarding-app.jsx',
             ],
             refresh: true,
         }),

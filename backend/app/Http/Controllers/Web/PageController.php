@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Auth;
 
 class PageController extends Controller
 {
+    public function onboarding()
+    {
+        return view('onboarding');
+    }
+
     public function dashboard()
     {
         $user = Auth::user();

@@ -11,7 +11,7 @@
 @keyframes glF{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(25px,-18px) scale(1.04)}66%{transform:translate(-18px,12px) scale(.96)}}
 .gl-hero{background:linear-gradient(135deg,#5f6fff,#c24dff,#ff6ec7);border-radius:22px;position:relative;overflow:hidden}
 .gl-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 85% 25%,rgba(255,255,255,.14) 0%,transparent 55%);pointer-events:none}
-.gl-card{background:rgba(255,255,255,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.35);border-radius:16px;box-shadow:0 6px 24px rgba(95,111,255,.07);position:relative;overflow:hidden;transition:transform .4s cubic-bezier(.4,0,.2,1),box-shadow .4s ease,border-color .4s ease}
+.gl-card{background:rgba(255,255,255,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.35);border-radius:16px;box-shadow:0 6px 24px rgba(95,111,255,.07);position:relative;transition:transform .4s cubic-bezier(.4,0,.2,1),box-shadow .4s ease,border-color .4s ease;overflow:hidden}
 .gl-card::before{content:'';position:absolute;inset:0;border-radius:16px;padding:1.5px;background:linear-gradient(135deg,rgba(95,111,255,.25),rgba(194,77,255,.2),rgba(255,110,199,.15));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:0;transition:opacity .4s ease}
 .gl-card:hover::before{opacity:1}
 .gl-card:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(95,111,255,.13),0 0 18px rgba(194,77,255,.06);border-color:rgba(194,77,255,.15)}
@@ -30,7 +30,7 @@
 .gl-status-pulse{animation:glPulse 2s ease-in-out infinite}
 .gl-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
 
-.sim-character-panel{background:linear-gradient(180deg,rgba(88,28,135,.04) 0%,rgba(194,77,255,.06) 100%);border-radius:16px;position:relative;overflow:hidden;min-height:460px}
+.sim-character-panel{background:linear-gradient(180deg,rgba(88,28,135,.04) 0%,rgba(194,77,255,.06) 100%);border-radius:16px;position:relative;overflow:visible}
 .sim-character-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 80%,rgba(139,92,246,.08) 0%,transparent 60%);pointer-events:none}
 
 .result-card{background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.4);border-radius:12px;padding:12px;margin-bottom:10px;transition:all .3s ease}
@@ -71,11 +71,11 @@
             </div>
         </div>
 
-        <div class="grid lg:grid-cols-12 gap-4">
+        <div class="grid lg:grid-cols-12 gap-4 lg:items-stretch">
 
             {{-- Left Column: Form --}}
-            <div class="lg:col-span-4">
-                <div class="gl-card p-5 sticky top-20 gl-a gl-d1" data-gl>
+            <div class="lg:col-span-4 flex flex-col">
+                <div class="gl-card p-5 flex-1 sticky top-20 gl-a gl-d1" data-gl>
                     <div class="flex items-center gap-2 mb-4">
                         <div class="gl-icon bg-purple-100 text-purple-600">🎯</div>
                         <h2 class="text-xs font-bold uppercase tracking-widest gl-grad-text">Simulate</h2>
@@ -235,9 +235,9 @@
             </div>
 
             {{-- Center Column: 3D Character --}}
-            <div class="lg:col-span-5">
-                <div class="gl-card sim-character-panel gl-a gl-d2" data-gl>
-                    <div class="p-3 border-b border-white/20 flex items-center justify-between">
+            <div class="lg:col-span-5 flex flex-col">
+                <div class="gl-card sim-character-panel gl-a gl-d2 flex flex-col flex-1" data-gl>
+                    <div class="p-3 border-b border-white/20 flex items-center justify-between shrink-0">
                         <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-500">3D Digital Twin</span>
                         <div class="flex items-center gap-2">
                             <span x-show="running" class="text-[10px] font-bold text-purple-500 flex items-center gap-1.5">
@@ -250,10 +250,52 @@
                             </div>
                         </div>
                     </div>
-                    <div id="simulation-character-root" style="height:420px">
-                        <div class="flex items-center justify-center py-10">
+                    <div id="simulation-character-root" class="flex-1" style="min-height:480px">
+                        <div class="flex items-center justify-center h-full">
                             <div class="w-6 h-6 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
                         </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- Right Column: History --}}
+            <div class="lg:col-span-3 flex flex-col">
+                <div class="gl-card p-4 gl-a gl-d3" data-gl>
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="gl-icon bg-indigo-100 text-indigo-600" style="width:26px;height:26px;font-size:.8rem">📋</div>
+                        <h2 class="text-[10px] font-bold uppercase tracking-widest gl-grad-text">History</h2>
+                    </div>
+                    <div x-show="loading" class="text-center py-6"><div class="inline-block w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div></div>
+                    <div x-show="!loading && sims.length===0" class="text-center py-6">
+                        <div class="text-3xl mb-1">⚡</div>
+                        <p class="text-[10px] text-gray-400">No simulations yet</p>
+                    </div>
+                    <div class="space-y-2 max-h-[500px] overflow-y-auto" style="scrollbar-width:thin">
+                        <template x-for="s in sims" :key="s.id">
+                            <div class="gl-sim-item p-2.5 cursor-pointer" @click="s._open = !s._open">
+                                <div class="flex items-center gap-2">
+                                    <div class="gl-icon" style="width:24px;height:24px;font-size:.75rem;border-radius:8px"
+                                         :class="s.type==='meal'?'bg-orange-100 text-orange-600':s.type==='sleep'?'bg-blue-100 text-blue-600':s.type==='food_impact'?'bg-lime-100 text-lime-600':'bg-red-100 text-red-600'"
+                                         x-text="s.type==='meal'?'🍽️':s.type==='sleep'?'😴':s.type==='food_impact'?'🍛':'😰'"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[11px] font-semibold text-gray-700 truncate" x-text="s.input_data?.description || s.input_data?.food_item || s.type"></p>
+                                        <p class="text-[9px] text-gray-400" x-text="new Date(s.created_at).toLocaleString()"></p>
+                                    </div>
+                                    <span class="text-xs font-black" :class="s.risk_change>0?'text-red-500':'text-emerald-500'"
+                                          x-text="(s.risk_change>0?'+':'')+s.risk_change.toFixed(2)"></span>
+                                </div>
+                                <div x-show="s._open" x-collapse class="mt-2 text-[10px] border-t border-white/30 pt-2 space-y-1.5">
+                                    <p class="text-gray-500"><strong class="text-gray-700">Before:</strong> <span x-text="s.original_risk_score?.toFixed(2)"></span>
+                                       (<span class="capitalize" x-text="s.risk_category_before"></span>)
+                                       → <strong class="text-gray-700">After:</strong> <span x-text="s.simulated_risk_score?.toFixed(2)"></span>
+                                       (<span class="capitalize" x-text="s.risk_category_after"></span>)</p>
+                                    <div x-show="s.rag_explanation" class="bg-white/50 p-1.5 rounded-lg text-gray-500 text-[9px]">
+                                        💡 <span x-text="s.rag_explanation"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -311,47 +353,6 @@
                                 </div>
                             </template>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Right Column: History --}}
-            <div class="lg:col-span-3">
-                <div class="gl-card p-4 gl-a gl-d3" data-gl>
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="gl-icon bg-indigo-100 text-indigo-600" style="width:26px;height:26px;font-size:.8rem">📋</div>
-                        <h2 class="text-[10px] font-bold uppercase tracking-widest gl-grad-text">History</h2>
-                    </div>
-                    <div x-show="loading" class="text-center py-6"><div class="inline-block w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div></div>
-                    <div x-show="!loading && sims.length===0" class="text-center py-6">
-                        <div class="text-3xl mb-1">⚡</div>
-                        <p class="text-[10px] text-gray-400">No simulations yet</p>
-                    </div>
-                    <div class="space-y-2 max-h-[500px] overflow-y-auto" style="scrollbar-width:thin">
-                        <template x-for="s in sims" :key="s.id">
-                            <div class="gl-sim-item p-2.5 cursor-pointer" @click="s._open = !s._open">
-                                <div class="flex items-center gap-2">
-                                    <div class="gl-icon" style="width:24px;height:24px;font-size:.75rem;border-radius:8px"
-                                         :class="s.type==='meal'?'bg-orange-100 text-orange-600':s.type==='sleep'?'bg-blue-100 text-blue-600':s.type==='food_impact'?'bg-lime-100 text-lime-600':'bg-red-100 text-red-600'"
-                                         x-text="s.type==='meal'?'🍽️':s.type==='sleep'?'😴':s.type==='food_impact'?'🍛':'😰'"></div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-[11px] font-semibold text-gray-700 truncate" x-text="s.input_data?.description || s.input_data?.food_item || s.type"></p>
-                                        <p class="text-[9px] text-gray-400" x-text="new Date(s.created_at).toLocaleString()"></p>
-                                    </div>
-                                    <span class="text-xs font-black" :class="s.risk_change>0?'text-red-500':'text-emerald-500'"
-                                          x-text="(s.risk_change>0?'+':'')+s.risk_change.toFixed(2)"></span>
-                                </div>
-                                <div x-show="s._open" x-collapse class="mt-2 text-[10px] border-t border-white/30 pt-2 space-y-1.5">
-                                    <p class="text-gray-500"><strong class="text-gray-700">Before:</strong> <span x-text="s.original_risk_score?.toFixed(2)"></span>
-                                       (<span class="capitalize" x-text="s.risk_category_before"></span>)
-                                       → <strong class="text-gray-700">After:</strong> <span x-text="s.simulated_risk_score?.toFixed(2)"></span>
-                                       (<span class="capitalize" x-text="s.risk_category_after"></span>)</p>
-                                    <div x-show="s.rag_explanation" class="bg-white/50 p-1.5 rounded-lg text-gray-500 text-[9px]">
-                                        💡 <span x-text="s.rag_explanation"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
                     </div>
                 </div>
             </div>
