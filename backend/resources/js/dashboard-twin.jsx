@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import DigitalTwin3D from './components/DigitalTwin3D';
+import SimulationCharacter from './components/SimulationCharacter';
 
 class ErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { error: null }; }
@@ -22,6 +23,15 @@ if (el) {
     createRoot(el).render(
         <ErrorBoundary>
             <DigitalTwin3D />
+        </ErrorBoundary>
+    );
+}
+
+const simEl = document.getElementById('simulation-character-root');
+if (simEl) {
+    createRoot(simEl).render(
+        <ErrorBoundary>
+            <SimulationCharacter />
         </ErrorBoundary>
     );
 }
