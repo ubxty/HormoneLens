@@ -73,8 +73,8 @@ function ImpactNode({ node, color, intensity, label, isHovered, onHover }) {
     );
 }
 
-/* ── Character model loader ── */
-function useCharacter(url) {
+/* ── Character model loader — arms-down for any Mixamo T-pose ── */
+function useCharacter(url, isMale) {
     const source = useFBX(url);
     return useMemo(() => {
         const cloned = SkeletonUtils.clone(source);
@@ -89,14 +89,48 @@ function useCharacter(url) {
                 child.material.metalness = 0.05;
             }
         });
+
+        // Both male and female Mixamo FBX exports are T-pose — bring arms down for both.
+        // Mixamo bone naming variants:
+        //   "mixamorigLeftArm"   — standard Mixamo FBX (most common)
+        //   "mixamorig6:LeftArm" — older/numbered Mixamo exports
+        //   "mixamorig:LeftArm"  — legacy colon-style
+        {
+            const boneMap = {};
+            cloned.traverse((child) => { if (child.name) boneMap[child.name] = child; });
+
+            const get = (...names) => names.reduce((found, n) => found || boneMap[n], null);
+
+            const leftArm   = get('mixamorigLeftArm',   'mixamorig6:LeftArm',   'mixamorig:LeftArm',   'LeftArm');
+            const rightArm  = get('mixamorigRightArm',  'mixamorig6:RightArm',  'mixamorig:RightArm',  'RightArm');
+            const leftFore  = get('mixamorigLeftForeArm',  'mixamorig6:LeftForeArm',  'mixamorig:LeftForeArm',  'LeftForeArm');
+            const rightFore = get('mixamorigRightForeArm', 'mixamorig6:RightForeArm', 'mixamorig:RightForeArm', 'RightForeArm');
+            const leftHand  = get('mixamorigLeftHand',  'mixamorig6:LeftHand',  'mixamorig:LeftHand',  'LeftHand');
+            const rightHand = get('mixamorigRightHand', 'mixamorig6:RightHand', 'mixamorig:RightHand', 'RightHand');
+
+            if (!leftArm) {
+                const found = Object.keys(boneMap).filter(k => /arm|shoulder|hand/i.test(k));
+                console.warn('[SimChar] LeftArm bone not found. Arm-related bones:', found);
+            }
+
+            // T-pose: LeftArm extends +X, RightArm extends -X.
+            // Negative Z on LeftArm and positive Z on RightArm both rotate down.
+            if (leftArm)  leftArm.rotation.z  = -Math.PI * 0.5;
+            if (rightArm) rightArm.rotation.z =  Math.PI * 0.5;
+            if (leftFore)  leftFore.rotation.z  = -Math.PI * 0.06;
+            if (rightFore) rightFore.rotation.z =  Math.PI * 0.06;
+            if (leftHand)  leftHand.rotation.z  = 0;
+            if (rightHand) rightHand.rotation.z  = 0;
+        }
+
         return cloned;
-    }, [source]);
+    }, [source, isMale]);
 }
 
 /* ── Character mesh ── */
-function CharacterModel({ url, isSimulating, riskChange }) {
+function CharacterModel({ url, isSimulating, riskChange, isMale }) {
     const groupRef = useRef();
-    const root = useCharacter(url);
+    const root = useCharacter(url, isMale);
     const emissiveColor = useMemo(() => new THREE.Color('#6d28d9'), []);
 
     const normalized = useMemo(() => {
@@ -174,7 +208,7 @@ function SceneContent({ gender, isSimulating, riskChange, result, hoveredNode, o
             <pointLight position={[0, 2.2, 2]} intensity={0.35} color="#a78bfa" distance={5} />
 
             <Float speed={1.4} rotationIntensity={0} floatIntensity={0.15} floatingRange={[-0.02, 0.02]}>
-                <CharacterModel url={url} isSimulating={isSimulating} riskChange={result?.risk_change} />
+                <CharacterModel url={url} isSimulating={isSimulating} riskChange={result?.risk_change} isMale={gender === 'male'} />
 
                 {result && IMPACT_ZONES.map((node) => (
                     <ImpactNode
@@ -187,10 +221,13 @@ function SceneContent({ gender, isSimulating, riskChange, result, hoveredNode, o
                         onHover={onNodeHover}
                     />
                 ))}
+
+                <HandResultCard result={result} isSimulating={isSimulating} />
             </Float>
 
             <ContactShadows position={[0, -0.44, 0]} opacity={0.35} scale={2} blur={2.5} far={1.2} color="#4c1d95" />
             <OrbitControls enableZoom={false} enablePan={false}
+                           target={[0, 0.56, 0]}
                            minPolarAngle={Math.PI * 0.3} maxPolarAngle={Math.PI * 0.7}
                            autoRotate autoRotateSpeed={0.5} enableDamping dampingFactor={0.08} />
         </>
@@ -205,6 +242,68 @@ function LoadingFallback() {
             <boxGeometry args={[0.4, 1.2, 0.1]} />
             <meshStandardMaterial color="#7c3aed" transparent opacity={0.25} />
         </mesh>
+    );
+}
+
+/* ── Result Card held in character's hands ── */
+function HandResultCard({ result, isSimulating }) {
+    if (!result && !isSimulating) return null;
+    const change = result?.risk_change ?? 0;
+    const isGood = change <= 0;
+    const color = isGood ? '#10b981' : '#ef4444';
+
+    return (
+        <group position={[0, 0.5, 0.38]}>
+            <Html
+                center
+                distanceFactor={5}
+                transform
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
+                <div style={{
+                    background: 'rgba(8,3,18,0.97)',
+                    backdropFilter: 'blur(24px)',
+                    border: `1.5px solid ${isSimulating ? '#a78bfa' : color}66`,
+                    borderRadius: 18,
+                    padding: '14px 18px',
+                    minWidth: 180,
+                    textAlign: 'center',
+                    boxShadow: `0 0 40px ${isSimulating ? '#7c3aed' : color}44, 0 8px 24px rgba(0,0,0,0.6)`,
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    animation: 'cardEntrance 0.4s ease-out',
+                }}>
+                    <style>{`
+                        @keyframes cardEntrance {
+                            from { opacity:0; transform: scale(0.8) translateY(8px); }
+                            to   { opacity:1; transform: scale(1) translateY(0); }
+                        }
+                    `}</style>
+                    {isSimulating ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center', padding: '4px 0' }}>
+                            <div style={{ width: 14, height: 14, border: '2px solid rgba(167,139,250,0.3)', borderTopColor: '#a78bfa', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                            <span style={{ color: '#c4b5fd', fontSize: 12, fontWeight: 700 }}>Analyzing…</span>
+                        </div>
+                    ) : (
+                        <>
+                            <div style={{ color: '#6b5fa6', fontSize: 9, fontWeight: 800, letterSpacing: 2.5, marginBottom: 10, textTransform: 'uppercase' }}>Simulation Result</div>
+                            <div style={{ fontSize: 34, fontWeight: 900, color, lineHeight: 1, marginBottom: 2, textShadow: `0 0 20px ${color}88` }}>
+                                {change > 0 ? '+' : ''}{change.toFixed(2)}
+                            </div>
+                            <div style={{ color: '#6b5fa6', fontSize: 10, marginBottom: 10 }}>risk score change</div>
+                            {result?.risk_category_after && (
+                                <div style={{
+                                    background: `${color}18`, border: `1px solid ${color}33`,
+                                    borderRadius: 10, padding: '5px 12px',
+                                    fontSize: 11, fontWeight: 700, color,
+                                }}>
+                                    {result.risk_category_after}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </Html>
+        </group>
     );
 }
 
@@ -252,6 +351,8 @@ export default function SimulationCharacter() {
     const [isSimulating, setIsSimulating] = useState(false);
     const [result, setResult] = useState(null);
     const [hoveredNode, setHoveredNode] = useState(null);
+    const [canvasError, setCanvasError] = useState(null);
+    const containerRef = useRef(null);
 
     // Fetch health profile
     useEffect(() => {
@@ -284,21 +385,30 @@ export default function SimulationCharacter() {
     }, []);
 
     if (loading) return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 480 }}>
             <div style={{ width: 32, height: 32, border: '3px solid #e9d5ff', borderTopColor: '#7c3aed', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
     );
 
     const gender = profile?.gender || 'female';
 
+    if (canvasError) return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 480, color: '#6b7280', fontFamily: 'system-ui' }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🧍</div>
+            <p style={{ fontSize: 12, fontWeight: 600 }}>3D model loading failed</p>
+            <p style={{ fontSize: 10, color: '#9ca3af', marginTop: 4 }}>{canvasError}</p>
+        </div>
+    );
+
     return (
-        <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 420 }}>
+        <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%', minHeight: 480 }}>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             <Canvas
-                camera={{ position: [0, 0.85, 3.4], fov: 36, near: 0.1, far: 50 }}
+                camera={{ position: [0, 0.56, 3.2], fov: 42, near: 0.1, far: 50 }}
                 gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
                 dpr={[1, 1.5]}
-                style={{ background: 'transparent' }}
+                style={{ background: 'transparent', width: '100%', height: '100%' }}
+                onCreated={({ gl }) => { gl.setClearColor(0x000000, 0); }}
             >
                 <Suspense fallback={<LoadingFallback />}>
                     <SceneContent
