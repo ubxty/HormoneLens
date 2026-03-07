@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DigitalTwinController;
 use App\Http\Controllers\DiseaseController;
+use App\Http\Controllers\FoodCompareController;
 use App\Http\Controllers\FoodImpactController;
 use App\Http\Controllers\HealthProfileController;
 use App\Http\Controllers\HistoryController;
@@ -74,6 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── Food Impact ──────────────────────────────────
     Route::post('/food-impact', FoodImpactController::class);
+    Route::post('/food-compare', FoodCompareController::class);
 
     // ── Alerts ───────────────────────────────────────
     Route::prefix('alerts')->group(function () {

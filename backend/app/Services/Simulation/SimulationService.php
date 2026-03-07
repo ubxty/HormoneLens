@@ -13,6 +13,7 @@ use App\Services\AI\PromptTemplates;
 use App\Services\Alerts\AlertService;
 use App\Services\DigitalTwin\DigitalTwinService;
 use App\Services\Risk\RiskEngineService;
+use App\Services\Simulation\GlucoseCurveService;
 
 class SimulationService
 {
@@ -23,6 +24,7 @@ class SimulationService
         private readonly RagSearchInterface $ragSearch,
         private readonly SimulationRepository $simulationRepo,
         private readonly BedrockService $bedrock,
+        private readonly GlucoseCurveService $glucoseCurve,
     ) {}
 
     /**
@@ -104,6 +106,10 @@ class SimulationService
         $snapshotData = $twin->snapshot_data;
         $diseaseContext = $snapshotData['health_profile']['disease_type'] ?? null;
         $foodItem = $input['food_item'];
+        $mealTime = $input['meal_time'] ?? null;
+
+        // Generate glucose curve prediction with cross-factor interactions
+        $curveResult = $this->glucoseCurve->predict($foodItem, $snapshotData, $mealTime);
 
         // Get RAG explanation for food impact
         $ragResult = $this->ragSearch->search(
@@ -111,8 +117,8 @@ class SimulationService
             $diseaseContext
         );
 
-        // Apply food-specific modifiers
-        $modifiedData = $this->applyFoodModifier($snapshotData, $foodItem, $ragResult);
+        // Apply food-specific modifiers using curve data
+        $modifiedData = $this->applyFoodModifier($snapshotData, $foodItem, $ragResult, $curveResult);
 
         // Recalculate risk
         $newScores = $this->riskEngine->recalculateFromSnapshot($modifiedData);
@@ -122,9 +128,10 @@ class SimulationService
 
         // Build alternatives (AI-enhanced when available)
         $aiFoodAnalysis = $this->generateFoodAnalysis($foodItem, $diseaseContext, $ragResult);
+        $dbAlternatives = $curveResult['food']['alternatives'] ?? [];
         $alternatives = $aiFoodAnalysis['success']
             ? $this->parseAIAlternatives($aiFoodAnalysis['response'], $foodItem)
-            : $this->buildFoodAlternatives($foodItem);
+            : (!empty($dbAlternatives) ? $dbAlternatives : $this->buildFoodAlternatives($foodItem));
 
         // Store simulation
         $simulation = $this->simulationRepo->create([
@@ -144,6 +151,12 @@ class SimulationService
                 'scores' => $newScores,
                 'alternatives' => $alternatives,
                 'reasoning_path' => $ragResult['reasoning_path'],
+                'glucose_curve' => $curveResult['curve'],
+                'peak' => $curveResult['peak'],
+                'recovery_minutes' => $curveResult['recovery_minutes'],
+                'baseline_mg_dl' => $curveResult['baseline_mg_dl'],
+                'food_data' => $curveResult['food'],
+                'modifiers' => $curveResult['modifiers'],
                 'ai_metadata' => $aiFoodAnalysis['success'] ? [
                     'model'  => $aiFoodAnalysis['model_used'],
                     'tokens' => $aiFoodAnalysis['input_tokens'] + $aiFoodAnalysis['output_tokens'],
@@ -207,31 +220,36 @@ class SimulationService
      * Apply food-specific modifiers based on glycemic impact estimation.
      * Works dynamically across all disease data in the snapshot.
      */
-    private function applyFoodModifier(array $snapshot, string $foodItem, array $ragResult): array
+    private function applyFoodModifier(array $snapshot, string $foodItem, array $ragResult, array $curveResult = []): array
     {
         $modified = $snapshot;
         $foodLower = strtolower($foodItem);
 
-        // High glycemic foods increase blood sugar
-        $highGiFoods = ['white rice', 'sugar', 'candy', 'soda', 'white bread', 'potato', 'fries',
-            'pastry', 'cake', 'jalebi', 'gulab jamun', 'maida', 'pizza', 'naan'];
-        $lowGiFoods = ['brown rice', 'quinoa', 'oats', 'salad', 'vegetables', 'dal', 'lentils',
-            'sprouts', 'nuts', 'yogurt', 'curd'];
+        // Use curve data for glycemic classification
+        $gi = $curveResult['food']['glycemic_index'] ?? null;
+        $spike = $curveResult['peak']['glucose_mg_dl'] ?? null;
+        $baseline = $curveResult['baseline_mg_dl'] ?? 100;
 
-        $isHighGi = false;
-        $isLowGi = false;
+        if ($gi !== null) {
+            $isHighGi = $gi >= 60;
+            $isLowGi = $gi <= 45;
+            $adjustedSpike = $spike ? ($spike - $baseline) : ($isHighGi ? 40 : ($isLowGi ? -15 : 10));
+        } else {
+            // Legacy fallback for hardcoded foods
+            $highGiFoods = ['white rice', 'sugar', 'candy', 'soda', 'white bread', 'potato', 'fries',
+                'pastry', 'cake', 'jalebi', 'gulab jamun', 'maida', 'pizza', 'naan'];
+            $lowGiFoods = ['brown rice', 'quinoa', 'oats', 'salad', 'vegetables', 'dal', 'lentils',
+                'sprouts', 'nuts', 'yogurt', 'curd'];
 
-        foreach ($highGiFoods as $food) {
-            if (str_contains($foodLower, $food)) {
-                $isHighGi = true;
-                break;
+            $isHighGi = false;
+            $isLowGi = false;
+            foreach ($highGiFoods as $food) {
+                if (str_contains($foodLower, $food)) { $isHighGi = true; break; }
             }
-        }
-        foreach ($lowGiFoods as $food) {
-            if (str_contains($foodLower, $food)) {
-                $isLowGi = true;
-                break;
+            foreach ($lowGiFoods as $food) {
+                if (str_contains($foodLower, $food)) { $isLowGi = true; break; }
             }
+            $adjustedSpike = $isHighGi ? 40 : ($isLowGi ? -15 : 10);
         }
 
         // Apply blood sugar modifiers to any disease that has avg_blood_sugar
@@ -241,18 +259,15 @@ class SimulationService
             }
 
             if (isset($data['avg_blood_sugar'])) {
+                $newSugar = ($data['avg_blood_sugar'] ?? 120) + $adjustedSpike;
+                $data['avg_blood_sugar'] = (float) min(350, max(70, $newSugar));
                 if ($isHighGi) {
-                    $data['avg_blood_sugar'] = min(350, ($data['avg_blood_sugar'] ?? 120) + 40);
                     $data['sugar_cravings'] = $data['sugar_cravings'] ?? 'frequent';
-                } elseif ($isLowGi) {
-                    $data['avg_blood_sugar'] = max(70, ($data['avg_blood_sugar'] ?? 120) - 15);
-                    if (isset($data['sugar_cravings'])) {
-                        $data['sugar_cravings'] = 'rare';
-                    }
+                } elseif ($isLowGi && isset($data['sugar_cravings'])) {
+                    $data['sugar_cravings'] = 'rare';
                 }
             }
 
-            // Also affect sugar cravings even for diseases without blood sugar
             if (!isset($data['avg_blood_sugar']) && isset($data['sugar_cravings'])) {
                 if ($isHighGi) {
                     $data['sugar_cravings'] = 'frequent';
