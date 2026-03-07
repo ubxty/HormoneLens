@@ -50,4 +50,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/reports',            [AdminPageController::class, 'reports'])->name('reports');
     Route::get('/rag',                [AdminPageController::class, 'rag'])->name('rag');
     Route::get('/rag/documents/{id}', [AdminPageController::class, 'ragDocument'])->name('rag.document');
+    Route::get('/bedrock',            [AdminPageController::class, 'bedrock'])->name('bedrock');
+    Route::get('/bedrock/models',     [AdminPageController::class, 'bedrockModels'])->name('bedrock.models');
+    Route::get('/bedrock/usage',      [AdminPageController::class, 'bedrockUsage'])->name('bedrock.usage');
 });

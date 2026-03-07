@@ -15,4 +15,7 @@ class PageController extends Controller
     public function reports()       { return view('admin.reports'); }
     public function rag()           { return view('admin.rag.index'); }
     public function ragDocument($id){ return view('admin.rag.document', compact('id')); }
+    public function bedrock()       { return view('admin.bedrock.index'); }
+    public function bedrockModels() { return view('admin.bedrock.models'); }
+    public function bedrockUsage()  { return view('admin.bedrock.usage'); }
 }

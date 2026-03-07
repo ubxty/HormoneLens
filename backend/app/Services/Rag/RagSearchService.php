@@ -46,7 +46,8 @@ class RagSearchService implements RagSearchInterface
         // Step 4: Build answer from terminal nodes
         $answerData = $this->answerBuilder->build(
             $traversalResult['terminal_nodes'],
-            $traversalResult['path']
+            $traversalResult['path'],
+            $question
         );
 
         // Step 5: Calculate confidence
@@ -68,6 +69,7 @@ class RagSearchService implements RagSearchInterface
             'source_nodes' => $sourceNodes,
             'source_pages' => $answerData['source_pages'],
             'confidence' => $confidenceScore,
+            'ai_metadata' => $answerData['ai_metadata'] ?? null,
         ];
     }
 
@@ -98,6 +100,7 @@ class RagSearchService implements RagSearchInterface
             'source_nodes' => [],
             'source_pages' => [],
             'confidence' => 0.0,
+            'ai_metadata' => null,
         ];
     }
 }

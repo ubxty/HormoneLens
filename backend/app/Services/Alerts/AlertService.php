@@ -8,6 +8,8 @@ use App\Models\Alert;
 use App\Models\User;
 use App\Repositories\AlertRepository;
 use App\Repositories\SimulationRepository;
+use App\Services\AI\BedrockService;
+use App\Services\AI\PromptTemplates;
 use Illuminate\Support\Collection;
 
 class AlertService
@@ -15,6 +17,7 @@ class AlertService
     public function __construct(
         private readonly AlertRepository $alertRepo,
         private readonly SimulationRepository $simulationRepo,
+        private readonly BedrockService $bedrock,
     ) {}
 
     /**
@@ -82,15 +85,34 @@ class AlertService
         string $title,
         string $message
     ): Alert {
+        $enhanced = $this->enhanceAlertMessage($type, $severity, $title, $message);
+
         return $this->alertRepo->create([
             'user_id' => $user->id,
             'simulation_id' => $simulationId,
             'type' => $type->value,
             'title' => $title,
-            'message' => $message,
+            'message' => $enhanced,
             'severity' => $severity->value,
             'is_read' => false,
         ]);
+    }
+
+    /**
+     * Enhance alert message with AI-generated contextual advice using fast model.
+     */
+    private function enhanceAlertMessage(AlertType $type, Severity $severity, string $title, string $message): string
+    {
+        $prompt = PromptTemplates::alertContext()
+            . "\n\nAlert Type: {$type->value}"
+            . "\nSeverity: {$severity->value}"
+            . "\nTitle: {$title}"
+            . "\nOriginal Message: {$message}"
+            . "\n\nEnhance the message with a brief, actionable recommendation (max 2 sentences). Keep the original meaning.";
+
+        $result = $this->bedrock->ask($prompt, 'fast');
+
+        return $result['success'] ? $result['response'] : $message;
     }
 
     private function isHighGlycemicFood(array $inputData, string $ragExplanation): bool

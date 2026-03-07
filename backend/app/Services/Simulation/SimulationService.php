@@ -7,6 +7,8 @@ use App\Enums\SimulationType;
 use App\Models\Simulation;
 use App\Models\User;
 use App\Repositories\SimulationRepository;
+use App\Services\AI\BedrockService;
+use App\Services\AI\PromptTemplates;
 use App\Services\Alerts\AlertService;
 use App\Services\DigitalTwin\DigitalTwinService;
 use App\Services\Risk\RiskEngineService;
@@ -19,6 +21,7 @@ class SimulationService
         private readonly AlertService $alertService,
         private readonly RagSearchInterface $ragSearch,
         private readonly SimulationRepository $simulationRepo,
+        private readonly BedrockService $bedrock,
     ) {}
 
     /**
@@ -47,6 +50,9 @@ class SimulationService
         $diseaseContext = $snapshotData['health_profile']['disease_type'] ?? null;
         $ragResult = $this->ragSearch->search($input['description'] ?? $input['type'], $diseaseContext);
 
+        // Generate AI-enhanced explanation
+        $aiExplanation = $this->generateAIExplanation($type, $input, $originalRisk, $simulatedRisk, $ragResult);
+
         // Store simulation
         $simulation = $this->simulationRepo->create([
             'user_id' => $user->id,
@@ -59,11 +65,16 @@ class SimulationService
             'risk_change' => $riskChange,
             'risk_category_before' => $twin->risk_category->value,
             'risk_category_after' => $newScores['risk_category'],
-            'rag_explanation' => $ragResult['answer'],
+            'rag_explanation' => $aiExplanation['response'],
             'rag_confidence' => $ragResult['confidence'],
             'results' => [
                 'scores' => $newScores,
                 'reasoning_path' => $ragResult['reasoning_path'],
+                'ai_metadata' => $aiExplanation['success'] ? [
+                    'model'  => $aiExplanation['model_used'],
+                    'tokens' => $aiExplanation['input_tokens'] + $aiExplanation['output_tokens'],
+                    'cost'   => $aiExplanation['cost'],
+                ] : null,
             ],
         ]);
 
@@ -108,8 +119,11 @@ class SimulationService
         $simulatedRisk = (float) $newScores['overall_risk_score'];
         $riskChange = round($simulatedRisk - $originalRisk, 2);
 
-        // Build alternatives
-        $alternatives = $this->buildFoodAlternatives($foodItem);
+        // Build alternatives (AI-enhanced when available)
+        $aiFoodAnalysis = $this->generateFoodAnalysis($foodItem, $diseaseContext, $ragResult);
+        $alternatives = $aiFoodAnalysis['success']
+            ? $this->parseAIAlternatives($aiFoodAnalysis['response'], $foodItem)
+            : $this->buildFoodAlternatives($foodItem);
 
         // Store simulation
         $simulation = $this->simulationRepo->create([
@@ -123,12 +137,17 @@ class SimulationService
             'risk_change' => $riskChange,
             'risk_category_before' => $twin->risk_category->value,
             'risk_category_after' => $newScores['risk_category'],
-            'rag_explanation' => $ragResult['answer'],
+            'rag_explanation' => $aiFoodAnalysis['success'] ? $aiFoodAnalysis['response'] : $ragResult['answer'],
             'rag_confidence' => $ragResult['confidence'],
             'results' => [
                 'scores' => $newScores,
                 'alternatives' => $alternatives,
                 'reasoning_path' => $ragResult['reasoning_path'],
+                'ai_metadata' => $aiFoodAnalysis['success'] ? [
+                    'model'  => $aiFoodAnalysis['model_used'],
+                    'tokens' => $aiFoodAnalysis['input_tokens'] + $aiFoodAnalysis['output_tokens'],
+                    'cost'   => $aiFoodAnalysis['cost'],
+                ] : null,
             ],
         ]);
 
@@ -272,5 +291,48 @@ class SimulationService
         }
 
         return ['Consider whole grain alternatives', 'Add more vegetables to your meal', 'Choose low-glycemic options'];
+    }
+
+    /**
+     * Generate AI-enhanced explanation for lifestyle simulation.
+     */
+    private function generateAIExplanation(SimulationType $type, array $input, float $originalRisk, float $simulatedRisk, array $ragResult): array
+    {
+        $prompt = PromptTemplates::simulationExplanation()
+            . "\n\nSimulation Type: {$type->value}"
+            . "\nChanges Made: " . json_encode($input)
+            . "\nRisk Score Change: {$originalRisk} → {$simulatedRisk}"
+            . "\nKnowledge Base Context: " . ($ragResult['answer'] ?? 'No context available');
+
+        return $this->bedrock->ask($prompt);
+    }
+
+    /**
+     * Generate AI-enhanced food impact analysis.
+     */
+    private function generateFoodAnalysis(string $foodItem, ?string $diseaseContext, array $ragResult): array
+    {
+        $prompt = PromptTemplates::foodImpact()
+            . "\n\nFood Item: {$foodItem}"
+            . "\nCondition: " . ($diseaseContext ?? 'general hormonal health')
+            . "\nKnowledge Base Context: " . ($ragResult['answer'] ?? 'No context available')
+            . "\n\nProvide: 1) Impact analysis 2) Three healthier alternatives as a JSON array under key 'alternatives'";
+
+        return $this->bedrock->ask($prompt);
+    }
+
+    /**
+     * Parse AI-generated food alternatives, falling back to static list.
+     */
+    private function parseAIAlternatives(string $aiResponse, string $foodItem): array
+    {
+        if (preg_match('/\[.*?\]/s', $aiResponse, $matches)) {
+            $parsed = json_decode($matches[0], true);
+            if (is_array($parsed) && count($parsed) > 0) {
+                return array_slice($parsed, 0, 5);
+            }
+        }
+
+        return $this->buildFoodAlternatives($foodItem);
     }
 }

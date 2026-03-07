@@ -98,6 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── RAG Knowledge Base ───────────────────────────
     Route::middleware('throttle:rag')->post('/rag/query', RagController::class);
+    Route::middleware('throttle:rag')->post('/rag/query-stream', [RagController::class, 'stream']);
 
     /*
     |----------------------------------------------------------------------
@@ -132,6 +133,17 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/pages', [\App\Http\Controllers\Admin\RagManagementController::class, 'storePage']);
             Route::put('/pages/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'updatePage']);
             Route::delete('/pages/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'destroyPage']);
+        });
+
+        // ── Bedrock AI Management ────────────────────
+        Route::prefix('bedrock')->group(function () {
+            Route::get('/status', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'status']);
+            Route::get('/models', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'models']);
+            Route::get('/usage', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'usage']);
+            Route::get('/pricing', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'pricing']);
+            Route::post('/test', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'test']);
+            Route::get('/settings', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'settings']);
+            Route::put('/settings', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'updateSettings']);
         });
     });
 });

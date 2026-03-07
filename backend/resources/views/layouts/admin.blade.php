@@ -245,6 +245,14 @@
                 <span class="text-sm">🚨</span> Alert Oversight</a>
             <a href="{{ route('admin.rag') }}" class="adm-nav-item {{ str_starts_with($cur,'admin.rag') ? 'adm-nav-active' : '' }}">
                 <span class="text-sm">📚</span> Knowledge Base</a>
+
+            <p class="px-3 pt-4 pb-1 text-[10px] font-bold text-white/30 uppercase tracking-widest">AI Engine</p>
+            <a href="{{ route('admin.bedrock') }}" class="adm-nav-item {{ $cur === 'admin.bedrock' ? 'adm-nav-active' : '' }}">
+                <span class="text-sm">🤖</span> AI Dashboard</a>
+            <a href="{{ route('admin.bedrock.models') }}" class="adm-nav-item {{ $cur === 'admin.bedrock.models' ? 'adm-nav-active' : '' }}">
+                <span class="text-sm">🧠</span> Models</a>
+            <a href="{{ route('admin.bedrock.usage') }}" class="adm-nav-item {{ $cur === 'admin.bedrock.usage' ? 'adm-nav-active' : '' }}">
+                <span class="text-sm">💰</span> Usage & Costs</a>
         </nav>
 
         {{-- Admin user --}}

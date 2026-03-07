@@ -15,6 +15,8 @@ class RagAnswerResource extends JsonResource
             'source_nodes' => $this['source_nodes'],
             'pages' => $this['source_pages'],
             'confidence' => round($this['confidence'] / 100, 2),
+            'ai_powered' => !empty($this['ai_metadata']),
+            'ai_metadata' => $this['ai_metadata'] ?? null,
         ];
     }
 }
