@@ -90,6 +90,14 @@ class BedrockService
     }
 
     /**
+     * Check if Bedrock is configured (lightweight, no API call).
+     */
+    public function isConfigured(): bool
+    {
+        return Bedrock::isConfigured();
+    }
+
+    /**
      * Check if Bedrock is configured and reachable.
      */
     public function isAvailable(): bool

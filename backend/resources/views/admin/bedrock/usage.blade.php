@@ -15,6 +15,12 @@
             <a href="{{ route('admin.bedrock') }}" class="adm-badge bg-white/60 hover:bg-white/80 text-gray-600 cursor-pointer transition px-3 py-1.5">← Back</a>
         </div>
 
+        {{-- Usage error --}}
+        <div x-show="usageError" class="adm-card p-4 border-l-4 border-amber-400 adm-a adm-d0" data-adm data-testid="usage-error">
+            <p class="text-xs font-bold text-amber-700">⚠ Usage data unavailable</p>
+            <p class="text-[10px] text-amber-600 mt-0.5" x-text="usageError"></p>
+        </div>
+
         {{-- Usage summary cards --}}
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="adm-card relative p-5 adm-a adm-d0" data-adm>
@@ -37,6 +43,12 @@
                     $<span x-text="(usage.monthly_cost ?? 0).toFixed(4)"></span>
                 </p>
             </div>
+        </div>
+
+        {{-- Pricing error --}}
+        <div x-show="pricingError" class="adm-card p-4 border-l-4 border-amber-400 adm-a adm-d0" data-adm data-testid="pricing-error">
+            <p class="text-xs font-bold text-amber-700">⚠ Pricing data unavailable</p>
+            <p class="text-[10px] text-amber-600 mt-0.5" x-text="pricingError"></p>
         </div>
 
         {{-- Pricing info --}}
@@ -77,18 +89,39 @@ function bedrockUsage() {
         loading: true,
         usage: {},
         pricing: {},
+        usageError: '',
+        pricingError: '',
 
         async init() {
-            try {
-                const [usageRes, pricingRes] = await Promise.all([
-                    api.get('/admin/bedrock/usage'),
-                    api.get('/admin/bedrock/pricing'),
-                ]);
-                this.usage = usageRes || {};
-                this.pricing = pricingRes || {};
-            } catch (e) {
-                toast('Failed to load usage data', 'error');
+            const results = await Promise.allSettled([
+                api.get('/admin/bedrock/usage'),
+                api.get('/admin/bedrock/pricing'),
+            ]);
+
+            // Usage
+            if (results[0].status === 'fulfilled') {
+                const res = results[0].value;
+                if (res.success === false) {
+                    this.usageError = res.error || 'Failed to load usage data';
+                } else {
+                    this.usage = res.data || res || {};
+                }
+            } else {
+                this.usageError = 'Network error loading usage data';
             }
+
+            // Pricing
+            if (results[1].status === 'fulfilled') {
+                const res = results[1].value;
+                if (res.success === false) {
+                    this.pricingError = res.error || 'Failed to load pricing data';
+                } else {
+                    this.pricing = res.data || res || {};
+                }
+            } else {
+                this.pricingError = 'Network error loading pricing data';
+            }
+
             this.loading = false;
             this.$nextTick(() => admAnimate());
         }

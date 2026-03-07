@@ -27,15 +27,30 @@ class RagServiceProvider extends ServiceProvider
                 $secret = \App\Models\AiSetting::getValue('bedrock_aws_secret');
                 $region = \App\Models\AiSetting::getValue('bedrock_region');
 
-                if ($key && $secret) {
-                    config([
-                        'bedrock.connections.default.keys' => [[
-                            'label'      => 'Admin-configured',
-                            'aws_key'    => $key,
-                            'aws_secret' => $secret,
-                            'region'     => $region ?: config('bedrock.connections.default.keys.0.region', 'us-east-1'),
-                        ]],
-                    ]);
+                if ($key) {
+                    // Bearer mode (ABSK tokens) doesn't need a secret — use a
+                    // placeholder so the vendor package's isConfigured() check passes.
+                    $isBearerMode = str_starts_with($key, 'ABSK');
+                    $effectiveSecret = $isBearerMode ? 'bearer-mode' : $secret;
+
+                    if ($isBearerMode || $effectiveSecret) {
+                        config([
+                            'bedrock.connections.default.keys' => [[
+                                'label'      => 'Admin-configured',
+                                'aws_key'    => $key,
+                                'aws_secret' => $effectiveSecret,
+                                'region'     => $region ?: config('bedrock.connections.default.keys.0.region', 'us-east-1'),
+                            ]],
+                        ]);
+                    }
+                }
+
+                // Load model alias overrides
+                foreach (['default', 'smart', 'fast'] as $alias) {
+                    $modelId = \App\Models\AiSetting::getValue("bedrock_model_{$alias}");
+                    if ($modelId) {
+                        config(["bedrock.aliases.{$alias}" => $modelId]);
+                    }
                 }
             }
         } catch (\Throwable $e) {

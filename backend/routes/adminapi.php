@@ -70,5 +70,7 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
         Route::put('/settings', [BedrockManagementController::class, 'updateSettings']);
         Route::get('/credentials', [BedrockManagementController::class, 'credentials']);
         Route::put('/credentials', [BedrockManagementController::class, 'updateCredentials']);
+        Route::get('/model-aliases', [BedrockManagementController::class, 'modelAliases']);
+        Route::put('/model-aliases', [BedrockManagementController::class, 'updateModelAliases']);
     });
 });
