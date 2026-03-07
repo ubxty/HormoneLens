@@ -49,32 +49,29 @@ class RagController extends Controller
             userId: $request->user()->id,
         );
 
-        $answer = $result['answer'] ?? '';
-        $prompt = PromptTemplates::ragSynthesis()
-            . "\n\nKnowledge Base:\n" . $answer
-            . "\n\nQuestion: " . $question;
+        $systemPrompt = PromptTemplates::ragSynthesis();
+        $userMessage = "Knowledge Base:\n" . ($result['answer'] ?? '') . "\n\nQuestion: " . $question;
 
-        return response()->stream(function () use ($prompt, $result) {
+        return response()->stream(function () use ($systemPrompt, $userMessage, $result) {
             // Send metadata first
             echo "data: " . json_encode(['type' => 'meta', 'confidence' => $result['confidence'], 'sources' => count($result['source_pages'] ?? [])]) . "\n\n";
             ob_flush();
             flush();
 
-            // Stream AI response
-            $streamResult = $this->bedrock->stream($prompt);
-
-            if (!$streamResult['success']) {
-                echo "data: " . json_encode(['type' => 'chunk', 'text' => $result['answer'] ?? 'No answer available.']) . "\n\n";
-                echo "data: " . json_encode(['type' => 'done']) . "\n\n";
-                ob_flush();
-                flush();
-                return;
+            // Stream AI response via onChunk callback
+            $failed = false;
+            try {
+                $this->bedrock->stream($systemPrompt, $userMessage, function (string $chunk) {
+                    echo "data: " . json_encode(['type' => 'chunk', 'text' => $chunk]) . "\n\n";
+                    ob_flush();
+                    flush();
+                });
+            } catch (\Throwable $e) {
+                $failed = true;
             }
 
-            foreach ($streamResult['stream'] as $chunk) {
-                echo "data: " . json_encode(['type' => 'chunk', 'text' => $chunk]) . "\n\n";
-                ob_flush();
-                flush();
+            if ($failed) {
+                echo "data: " . json_encode(['type' => 'chunk', 'text' => $result['answer'] ?? 'No answer available.']) . "\n\n";
             }
 
             echo "data: " . json_encode(['type' => 'done']) . "\n\n";

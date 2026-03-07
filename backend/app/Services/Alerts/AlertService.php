@@ -4,6 +4,7 @@ namespace App\Services\Alerts;
 
 use App\Enums\AlertType;
 use App\Enums\Severity;
+use App\Models\AiSetting;
 use App\Models\Alert;
 use App\Models\User;
 use App\Repositories\AlertRepository;
@@ -103,14 +104,20 @@ class AlertService
      */
     private function enhanceAlertMessage(AlertType $type, Severity $severity, string $title, string $message): string
     {
-        $prompt = PromptTemplates::alertContext()
-            . "\n\nAlert Type: {$type->value}"
+        if (!AiSetting::getValue('alert_ai_enhancement', true)) {
+            return $message;
+        }
+
+        $systemPrompt = PromptTemplates::alertContext();
+        $userMessage = "Alert Type: {$type->value}"
             . "\nSeverity: {$severity->value}"
             . "\nTitle: {$title}"
             . "\nOriginal Message: {$message}"
             . "\n\nEnhance the message with a brief, actionable recommendation (max 2 sentences). Keep the original meaning.";
 
-        $result = $this->bedrock->ask($prompt, 'fast');
+        $result = $this->bedrock->ask($systemPrompt, $userMessage, [
+            'model' => \Ubxty\BedrockAi\Facades\Bedrock::resolveAlias('fast'),
+        ]);
 
         return $result['success'] ? $result['response'] : $message;
     }

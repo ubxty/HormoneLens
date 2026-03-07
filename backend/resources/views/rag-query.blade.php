@@ -56,7 +56,7 @@
 
         {{-- Query form --}}
         <div class="gl-card p-5 mb-4 gl-a gl-d1" data-gl>
-            <form @submit.prevent="ask()" class="space-y-3">
+            <form @submit.prevent="streaming ? askStream() : ask()" class="space-y-3">
                 <div>
                     <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1">Your Question</label>
                     <textarea x-model="question" rows="2" required maxlength="500"
@@ -71,9 +71,19 @@
                         <option value="pcod">PCOD / PCOS</option>
                     </select>
                 </div>
-                <button type="submit" :disabled="asking" class="gl-btn">
-                    <span x-show="!asking">📚 Ask</span><span x-show="asking">Searching…</span>
-                </button>
+                <div class="flex items-center justify-between gap-3">
+                    <button type="submit" :disabled="asking" class="gl-btn">
+                        <span x-show="!asking">📚 Ask</span><span x-show="asking">Searching…</span>
+                    </button>
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <span class="text-[11px] font-medium text-gray-500">Stream</span>
+                        <div class="relative">
+                            <input type="checkbox" x-model="streaming" class="sr-only peer">
+                            <div class="w-8 h-4 bg-gray-200 rounded-full peer-checked:bg-purple-500 transition-colors"></div>
+                            <div class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full peer-checked:translate-x-4 transition-transform"></div>
+                        </div>
+                    </label>
+                </div>
             </form>
 
             {{-- Quick questions --}}
@@ -81,7 +91,7 @@
                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-2">Try asking:</p>
                 <div class="flex flex-wrap gap-2">
                     <template x-for="q in quickQuestions">
-                        <button @click="question=q; ask()" class="gl-quick" x-text="q"></button>
+                        <button @click="question=q; streaming ? askStream() : ask()" class="gl-quick" x-text="q"></button>
                     </template>
                 </div>
             </div>
@@ -97,7 +107,7 @@
                       x-text="'Confidence: ' + (answer?.confidence * 100).toFixed(0) + '%'"></span>
             </div>
             <div class="text-sm text-gray-700 leading-relaxed mb-4">
-                <p x-text="answer?.answer"></p>
+                <p x-text="answer?.answer || streamText"></p>
             </div>
 
             {{-- Source pages --}}
@@ -151,6 +161,7 @@
 function ragPage() {
     return {
         question: '', context: '', asking: false, answer: null, history: [],
+        streaming: true, streamText: '',
         quickQuestions: [
             'What foods spike blood sugar?',
             'How does sleep affect insulin?',
@@ -159,7 +170,7 @@ function ragPage() {
         ],
         async ask(){
             if(!this.question.trim()) return;
-            this.asking = true; this.answer = null;
+            this.asking = true; this.answer = null; this.streamText = '';
             const payload = { question: this.question };
             if(this.context) payload.disease_context = this.context;
             const r = await api.post('/rag/query', payload);
@@ -167,6 +178,56 @@ function ragPage() {
             else toast(r.message || 'Query failed', 'error');
             this.asking = false;
             this.$nextTick(()=>document.querySelectorAll('[data-gl]').forEach(el=>el.classList.add('gl-v')));
+        },
+        async askStream(){
+            if(!this.question.trim()) return;
+            this.asking = true; this.answer = null; this.streamText = '';
+            const payload = { question: this.question };
+            if(this.context) payload.disease_context = this.context;
+
+            try {
+                const token = document.querySelector('meta[name="api-token"]')?.content;
+                const res = await fetch('/api/rag/query-stream', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'text/event-stream',
+                        ...(token ? {'Authorization': 'Bearer ' + token} : {}),
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!res.ok) { toast('Stream failed', 'error'); this.asking = false; return; }
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let meta = {};
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const lines = decoder.decode(value, { stream: true }).split('\n');
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const evt = JSON.parse(line.slice(6));
+                        if (evt.type === 'meta') {
+                            meta = evt;
+                            this.answer = { answer: '', confidence: evt.confidence, pages: [], reasoning_path: [] };
+                            this.$nextTick(()=>document.querySelectorAll('[data-gl]').forEach(el=>el.classList.add('gl-v')));
+                        } else if (evt.type === 'chunk') {
+                            this.streamText += evt.text;
+                        } else if (evt.type === 'done') {
+                            this.answer = { answer: this.streamText, confidence: meta.confidence || 0, pages: [], reasoning_path: [] };
+                            this.history.unshift({q: this.question, a: this.answer});
+                            if (this.history.length > 10) this.history.pop();
+                        }
+                    }
+                }
+            } catch(e) {
+                toast('Streaming error: ' + e.message, 'error');
+            }
+            this.asking = false;
         },
         init(){
             this.$nextTick(()=>document.querySelectorAll('[data-gl]').forEach(el=>el.classList.add('gl-v')));

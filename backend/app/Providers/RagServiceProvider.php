@@ -20,6 +20,26 @@ class RagServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        // Override Bedrock config with admin-stored credentials (if set)
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('ai_settings')) {
+                $key = \App\Models\AiSetting::getValue('bedrock_aws_key');
+                $secret = \App\Models\AiSetting::getValue('bedrock_aws_secret');
+                $region = \App\Models\AiSetting::getValue('bedrock_region');
+
+                if ($key && $secret) {
+                    config([
+                        'bedrock.connections.default.keys' => [[
+                            'label'      => 'Admin-configured',
+                            'aws_key'    => $key,
+                            'aws_secret' => $secret,
+                            'region'     => $region ?: config('bedrock.connections.default.keys.0.region', 'us-east-1'),
+                        ]],
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            // DB not available yet (migrations running, etc.)
+        }
     }
 }

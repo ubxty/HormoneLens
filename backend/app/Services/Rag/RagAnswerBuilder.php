@@ -2,6 +2,7 @@
 
 namespace App\Services\Rag;
 
+use App\Models\AiSetting;
 use App\Models\RagPage;
 use App\Repositories\Rag\RagPageRepository;
 use App\Services\AI\BedrockService;
@@ -34,7 +35,13 @@ class RagAnswerBuilder
         $context = $pages->map(fn(RagPage $p) => $p->content)->implode("\n\n---\n\n");
         $pathStr = collect($path)->pluck('title')->implode(' → ');
 
-        $aiResult = $this->synthesizeWithAI($question, $context, $pathStr);
+        // Check feature flag before calling AI
+        if (!AiSetting::getValue('rag_ai_synthesis', true)) {
+            $truncated = mb_substr($context, 0, 2000);
+            $aiResult = ['success' => false, 'response' => $truncated . (mb_strlen($context) > 2000 ? '...' : '')];
+        } else {
+            $aiResult = $this->synthesizeWithAI($question, $context, $pathStr);
+        }
 
         $sourcePages = $pages->map(fn(RagPage $p) => [
             'id'          => $p->id,

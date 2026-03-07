@@ -15,6 +15,10 @@ class RagQueryLog extends Model
         'reasoning_path',
         'selected_nodes',
         'confidence',
+        'model_used',
+        'tokens_used',
+        'ai_cost',
+        'latency_ms',
         'created_at',
     ];
 

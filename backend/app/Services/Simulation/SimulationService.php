@@ -4,6 +4,7 @@ namespace App\Services\Simulation;
 
 use App\Contracts\RagSearchInterface;
 use App\Enums\SimulationType;
+use App\Models\AiSetting;
 use App\Models\Simulation;
 use App\Models\User;
 use App\Repositories\SimulationRepository;
@@ -298,13 +299,17 @@ class SimulationService
      */
     private function generateAIExplanation(SimulationType $type, array $input, float $originalRisk, float $simulatedRisk, array $ragResult): array
     {
-        $prompt = PromptTemplates::simulationExplanation()
-            . "\n\nSimulation Type: {$type->value}"
+        if (!AiSetting::getValue('simulation_ai_explanation', true)) {
+            return $this->bedrock->ask('', ''); // returns errorResult since AI disabled
+        }
+
+        $systemPrompt = PromptTemplates::simulationExplanation();
+        $userMessage = "Simulation Type: {$type->value}"
             . "\nChanges Made: " . json_encode($input)
             . "\nRisk Score Change: {$originalRisk} → {$simulatedRisk}"
             . "\nKnowledge Base Context: " . ($ragResult['answer'] ?? 'No context available');
 
-        return $this->bedrock->ask($prompt);
+        return $this->bedrock->ask($systemPrompt, $userMessage);
     }
 
     /**
@@ -312,13 +317,17 @@ class SimulationService
      */
     private function generateFoodAnalysis(string $foodItem, ?string $diseaseContext, array $ragResult): array
     {
-        $prompt = PromptTemplates::foodImpact()
-            . "\n\nFood Item: {$foodItem}"
+        if (!AiSetting::getValue('simulation_ai_explanation', true)) {
+            return ['success' => false, 'response' => ''];
+        }
+
+        $systemPrompt = PromptTemplates::foodImpact();
+        $userMessage = "Food Item: {$foodItem}"
             . "\nCondition: " . ($diseaseContext ?? 'general hormonal health')
             . "\nKnowledge Base Context: " . ($ragResult['answer'] ?? 'No context available')
             . "\n\nProvide: 1) Impact analysis 2) Three healthier alternatives as a JSON array under key 'alternatives'";
 
-        return $this->bedrock->ask($prompt);
+        return $this->bedrock->ask($systemPrompt, $userMessage);
     }
 
     /**

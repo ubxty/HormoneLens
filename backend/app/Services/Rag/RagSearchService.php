@@ -86,6 +86,10 @@ class RagSearchService implements RagSearchInterface
             'reasoning_path' => $result['reasoning_path'],
             'selected_nodes' => $result['source_nodes'],
             'confidence' => $result['confidence'],
+            'model_used' => $result['ai_metadata']['model'] ?? null,
+            'tokens_used' => $result['ai_metadata']['tokens'] ?? null,
+            'ai_cost' => $result['ai_metadata']['cost'] ?? null,
+            'latency_ms' => $result['ai_metadata']['latency'] ?? null,
             'created_at' => now(),
         ]);
 
