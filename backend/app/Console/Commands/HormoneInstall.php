@@ -63,18 +63,20 @@ class HormoneInstall extends Command
         $this->newLine();
 
         $this->table(
-            ['Account', 'Email', 'Password', 'Role'],
+            ['Account', 'Email', 'Password', 'Role', 'Login URL'],
             [
-                ['Admin',        'admin@hormonelens.com', 'password',    'Super Admin'],
-                ['Demo – Priya', 'priya@demo.com',       'password123', 'User (Diabetes + Thyroid)'],
-                ['Demo – Anita', 'anita@demo.com',       'password123', 'User (PCOD)'],
-                ['Demo – Rahul', 'rahul@demo.com',       'password123', 'User (Metabolic Syndrome)'],
+                ['Admin',        'admin@hormonelens.com', 'admin123',    'Super Admin', '/admin/login'],
+                ['Demo – Priya', 'priya@demo.com',       'password123', 'User (Diabetes + Thyroid)', '/login'],
+                ['Demo – Anita', 'anita@demo.com',       'password123', 'User (PCOD)', '/login'],
+                ['Demo – Rahul', 'rahul@demo.com',       'password123', 'User (Metabolic Syndrome)', '/login'],
             ]
         );
 
         $this->newLine();
-        $this->line('  <fg=cyan>▸</> Serve: <fg=white>php artisan serve --port=8080</>');
-        $this->line('  <fg=cyan>▸</> Visit: <fg=white>http://localhost:8080</>');
+        $this->line('  <fg=cyan>▸</> Serve:       <fg=white>php artisan serve --port=8080</>');
+        $this->line('  <fg=cyan>▸</> User Login:   <fg=white>http://localhost:8080/login</>');
+        $this->line('  <fg=cyan>▸</> Admin Login:  <fg=white>http://localhost:8080/admin/login</>');
+        $this->line('  <fg=cyan>▸</> Admin API:    <fg=white>POST http://localhost:8080/api/admin/login</>');
         $this->newLine();
 
         return self::SUCCESS;

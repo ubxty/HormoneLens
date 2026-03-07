@@ -11,11 +11,6 @@ use App\Http\Controllers\HealthProfileController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\RagController;
 use App\Http\Controllers\SimulationController;
-use App\Http\Controllers\Admin\AlertManagementController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ReportController;
-use App\Http\Controllers\Admin\SimulationLogController;
-use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -99,51 +94,4 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── RAG Knowledge Base ───────────────────────────
     Route::middleware('throttle:rag')->post('/rag/query', RagController::class);
     Route::middleware('throttle:rag')->post('/rag/query-stream', [RagController::class, 'stream']);
-
-    /*
-    |----------------------------------------------------------------------
-    | Admin Routes
-    |----------------------------------------------------------------------
-    */
-    Route::middleware('admin')->prefix('admin')->group(function () {
-        Route::get('/dashboard', DashboardController::class);
-
-        Route::get('/users', [UserManagementController::class, 'index']);
-        Route::get('/users/{id}', [UserManagementController::class, 'show']);
-        Route::patch('/users/{id}/toggle-admin', [UserManagementController::class, 'toggleAdmin']);
-
-        Route::get('/simulations', [SimulationLogController::class, 'index']);
-        Route::get('/simulations/{id}', [SimulationLogController::class, 'show']);
-
-        Route::get('/alerts', [AlertManagementController::class, 'index']);
-        Route::get('/alerts/{id}', [AlertManagementController::class, 'show']);
-
-        Route::get('/reports', ReportController::class);
-
-        // ── RAG Knowledge Base CRUD ──────────────────
-        Route::prefix('rag')->group(function () {
-            Route::get('/documents', [\App\Http\Controllers\Admin\RagManagementController::class, 'documents']);
-            Route::post('/documents', [\App\Http\Controllers\Admin\RagManagementController::class, 'storeDocument']);
-            Route::get('/documents/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'showDocument']);
-            Route::put('/documents/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'updateDocument']);
-            Route::delete('/documents/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'destroyDocument']);
-            Route::post('/nodes', [\App\Http\Controllers\Admin\RagManagementController::class, 'storeNode']);
-            Route::put('/nodes/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'updateNode']);
-            Route::delete('/nodes/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'destroyNode']);
-            Route::post('/pages', [\App\Http\Controllers\Admin\RagManagementController::class, 'storePage']);
-            Route::put('/pages/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'updatePage']);
-            Route::delete('/pages/{id}', [\App\Http\Controllers\Admin\RagManagementController::class, 'destroyPage']);
-        });
-
-        // ── Bedrock AI Management ────────────────────
-        Route::prefix('bedrock')->group(function () {
-            Route::get('/status', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'status']);
-            Route::get('/models', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'models']);
-            Route::get('/usage', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'usage']);
-            Route::get('/pricing', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'pricing']);
-            Route::post('/test', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'test']);
-            Route::get('/settings', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'settings']);
-            Route::put('/settings', [\App\Http\Controllers\Admin\BedrockManagementController::class, 'updateSettings']);
-        });
-    });
 });

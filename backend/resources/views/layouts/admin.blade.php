@@ -259,11 +259,11 @@
         <div class="p-4 border-t border-white/10 shrink-0 relative z-10">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    {{ strtoupper(substr(Auth::guard('admin')->user()->name, 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold text-white truncate">{{ Auth::user()->name }}</p>
-                    <p class="text-[10px] text-white/40 truncate">{{ Auth::user()->email }}</p>
+                    <p class="text-xs font-bold text-white truncate">{{ Auth::guard('admin')->user()->name }}</p>
+                    <p class="text-[10px] text-white/40 truncate">{{ Auth::guard('admin')->user()->email }}</p>
                 </div>
             </div>
         </div>
@@ -344,20 +344,20 @@
                 <div x-data="{ open: false }" class="relative">
                     <button @click="open=!open" @click.outside="open=false" class="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl hover:bg-gray-100 transition">
                         <div class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-[10px] font-bold">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            {{ strtoupper(substr(Auth::guard('admin')->user()->name, 0, 1)) }}
                         </div>
-                        <span class="text-xs font-medium text-gray-600 hidden sm:inline">{{ Auth::user()->name }}</span>
+                        <span class="text-xs font-medium text-gray-600 hidden sm:inline">{{ Auth::guard('admin')->user()->name }}</span>
                     </button>
                     <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/60 overflow-hidden z-50">
                         <div class="px-4 py-2.5 border-b border-gray-100">
-                            <p class="text-xs font-bold text-gray-800">{{ Auth::user()->name }}</p>
-                            <p class="text-[10px] text-gray-400">{{ Auth::user()->email }}</p>
+                            <p class="text-xs font-bold text-gray-800">{{ Auth::guard('admin')->user()->name }}</p>
+                            <p class="text-[10px] text-gray-400">{{ Auth::guard('admin')->user()->email }}</p>
                         </div>
                         <div class="py-1">
-                            <a href="{{ route('health-profile') }}" class="block px-4 py-2 text-xs text-gray-600 hover:bg-purple-50 hover:text-purple-700">Settings</a>
+                            <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-xs text-gray-600 hover:bg-purple-50 hover:text-purple-700">Settings</a>
                         </div>
                         <div class="border-t border-gray-100 py-1">
-                            <form method="POST" action="{{ route('logout') }}">@csrf
+                            <form method="POST" action="{{ route('admin.logout') }}">@csrf
                                 <button class="w-full text-left px-4 py-2 text-xs text-red-500 hover:bg-red-50">Logout</button>
                             </form>
                         </div>

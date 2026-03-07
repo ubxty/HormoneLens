@@ -126,13 +126,6 @@
             <a href="{{ route('knowledge') }}" data-tour-id="nav-knowledge"
                class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg {{ $cur==='knowledge' ? 'bg-brand-50 text-brand-700':'text-gray-600 hover:bg-gray-100' }}">
                 📚 Knowledge Base</a>
-
-            @if(Auth::user()->is_admin)
-            <p class="pt-3 pb-1 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin</p>
-            <a href="{{ route('admin.dashboard') }}"
-               class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-brand-600 hover:bg-brand-50">
-                🛡️ Admin Panel</a>
-            @endif
         </nav>
 
         {{-- ── User section at bottom of sidebar ── --}}

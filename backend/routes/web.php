@@ -2,15 +2,12 @@
 
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\PageController;
-use App\Http\Controllers\Web\Admin\PageController as AdminPageController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Landing page (public) ───────────────────────────
 Route::get('/', function () {
     if (auth()->check()) {
-        return auth()->user()->is_admin
-            ? redirect()->route('admin.dashboard')
-            : redirect()->route('dashboard');
+        return redirect()->route('dashboard');
     }
     return view('landing');
 })->name('home');
@@ -37,20 +34,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/history',        [PageController::class, 'history'])->name('history');
     Route::get('/knowledge',      [PageController::class, 'ragQuery'])->name('knowledge');
     Route::get('/rag-query', function () { return redirect()->route('knowledge'); })->name('rag-query');
-});
-
-// ─── Admin pages (auth + admin) ─────────────────────
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/',                   [AdminPageController::class, 'dashboard'])->name('dashboard');
-    Route::get('/users',              [AdminPageController::class, 'users'])->name('users');
-    Route::get('/users/{id}',         [AdminPageController::class, 'userShow'])->name('users.show');
-    Route::get('/risk-analysis',      [AdminPageController::class, 'riskAnalysis'])->name('risk-analysis');
-    Route::get('/simulations',        [AdminPageController::class, 'simulations'])->name('simulations');
-    Route::get('/alerts',             [AdminPageController::class, 'alerts'])->name('alerts');
-    Route::get('/reports',            [AdminPageController::class, 'reports'])->name('reports');
-    Route::get('/rag',                [AdminPageController::class, 'rag'])->name('rag');
-    Route::get('/rag/documents/{id}', [AdminPageController::class, 'ragDocument'])->name('rag.document');
-    Route::get('/bedrock',            [AdminPageController::class, 'bedrock'])->name('bedrock');
-    Route::get('/bedrock/models',     [AdminPageController::class, 'bedrockModels'])->name('bedrock.models');
-    Route::get('/bedrock/usage',      [AdminPageController::class, 'bedrockUsage'])->name('bedrock.usage');
 });
