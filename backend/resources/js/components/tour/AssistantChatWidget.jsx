@@ -1,6 +1,6 @@
 import React, { useState, Suspense } from 'react';
 import ChatWindow from './ChatWindow';
-import TourAssistantCharacter from './TourAssistantCharacter';
+import TourAssistantCharacter from './TourAssistantCharacter2D';
 
 /**
  * The character IS the chat trigger — no circle button.
@@ -53,7 +53,7 @@ export default function AssistantChatWidget({ visible = true }) {
                     alignSelf: 'center',
                     position: 'relative',
                 }}>
-                    Need help? Chat with Luna!
+                    Need help? Chat with HormoneLens!
                     {/* Arrow pointing down toward character */}
                     <div style={{
                         position: 'absolute',
@@ -70,7 +70,7 @@ export default function AssistantChatWidget({ visible = true }) {
             {/* Character — the actual clickable trigger */}
             <div
                 role="button"
-                aria-label={open ? 'Close chat' : 'Chat with Luna'}
+                aria-label={open ? 'Close chat' : 'Chat with HormoneLens'}
                 tabIndex={0}
                 onClick={() => setOpen((o) => !o)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((o) => !o); } }}

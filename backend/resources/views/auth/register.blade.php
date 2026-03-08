@@ -33,7 +33,11 @@
         }
         @media (max-width: 768px) {
             .left-panel  { display: none; }
-            .right-panel { width: 100%; background: linear-gradient(135deg,#ede9fe,#dbeafe); }
+            .right-panel { width: 100%; background: linear-gradient(135deg,#ede9fe,#dbeafe); padding: 32px 20px; }
+        }
+        @media (max-width: 480px) {
+            .right-panel { padding: 20px 12px; }
+            .login-box   { padding: 24px 18px; border-radius: 16px; }
         }
 
         /* ── Left panel background ── */
@@ -380,7 +384,7 @@
         <div class="ai-particle" style="top:60%;left:38%; --ap-delay:2.5s;"></div>
         <div class="ai-particle" style="top:55%;right:35%;--ap-delay:3.8s;"></div>
 
-        <div class="welcome-badge">✨ Create Your Simulation Profile</div>
+        <div class="welcome-badge">✨ Create Your HormoneLens Profile</div>
         <div class="scan-lines"></div>
 
         <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
@@ -549,7 +553,7 @@
                     </div>
                 </div>
                 <button type="submit" class="hl-btn" style="margin-top:8px;">
-                    Create Simulation Profile
+                    Create HormoneLens Profile
                 </button>
             </form>
 

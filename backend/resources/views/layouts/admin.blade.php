@@ -203,7 +203,7 @@
             if(s<86400)return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago';
         }
     }"
-     x-init="fetchAlertCount(); setInterval(()=>fetchAlertCount(), 5000)"
+     x-init="fetchAlertCount(); setInterval(()=>fetchAlertCount(), 60000)"
      class="flex min-h-screen">
 
     {{-- Overlay --}}

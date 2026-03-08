@@ -33,7 +33,11 @@
         }
         @media (max-width: 768px) {
             .left-panel  { display: none; }
-            .right-panel { width: 100%; background: linear-gradient(135deg,#ede9fe,#dbeafe); }
+            .right-panel { width: 100%; background: linear-gradient(135deg,#ede9fe,#dbeafe); padding: 32px 20px; }
+        }
+        @media (max-width: 480px) {
+            .right-panel { padding: 24px 14px; }
+            .login-box   { padding: 28px 20px; border-radius: 16px; }
         }
 
         /* ── Left panel background ── */
@@ -610,14 +614,14 @@
                     <label for="remember" class="text-sm text-gray-500">Remember me</label>
                 </div>
                 <button type="submit" class="hl-btn">
-                    Sign In to Simulation Lab
+                    Sign In to HormoneLens
                 </button>
             </form>
 
             <p class="mt-6 text-center text-sm text-gray-500">
                 Don't have an account?
                 <a href="{{ route('register') }}" class="font-semibold text-violet-600 hover:text-violet-700 transition-colors">
-                    Create Simulation Profile
+                    Create Account
                 </a>
             </p>
         </div>

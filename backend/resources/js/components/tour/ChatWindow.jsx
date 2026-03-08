@@ -49,7 +49,7 @@ const KNOWLEDGE = [
     },
     {
         patterns: ['hello', 'hi', 'hey', 'morning', 'afternoon', 'evening', 'how are you'],
-        reply: "Hey there! 👋 I'm Luna, your HormoneLens guide.\n\nI'm here to help you understand your health data and get the most from the platform. What would you like to do?",
+        reply: "Hey there! 👋 I'm HormoneLens, your HormoneLens guide.\n\nI'm here to help you understand your health data and get the most from the platform. What would you like to do?",
         actions: [
             { label: '✨ Create My Digital Twin', href: '/digital-twin' },
             { label: '⚡ Run a Simulation', href: '/simulations' },
@@ -175,7 +175,7 @@ export default function ChatWindow({ onClose }) {
     const [messages, setMessages] = useState([
         {
             id: uid(), role: 'assistant',
-            text: "Hey! 👋 I'm Luna — your HormoneLens guide.\n\nHow can I help you today?",
+            text: "Hey! 👋 I'm HormoneLens — your HormoneLens guide.\n\nHow can I help you today?",
             actions: [],
         },
     ]);
@@ -235,7 +235,7 @@ export default function ChatWindow({ onClose }) {
                     fontSize: 18,
                 }}>🌸</div>
                 <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700 }}>Luna</div>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>HormoneLens</div>
                     <div style={{ fontSize: 11, opacity: 0.8 }}>Your HormoneLens Guide</div>
                 </div>
                 <button onClick={onClose} style={{
@@ -318,7 +318,7 @@ export default function ChatWindow({ onClose }) {
                             display: 'flex', gap: 5, alignItems: 'center',
                             boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
                         }}>
-                            <span style={{ fontSize: 11, color: '#9ca3af', marginRight: 4 }}>Luna is typing</span>
+                            <span style={{ fontSize: 11, color: '#9ca3af', marginRight: 4 }}>HormoneLens is typing</span>
                             {[0, 0.2, 0.4].map((delay, i) => (
                                 <span key={i} style={{
                                     width: 6, height: 6, borderRadius: '50%',
@@ -342,7 +342,7 @@ export default function ChatWindow({ onClose }) {
             }}>
                 <input
                     type="text"
-                    placeholder="Ask Luna anything…"
+                    placeholder="Ask HormoneLens anything…"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKey}

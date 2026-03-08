@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense, useMemo } from 'react';
 import HighlightOverlay from './HighlightOverlay';
 import TourSpeechBubble from './TourSpeechBubble';
-import TourAssistantCharacter from './TourAssistantCharacter';
+import TourAssistantCharacter from './TourAssistantCharacter2D';
 import AssistantChatWidget from './AssistantChatWidget';
 
 /* ─── Storage key ─── */
@@ -12,7 +12,7 @@ const TOUR_STEPS = [
     {
         id: 'welcome',
         selector: null,
-        text: "Hey! I'm Luna, your health buddy. Let me show you around your dashboard!",
+        text: "Hey! I'm HormoneLens, your health buddy. Let me show you around your dashboard!",
         characterAnim: 'wave',
         characterSide: 'right',
     },

@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect, Suspense, useMemo } from 'react';
-import AssistantCharacter from './AssistantCharacter';
+import AssistantCharacter from './AssistantCharacter2D';
 import SpeechBubble from './SpeechBubble';
 import ProgressBar from './ProgressBar';
 import HealthQuestionForm, { STEPS } from './HealthQuestionForm';
 
 /* ─── intro messages the character says before questions ─── */
 const INTRO_MESSAGES = [
-    "Hi there! I'm Luna — your personal health assistant. 👋",
+    "Hi there! I'm HormoneLens — your personal health assistant. 👋",
     "I'll walk you through building your very own digital health twin.",
     "Just pick the answers that feel right — no wrong choices here!",
 ];
