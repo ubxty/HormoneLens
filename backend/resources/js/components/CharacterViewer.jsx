@@ -15,7 +15,7 @@
  *
  * Usage:
  *   import CharacterViewer from './CharacterViewer';
- *   import modelUrl from './MyCharacter.fbx?url';
+ *   import modelUrl from './MyCharacter.glb?url';
  *
  *   <CharacterViewer fbxUrl={modelUrl} gender="female" />
  */
@@ -30,7 +30,7 @@ import React, {
     memo,
 } from 'react';
 import { Canvas, useFrame }                                  from '@react-three/fiber';
-import { OrbitControls, ContactShadows, Float, useFBX }     from '@react-three/drei';
+import { OrbitControls, ContactShadows, Float, useGLTF }     from '@react-three/drei';
 import * as THREE                                            from 'three';
 import { SkeletonUtils }                                     from 'three-stdlib';
 
@@ -42,14 +42,14 @@ import CharacterDebugPanel   from './CharacterDebugPanel';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Loads and renders a single FBX via useFBX (cached by R3F).
+ * Loads and renders a single GLB via useGLTF (cached by R3F).
  * Calls onInspected once after the model is ready.
  *
  * @param {{ fbxUrl: string, onInspected: Function }} props
  */
 const CharacterMesh = memo(({ fbxUrl, onInspected }) => {
-    // useFBX suspends until the asset is ready — Suspense handles the fallback
-    const source       = useFBX(fbxUrl);
+    // useGLTF suspends until the asset is ready — Suspense handles the fallback
+    const { scene: source, animations: sourceAnims } = useGLTF(fbxUrl);
     const groupRef     = useRef();
     const reportedRef  = useRef(false); // guard: fire onInspected only once
 
@@ -94,14 +94,14 @@ const CharacterMesh = memo(({ fbxUrl, onInspected }) => {
         const scale  = size.y > 0 ? 2.0 / size.y : 1;
 
         // Run the capability inspector — also prints the console report
-        const caps = inspectCharacter(cloned, source.animations ?? []);
+        const caps = inspectCharacter(cloned, sourceAnims ?? []);
 
         return {
             root:         cloned,
             normalized:   { scale, centerX: center.x, minY: box.min.y, centerZ: center.z },
             capabilities: caps,
         };
-    }, [source]);
+    }, [source, sourceAnims]);
 
     // ── Fire onInspected exactly once when capabilities become available ──────
     useEffect(() => {
@@ -133,7 +133,7 @@ const CharacterMesh = memo(({ fbxUrl, onInspected }) => {
 CharacterMesh.displayName = 'CharacterMesh';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Suspense fallback — visible while FBX is being fetched
+// Suspense fallback — visible while GLB is being fetched
 // ─────────────────────────────────────────────────────────────────────────────
 function SpinningFallback() {
     const ref = useRef();

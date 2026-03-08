@@ -1,14 +1,14 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, ContactShadows, useFBX } from '@react-three/drei';
+import { OrbitControls, ContactShadows, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { SkeletonUtils } from 'three-stdlib';
-import { FBXLoader } from 'three-stdlib';
+import { GLTFLoader } from 'three-stdlib';
 
-import characterUrl from '../Standing Idle(1).fbx?url';
-import wavingUrl from '../Waving.fbx?url';
-import clappingUrl from '../Clapping.fbx?url';
-import spinUrl from '../Northern Soul Spin Combo.fbx?url';
+import characterUrl from '../Standing Idle(1).glb?url';
+import wavingUrl from '../Waving.glb?url';
+import clappingUrl from '../Clapping.glb?url';
+import spinUrl from '../Northern Soul Spin Combo.glb?url';
 
 const TARGET_HEIGHT = 1.7;
 const CROSSFADE_DURATION = 0.4;
@@ -56,12 +56,12 @@ function CharacterMesh({ animationState, isSpeaking }) {
     const mixerRef = useRef(null);
     const actionsRef = useRef({});
     const currentActionRef = useRef(null);
-    const source = useFBX(characterUrl);
+    const { scene: source, animations: sourceAnims } = useGLTF(characterUrl);
 
-    /* Load external animation FBXes */
-    const waveFbx = useLoader(FBXLoader, wavingUrl);
-    const clapFbx = useLoader(FBXLoader, clappingUrl);
-    const spinFbx = useLoader(FBXLoader, spinUrl);
+    /* Load external animation GLBs */
+    const { scene: waveGltf, animations: waveAnims } = useLoader(GLTFLoader, wavingUrl);
+    const { scene: clapGltf, animations: clapAnims } = useLoader(GLTFLoader, clappingUrl);
+    const { scene: spinGltf, animations: spinAnims } = useLoader(GLTFLoader, spinUrl);
 
     const model = useMemo(() => {
         const cloned = SkeletonUtils.clone(source);
@@ -86,9 +86,9 @@ function CharacterMesh({ animationState, isSpeaking }) {
         mixerRef.current = mixer;
         const actions = {};
 
-        /* Idle clip from the character FBX */
-        if (source.animations?.length) {
-            const clip = retargetClip(source.animations[0], model);
+        /* Idle clip from the character GLB */
+        if (sourceAnims?.length) {
+            const clip = retargetClip(sourceAnims[0], model);
             if (clip.tracks.length) {
                 actions.idle = mixer.clipAction(clip);
                 actions.idle.setLoop(THREE.LoopRepeat, Infinity);
@@ -96,8 +96,8 @@ function CharacterMesh({ animationState, isSpeaking }) {
         }
 
         /* Wave */
-        if (waveFbx.animations?.length) {
-            const clip = retargetClip(waveFbx.animations[0], model);
+        if (waveAnims?.length) {
+            const clip = retargetClip(waveAnims[0], model);
             if (clip.tracks.length) {
                 actions.wave = mixer.clipAction(clip);
                 actions.wave.setLoop(THREE.LoopRepeat, 2);
@@ -106,8 +106,8 @@ function CharacterMesh({ animationState, isSpeaking }) {
         }
 
         /* Clap */
-        if (clapFbx.animations?.length) {
-            const clip = retargetClip(clapFbx.animations[0], model);
+        if (clapAnims?.length) {
+            const clip = retargetClip(clapAnims[0], model);
             if (clip.tracks.length) {
                 actions.clap = mixer.clipAction(clip);
                 actions.clap.setLoop(THREE.LoopRepeat, 3);
@@ -116,8 +116,8 @@ function CharacterMesh({ animationState, isSpeaking }) {
         }
 
         /* Spin */
-        if (spinFbx.animations?.length) {
-            const clip = retargetClip(spinFbx.animations[0], model);
+        if (spinAnims?.length) {
+            const clip = retargetClip(spinAnims[0], model);
             if (clip.tracks.length) {
                 actions.spin = mixer.clipAction(clip);
                 actions.spin.setLoop(THREE.LoopOnce, 1);
@@ -149,7 +149,7 @@ function CharacterMesh({ animationState, isSpeaking }) {
             mixer.stopAllAction();
             mixer.uncacheRoot(model);
         };
-    }, [model, source, waveFbx, clapFbx, spinFbx]);
+    }, [model, source, sourceAnims, waveAnims, clapAnims, spinAnims]);
 
     /* Transition animations on state change */
     useEffect(() => {

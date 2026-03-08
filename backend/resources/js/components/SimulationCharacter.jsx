@@ -1,24 +1,24 @@
 import React, { useRef, useMemo, useEffect, useState, useCallback, Suspense } from 'react';
 import { inspectCharacter }  from './CharacterInspector';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, ContactShadows, Float, Html, useFBX } from '@react-three/drei';
+import { OrbitControls, ContactShadows, Float, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 
 /* ── Asset imports ── */
-import maleFbxUrl   from './Ch09_nonPBR.fbx?url';
-import femaleFbxUrl from './Standing Idle(1).fbx?url';
+import maleGlbUrl   from './Ch09_nonPBR.glb?url';
+import femaleGlbUrl from './Standing Idle(1).glb?url';
 
-/* Animation FBX files (contain clips, not visible meshes) */
-import idleAnimUrl  from './Standing Idle(1).fbx?url';
-import clapAnimUrl  from './Clapping.fbx?url';
-import sadAnimUrl   from './Sad Idle.fbx?url';
+/* Animation GLB files (contain clips, not visible meshes) */
+import idleAnimUrl  from './Standing Idle(1).glb?url';
+import clapAnimUrl  from './Clapping.glb?url';
+import sadAnimUrl   from './Sad Idle.glb?url';
 
 /* ── Constants ── */
 const FADE_DURATION   = 0.3;  // seconds for cross-fade between animations
 const TARGET_HEIGHT   = 1.6;  // normalized model height in scene units
 
-/* ── Retarget animation tracks from one FBX skeleton to another ── */
+/* ── Retarget animation tracks from one GLB skeleton to another ── */
 function retargetClip(clip, targetRoot) {
     const nodeNames = new Set();
     targetRoot.traverse((n) => { if (n.name) nodeNames.add(n.name); });
@@ -49,7 +49,7 @@ function retargetClip(clip, targetRoot) {
 
 /* ── Clone & prepare character mesh (no manual arm rotation — idle anim handles pose) ── */
 function useCharacter(url) {
-    const source = useFBX(url);
+    const { scene: source, animations: sourceAnims } = useGLTF(url);
     return useMemo(() => {
         const cloned = SkeletonUtils.clone(source);
         cloned.traverse((child) => {
@@ -64,9 +64,9 @@ function useCharacter(url) {
             }
         });
 
-        const capabilities = inspectCharacter(cloned, source.animations ?? []);
+        const capabilities = inspectCharacter(cloned, sourceAnims ?? []);
         return { model: cloned, capabilities };
-    }, [source]);
+    }, [source, sourceAnims]);
 }
 
 /* ── Character mesh with animation (idle / clap / sad) ── */
@@ -80,18 +80,18 @@ function CharacterModel({ url, isSimulating, riskChange, isMale, onInspected }) 
     const { model: root, capabilities } = useCharacter(url);
     const emissiveColor = useMemo(() => new THREE.Color('#6d28d9'), []);
 
-    const idleFbx  = useFBX(idleAnimUrl);
-    const clapFbx  = useFBX(clapAnimUrl);
-    const sadFbx   = useFBX(sadAnimUrl);
+    const { scene: idleGltf, animations: idleAnims }  = useGLTF(idleAnimUrl);
+    const { scene: clapGltf, animations: clapAnims }  = useGLTF(clapAnimUrl);
+    const { scene: sadGltf, animations: sadAnims }   = useGLTF(sadAnimUrl);
 
     useEffect(() => {
         if (!root) return;
         const mixer = new THREE.AnimationMixer(root);
         mixerRef.current = mixer;
 
-        const load = (fbx, loop = true) => {
-            if (!fbx?.animations?.length) return null;
-            const clip   = retargetClip(fbx.animations[0], root);
+        const load = (anims, loop = true) => {
+            if (!anims?.length) return null;
+            const clip   = retargetClip(anims[0], root);
             if (!clip.tracks.length) return null;
             const action = mixer.clipAction(clip);
             action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
@@ -100,9 +100,9 @@ function CharacterModel({ url, isSimulating, riskChange, isMale, onInspected }) 
         };
 
         const actions = {
-            idle: load(idleFbx, true),
-            clap: load(clapFbx, false),
-            sad:  load(sadFbx, true),
+            idle: load(idleAnims, true),
+            clap: load(clapAnims, false),
+            sad:  load(sadAnims, true),
         };
         actionsRef.current = actions;
 
@@ -203,7 +203,7 @@ function CharacterModel({ url, isSimulating, riskChange, isMale, onInspected }) 
 
 /* ── Scene ── */
 function SceneContent({ gender, isSimulating, result, onInspected }) {
-    const url = gender === 'male' ? maleFbxUrl : femaleFbxUrl;
+    const url = gender === 'male' ? maleGlbUrl : femaleGlbUrl;
 
     return (
         <>

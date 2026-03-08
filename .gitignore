@@ -3,3 +3,4 @@ Documents/Documenting/.~lock.UserStories.docx#
 backend/composer.lock
 .playwright-mcp/*
 .vscode/tasks.json
+backend/package-lock.json
