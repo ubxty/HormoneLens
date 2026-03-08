@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, Suspense, useMemo } from 'react';
-import AssistantCharacter from './AssistantCharacter2D';
+import AssistantCharacter from './AssistantCharacter';
 import SpeechBubble from './SpeechBubble';
 import ProgressBar from './ProgressBar';
 import HealthQuestionForm, { STEPS } from './HealthQuestionForm';
