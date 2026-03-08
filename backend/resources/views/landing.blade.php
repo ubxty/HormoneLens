@@ -1641,7 +1641,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-violet-100 text-violet-700 mb-4 uppercase tracking-wide">Team Leader</span>
                 {{-- Description --}}
                 <p class="text-sm text-gray-500 leading-relaxed mb-6">
-                    <strong class="text-gray-700">Founder</strong> of <strong class="text-gray-700">Ubxty – Unboxing Technology</strong> and a software engineer with 10+ years of experience in web, mobile, and cloud development. Leads the vision, planning, and technical implementation with deep expertise in Laravel, Flutter, and scalable product architecture.
+                    <strong class="text-gray-700">Founder</strong> of <strong class="text-gray-700">UBXTY Unboxing Technology</strong> and a software engineer with 10+ years of experience in web, mobile, and cloud development. Leads the vision, planning, and technical implementation with deep expertise in Laravel, Flutter, and scalable product architecture.
                 </p>
                 {{-- LinkedIn --}}
                 <a href="https://www.linkedin.com/in/ravdeep-singh-a4544abb/" target="_blank" rel="noopener noreferrer" class="team-linkedin mt-auto">
