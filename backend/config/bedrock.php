@@ -29,12 +29,20 @@ return [
     'connections' => [
         'default' => [
             'keys' => [
-                [
-                    'label' => env('BEDROCK_KEY_LABEL', 'Primary'),
-                    'aws_key' => env('BEDROCK_AWS_KEY', env('AWS_ACCESS_KEY_ID', '')),
-                    'aws_secret' => env('BEDROCK_AWS_SECRET', env('AWS_SECRET_ACCESS_KEY', '')),
-                    'region' => env('BEDROCK_REGION', env('AWS_DEFAULT_REGION', 'us-east-1')),
-                ],
+                (function () {
+                    $key    = env('BEDROCK_AWS_KEY', env('AWS_ACCESS_KEY_ID', ''));
+                    $secret = env('BEDROCK_AWS_SECRET', env('AWS_SECRET_ACCESS_KEY', ''));
+                    // ABSK tokens are HTTP Bearer tokens — no real secret needed.
+                    if (str_starts_with($key, 'ABSK') && empty($secret)) {
+                        $secret = 'bearer-mode';
+                    }
+                    return [
+                        'label'      => env('BEDROCK_KEY_LABEL', 'Primary'),
+                        'aws_key'    => $key,
+                        'aws_secret' => $secret,
+                        'region'     => env('BEDROCK_REGION', env('AWS_DEFAULT_REGION', 'us-east-1')),
+                    ];
+                })(),
             ],
         ],
     ],
@@ -136,9 +144,9 @@ return [
     |
     */
     'aliases' => [
-        'default' => 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-        'smart'   => 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-        'fast'    => 'anthropic.claude-3-haiku-20240307-v1:0',
+        'default' => 'anthropic.claude-sonnet-4-6',
+        'smart'   => 'anthropic.claude-sonnet-4-6',
+        'fast'    => 'anthropic.claude-3-5-haiku-20241022-v1:0',
     ],
 
     /*

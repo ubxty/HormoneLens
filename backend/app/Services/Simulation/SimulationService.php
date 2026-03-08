@@ -68,7 +68,7 @@ class SimulationService
             'risk_change' => $riskChange,
             'risk_category_before' => $twin->risk_category->value,
             'risk_category_after' => $newScores['risk_category'],
-            'rag_explanation' => $aiExplanation['response'],
+            'rag_explanation' => $aiExplanation['success'] ? $aiExplanation['response'] : ($ragResult['answer'] ?? 'No explanation available.'),
             'rag_confidence' => $ragResult['confidence'],
             'results' => [
                 'scores' => $newScores,

@@ -89,6 +89,8 @@ export default function DigitalTwin3D() {
   const [twin,        setTwin]        = useState(null);
   const [profile,     setProfile]     = useState(null);
   const [loading,     setLoading]     = useState(true);
+  const [generating,  setGenerating]  = useState(false);
+  const [genError,    setGenError]    = useState(null);
   const [hoveredZone, setHoveredZone] = useState(null);
   const [isMobile,    setIsMobile]    = useState(window.innerWidth < 900);
   const [bodyShape,   setBodyShape]   = useState(0.45);
@@ -113,6 +115,30 @@ export default function DigitalTwin3D() {
       setLoading(false);
     });
   }, []);
+
+  // Generate twin via API
+  const generateTwin = async () => {
+    setGenerating(true);
+    setGenError(null);
+    const csrf = document.querySelector('meta[name=csrf-token]')?.content ?? '';
+    try {
+      const res = await fetch('/api/digital-twin/generate', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+        credentials: 'same-origin',
+      });
+      const data = await res.json();
+      if (data?.success && data.data) {
+        setTwin(data.data);
+      } else {
+        setGenError(data?.message || 'Generation failed. Please ensure your health profile is complete.');
+      }
+    } catch {
+      setGenError('Network error — please try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   // Computed
   const bmi     = computeBmi(profile?.weight, profile?.height);
@@ -257,15 +283,40 @@ export default function DigitalTwin3D() {
         })}
 
         {!loading && !twin && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .9 }}
-            style={{ textAlign: 'center', padding: '16px 12px', background: 'rgba(255,255,255,.4)', borderRadius: 14, border: '1px dashed rgba(139,92,246,.3)', marginTop: 4 }}
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .5, duration: .6 }}
+            style={{ textAlign: 'center', padding: '28px 20px', background: 'linear-gradient(135deg, rgba(124,58,237,0.06), rgba(236,72,153,0.06))', borderRadius: 20, border: '2px solid rgba(139,92,246,.2)', marginTop: 4, position: 'relative', overflow: 'hidden' }}
           >
-            <div style={{ fontSize: 28, marginBottom: 7 }}>🧬</div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 4 }}>No Twin Generated Yet</p>
-            <p style={{ fontSize: 10, color: '#9ca3af', marginBottom: 10, lineHeight: 1.5 }}>Complete your Health Profile to activate the body model.</p>
-            <a href="/digital-twin" style={{ display: 'inline-block', padding: '6px 16px', background: 'linear-gradient(135deg,#7c3aed,#ec4899)', color: '#fff', borderRadius: 10, fontSize: 11, fontWeight: 700, textDecoration: 'none' }}>
-              Generate Twin →
-            </a>
+            {/* Animated glow background */}
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 80%, rgba(124,58,237,0.08), transparent 70%)', pointerEvents: 'none', animation: 'ctaGlow 3s ease-in-out infinite' }} />
+            <div style={{ fontSize: 40, marginBottom: 10, position: 'relative' }}>🧬</div>
+            <p style={{ fontSize: 14, fontWeight: 800, color: '#4c1d95', marginBottom: 6, position: 'relative' }}>Your Health Twin Awaits</p>
+            <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 16, lineHeight: 1.6, position: 'relative' }}>Create your personal digital twin to see your hormone health insights come alive.</p>
+            {genError && (
+              <p style={{ fontSize: 11, color: '#ef4444', marginBottom: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '7px 12px', position: 'relative' }}>
+                ⚠ {genError}
+              </p>
+            )}
+            <button
+              onClick={generateTwin}
+              disabled={generating}
+              style={{
+                display: 'inline-block', padding: '14px 36px',
+                background: generating
+                  ? 'linear-gradient(135deg, #9ca3af, #6b7280)'
+                  : 'linear-gradient(135deg, #7c3aed, #a855f7, #ec4899)',
+                color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 800,
+                border: 'none', cursor: generating ? 'not-allowed' : 'pointer',
+                position: 'relative',
+                boxShadow: generating
+                  ? 'none'
+                  : '0 6px 24px rgba(124,58,237,0.35), 0 2px 8px rgba(236,72,153,0.2)',
+                animation: generating ? 'none' : 'ctaPulse 2.5s ease-in-out infinite',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                letterSpacing: '0.02em',
+              }}
+            >
+              {generating ? '⏳ Generating…' : '✨ Generate My Twin'}
+            </button>
           </motion.div>
         )}
 
@@ -351,6 +402,8 @@ export default function DigitalTwin3D() {
         @keyframes dt3Blob   { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(25px,-18px) scale(1.04)} 66%{transform:translate(-18px,12px) scale(.96)} }
         @keyframes dt3Status { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
         @keyframes dt3Dash   { to { stroke-dashoffset: -1.5; } }
+        @keyframes ctaPulse  { 0%,100%{box-shadow:0 6px 24px rgba(124,58,237,0.35),0 2px 8px rgba(236,72,153,0.2)} 50%{box-shadow:0 8px 32px rgba(124,58,237,0.5),0 4px 16px rgba(236,72,153,0.3)} }
+        @keyframes ctaGlow   { 0%,100%{opacity:0.5} 50%{opacity:1} }
       `}</style>
     </div>
   );

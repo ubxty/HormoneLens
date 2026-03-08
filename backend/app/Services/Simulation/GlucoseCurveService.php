@@ -155,12 +155,29 @@ class GlucoseCurveService
 
         $combined = $sleepMod * $stressMod * $activityMod * $mealTimeMod;
 
+        // Peak time factor: how quickly glucose peaks (active = faster peak)
+        $peakTimeFactor = match ($activity) {
+            'sedentary' => 1.12,
+            'moderate' => 1.0,
+            'active'    => 0.90,
+            'very_active' => 0.82,
+            default => 1.0,
+        };
+        if ($stress === 'high') {
+            $peakTimeFactor *= 0.95; // high stress → slightly faster, more erratic peak
+        }
+
+        // Recovery factor: how long it takes to return to baseline (poor metabolic health = slower)
+        $recoveryFactor = round($sleepMod * $stressMod, 3);
+
         return [
             'sleep' => ['value' => $sleepHours, 'factor' => $sleepMod, 'label' => $sleepHours < 7 ? 'Poor sleep increases spike' : 'Good sleep helps'],
             'stress' => ['value' => $stress, 'factor' => $stressMod, 'label' => $stress === 'high' ? 'High stress amplifies spike' : ($stress === 'low' ? 'Low stress reduces spike' : 'Moderate stress effect')],
             'activity' => ['value' => $activity, 'factor' => $activityMod, 'label' => $activity === 'active' ? 'Active lifestyle reduces spike' : ($activity === 'sedentary' ? 'Sedentary lifestyle worsens spike' : 'Moderate activity effect')],
             'meal_time' => ['value' => $mealTime ?? 'unspecified', 'factor' => $mealTimeMod, 'label' => $this->mealTimeLabel($mealTime)],
             'combined' => round($combined, 3),
+            'peak_time_factor' => round($peakTimeFactor, 3),
+            'recovery_factor' => $recoveryFactor,
         ];
     }
 
