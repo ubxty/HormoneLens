@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, ContactShadows, useFBX } from '@react-three/drei';
+import { OrbitControls, ContactShadows, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { SkeletonUtils, FBXLoader } from 'three-stdlib';
+import { SkeletonUtils, GLTFLoader } from 'three-stdlib';
 
-import characterUrl from '../Standing Idle(1).fbx?url';
-import wavingUrl from '../Waving.fbx?url';
-import clappingUrl from '../Clapping.fbx?url';
+import characterUrl from '../Standing Idle(1).glb?url';
+import wavingUrl from '../Waving.glb?url';
+import clappingUrl from '../Clapping.glb?url';
 
 const TARGET_HEIGHT = 1.7;
 const CROSSFADE_DURATION = 0.35;
@@ -46,10 +46,10 @@ function CharacterMesh({ isSpeaking, animationState = 'idle' }) {
     const mixerRef = useRef(null);
     const actionsRef = useRef({});
     const currentActionRef = useRef(null);
-    const source = useFBX(characterUrl);
+    const { scene: source, animations: sourceAnims } = useGLTF(characterUrl);
 
-    const waveFbx = useLoader(FBXLoader, wavingUrl);
-    const clapFbx = useLoader(FBXLoader, clappingUrl);
+    const { scene: waveGltf, animations: waveAnims } = useLoader(GLTFLoader, wavingUrl);
+    const { scene: clapGltf, animations: clapAnims } = useLoader(GLTFLoader, clappingUrl);
 
     const model = useMemo(() => {
         const cloned = SkeletonUtils.clone(source);
@@ -73,16 +73,16 @@ function CharacterMesh({ isSpeaking, animationState = 'idle' }) {
         mixerRef.current = mixer;
         const actions = {};
 
-        if (source.animations?.length) {
-            const clip = retargetClip(source.animations[0], model);
+        if (sourceAnims?.length) {
+            const clip = retargetClip(sourceAnims[0], model);
             if (clip.tracks.length) {
                 actions.idle = mixer.clipAction(clip);
                 actions.idle.setLoop(THREE.LoopRepeat, Infinity);
             }
         }
 
-        if (waveFbx.animations?.length) {
-            const clip = retargetClip(waveFbx.animations[0], model);
+        if (waveAnims?.length) {
+            const clip = retargetClip(waveAnims[0], model);
             if (clip.tracks.length) {
                 actions.wave = mixer.clipAction(clip);
                 actions.wave.setLoop(THREE.LoopRepeat, 2);
@@ -90,8 +90,8 @@ function CharacterMesh({ isSpeaking, animationState = 'idle' }) {
             }
         }
 
-        if (clapFbx.animations?.length) {
-            const clip = retargetClip(clapFbx.animations[0], model);
+        if (clapAnims?.length) {
+            const clip = retargetClip(clapAnims[0], model);
             if (clip.tracks.length) {
                 actions.clap = mixer.clipAction(clip);
                 actions.clap.setLoop(THREE.LoopRepeat, 2);
@@ -120,7 +120,7 @@ function CharacterMesh({ isSpeaking, animationState = 'idle' }) {
             mixer.stopAllAction();
             mixer.uncacheRoot(model);
         };
-    }, [model, source, waveFbx, clapFbx]);
+    }, [model, source, sourceAnims, waveAnims, clapAnims]);
 
     useEffect(() => {
         const actions = actionsRef.current;

@@ -8,7 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/libs/fflate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/curves/NURBSCurve.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/loaders/FBXLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/loaders/DRACOLoader.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
@@ -461,8 +462,39 @@
             #character-panel { display: none; }
             #stats-panel     { display: none; }
             #game-shell      { min-height: 70vh; }
-            .characters { grid-template-columns: 1fr; }
             .card { max-height: 95vh; overflow: auto; }
+            #start-overlay { padding: 16px; }
+            #start-overlay .card { padding: 20px; }
+            #start-overlay .characters { gap: 12px; }
+            #start-overlay .character-btn { min-height: 140px; padding: 12px; }
+            #start-overlay .char-art { height: 70px; margin-bottom: 8px; }
+            #start-overlay .title { font-size: 28px; margin-bottom: 4px; }
+            #start-overlay .subtitle { font-size: 13px; margin-bottom: 16px; }
+            #gender-overlay { padding: 16px; }
+            .gender-card { padding: 24px 16px; }
+            .gender-card .title { font-size: 24px; margin-bottom: 16px; }
+            .gender-options { gap: 16px; }
+            .gender-btn { padding: 20px 12px 16px; gap: 10px; border-radius: 14px; }
+            .gender-btn .gender-icon { width: 100px; height: 120px; }
+            .gender-btn .gender-label { font-size: 18px; }
+        }
+        @media (max-width: 480px) {
+            #start-overlay { padding: 10px; }
+            #start-overlay .card { padding: 14px; }
+            #start-overlay .characters { gap: 8px; }
+            #start-overlay .character-btn { min-height: 100px; padding: 8px; }
+            #start-overlay .char-art { height: 50px; margin-bottom: 6px; }
+            #start-overlay .char-name { font-size: 14px; }
+            #start-overlay .char-desc { font-size: 11px; }
+            #start-overlay .title { font-size: 22px; }
+            #start-overlay .subtitle { font-size: 12px; margin-bottom: 12px; }
+            #gender-overlay { padding: 10px; }
+            .gender-card { padding: 20px 12px; }
+            .gender-card .title { font-size: 20px; margin-bottom: 12px; }
+            .gender-options { gap: 10px; }
+            .gender-btn { padding: 14px 8px 12px; gap: 8px; border-radius: 12px; }
+            .gender-btn .gender-icon { width: 70px; height: 80px; }
+            .gender-btn .gender-label { font-size: 16px; }
         }
     </style>
 </head>
@@ -677,12 +709,12 @@ const Config = {
 const GenderSelection = {
     selectedGender: null, // 'male' or 'female'
     modelPaths: {
-        male: 'models/character_male.fbx',
-        female: 'models/character_female.fbx',
+        male: 'models/character_male.glb',
+        female: 'models/character_female.glb',
     },
 
     getModelPath() {
-        return this.modelPaths[this.selectedGender] || 'models/character.fbx';
+        return this.modelPaths[this.selectedGender] || 'models/character.glb';
     },
 
     // SVG builders for character silhouettes in size boxes
@@ -1452,7 +1484,7 @@ const TrickSystem = {
 };
 
 // ──────────────────────────────────────────────────────────────
-// Character3DSystem — full-height FBX model with trick animations
+// Character3DSystem — full-height GLB model with trick animations
 // ──────────────────────────────────────────────────────────────
 const Character3DSystem = {
     scene: null,
@@ -1537,31 +1569,35 @@ const Character3DSystem = {
         ground.position.y = 0.5;
         this.scene.add(ground);
 
-        // Load FBX
-        if (typeof THREE.FBXLoader === 'undefined') {
-            console.warn('FBXLoader not available');
+        // Load GLB with Draco decoder
+        if (typeof THREE.GLTFLoader === 'undefined') {
+            console.warn('GLTFLoader not available');
             return;
         }
 
         var self = this;
-        var loader = new THREE.FBXLoader();
+        var dracoLoader = new THREE.DRACOLoader();
+        dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/libs/draco/');
+        var loader = new THREE.GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
         var modelPath = GenderSelection.getModelPath();
         loader.load(
             modelPath,
-            function(fbx) {
-                self.model = fbx;
+            function(gltf) {
+                var model = gltf.scene;
+                self.model = model;
                 self.baseScale = 2.8;
-                fbx.scale.setScalar(self.baseScale);
+                model.scale.setScalar(self.baseScale);
 
-                var box    = new THREE.Box3().setFromObject(fbx);
+                var box    = new THREE.Box3().setFromObject(model);
                 var center = box.getCenter(new THREE.Vector3());
                 var size   = box.getSize(new THREE.Vector3());
 
                 // Feet on ground, centered
-                fbx.position.x = -center.x;
-                fbx.position.y = -box.min.y;
-                fbx.position.z = -center.z;
-                self.modelBaseY  = fbx.position.y;
+                model.position.x = -center.x;
+                model.position.y = -box.min.y;
+                model.position.z = -center.z;
+                self.modelBaseY  = model.position.y;
                 self.modelHeight = size.y;
 
                 TrickSystem.setModelScale(size.y);
@@ -1570,18 +1606,18 @@ const Character3DSystem = {
                 self.fitCamera(size);
 
                 // Play the animation exactly as baked — no track stripping
-                if (fbx.animations && fbx.animations.length > 0) {
-                    self.mixer = new THREE.AnimationMixer(fbx);
-                    var action = self.mixer.clipAction(fbx.animations[0]);
+                if (gltf.animations && gltf.animations.length > 0) {
+                    self.mixer = new THREE.AnimationMixer(model);
+                    var action = self.mixer.clipAction(gltf.animations[0]);
                     action.play();
                 }
 
-                self.modelGroup.add(fbx);
+                self.modelGroup.add(model);
                 self.ready = true;
                 self.setBodyType('fit');
             },
             undefined,
-            function(err) { console.warn('FBX load error:', err); }
+            function(err) { console.warn('GLB load error:', err); }
         );
     },
 

@@ -1023,8 +1023,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 {{-- ═══════════ HEALTHY SNAKE GAME ═══════════ --}}
 <section id="sleep-game" class="py-14 sm:py-16 lg:py-20 bg-gradient-to-b from-white via-purple-50/40 to-white overflow-hidden">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6">
-        <div class="text-center mb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="text-center mb-10">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 mb-4 border border-purple-100">
                 🐍 Interactive Health Game
             </span>
@@ -1032,26 +1032,105 @@ document.addEventListener('DOMContentLoaded', () => {
                 Can You <span class="bg-gradient-to-r from-brand-600 to-purple-600 bg-clip-text text-transparent">Eat Healthy?</span>
             </h2>
             <p class="mt-3 text-gray-500 max-w-2xl mx-auto text-sm lg:text-base">
-                Play <strong>Healthy Snake</strong> — guide your snake to eat nutritious foods, avoid junk food, and survive. Eat 3 pieces of junk food and your snake becomes unhealthy and dies!
+                Play <strong>Healthy Snake</strong> — guide your snake to eat nutritious foods, avoid junk food, and survive.
             </p>
         </div>
 
-        <div id="game-frame-wrap" class="rounded-2xl overflow-hidden shadow-[0_25px_60px_-12px_rgba(0,0,0,0.15)] border border-purple-100/60 ring-1 ring-black/[0.03] mx-auto" style="background: #0d1117; max-width: 520px;">
-            <iframe
-                src="{{ asset('sleep-catcher/index.html') }}"
-                title="Healthy Snake — Eat Healthy, Stay Alive"
-                class="w-full border-0"
-                style="height: clamp(300px, 50vw, 520px); max-height: 70vh;"
-                allow="autoplay"
-                loading="lazy"
-                sandbox="allow-scripts allow-same-origin"
-            ></iframe>
+        {{-- Desktop: side-by-side | Mobile: stacked --}}
+        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch">
+
+            {{-- Game iframe --}}
+            <div class="lg:flex-[3] min-w-0">
+                <div id="game-frame-wrap" class="rounded-2xl overflow-hidden shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] border border-purple-100/60 ring-1 ring-black/[0.03] h-full" style="background: #0d1117;">
+                    <iframe
+                        src="{{ asset('sleep-catcher/index.html') }}"
+                        title="Healthy Snake — Eat Healthy, Stay Alive"
+                        class="w-full border-0"
+                        style="height: clamp(380px, 46vw, 600px);"
+                        allow="autoplay"
+                        loading="lazy"
+                        sandbox="allow-scripts allow-same-origin"
+                    ></iframe>
+                </div>
+            </div>
+
+            {{-- Info sidebar (desktop) --}}
+            <div class="lg:flex-[1.2] min-w-0 flex flex-col gap-4">
+                {{-- How to play card --}}
+                <div class="rounded-2xl border border-purple-100/60 bg-white/80 backdrop-blur p-5 shadow-sm flex-1">
+                    <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center text-sm">🎮</span>
+                        How to Play
+                    </h3>
+                    <ul class="space-y-2.5 text-sm text-gray-600">
+                        <li class="flex items-start gap-2">
+                            <span class="mt-0.5 w-5 h-5 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                            <span>Select your <strong>gender</strong> and <strong>character</strong> body type</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="mt-0.5 w-5 h-5 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                            <span>Use <kbd class="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono text-gray-500">Arrow keys</kbd> or <kbd class="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono text-gray-500">WASD</kbd> to move</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="mt-0.5 w-5 h-5 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-xs font-bold shrink-0">3</span>
+                            <span>Eat <strong class="text-green-600">healthy food</strong> to grow your snake</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="mt-0.5 w-5 h-5 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-xs font-bold shrink-0">✗</span>
+                            <span>Avoid <strong class="text-red-500">junk food</strong> — 3 strikes and you're out!</span>
+                        </li>
+                    </ul>
+                </div>
+
+                {{-- Health facts card --}}
+                <div class="rounded-2xl border border-purple-100/60 bg-white/80 backdrop-blur p-5 shadow-sm flex-1">
+                    <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-sm">🧠</span>
+                        Did You Know?
+                    </h3>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-start gap-2">
+                            <span class="text-purple-400 mt-0.5">▸</span>
+                            <span>Processed food can spike <strong>insulin levels</strong> by up to 300%</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-purple-400 mt-0.5">▸</span>
+                            <span>A balanced diet reduces <strong>PCOS symptoms</strong> by 40%</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-purple-400 mt-0.5">▸</span>
+                            <span>Leafy greens boost <strong>thyroid function</strong> naturally</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-purple-400 mt-0.5">▸</span>
+                            <span>Regular healthy eating lowers <strong>metabolic syndrome</strong> risk by 50%</span>
+                        </li>
+                    </ul>
+                </div>
+
+                {{-- Controls hint (desktop only) --}}
+                <div class="hidden lg:block rounded-2xl border border-gray-100 bg-gray-50/80 p-4">
+                    <div class="flex items-center gap-3 text-xs text-gray-500">
+                        <div class="grid grid-cols-3 gap-1 shrink-0">
+                            <span></span>
+                            <kbd class="w-6 h-6 flex items-center justify-center bg-white rounded border border-gray-200 text-[10px] font-mono shadow-sm">↑</kbd>
+                            <span></span>
+                            <kbd class="w-6 h-6 flex items-center justify-center bg-white rounded border border-gray-200 text-[10px] font-mono shadow-sm">←</kbd>
+                            <kbd class="w-6 h-6 flex items-center justify-center bg-white rounded border border-gray-200 text-[10px] font-mono shadow-sm">↓</kbd>
+                            <kbd class="w-6 h-6 flex items-center justify-center bg-white rounded border border-gray-200 text-[10px] font-mono shadow-sm">→</kbd>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-700 mb-0.5">Keyboard Controls</p>
+                            <p>Press <kbd class="px-1 py-0.5 bg-white rounded text-[10px] font-mono border border-gray-200">ESC</kbd> to unlock page scroll</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <p class="text-center text-xs text-gray-400 mt-4">
-            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">Arrow keys</kbd> /
-            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">WASD</kbd> to move &bull;
-            <kbd class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 text-[10px] font-mono">ESC</kbd> to unlock scroll &bull;
+        {{-- Mobile-only controls hint --}}
+        <p class="text-center text-xs text-gray-400 mt-4 lg:hidden">
             Swipe to move on mobile &bull; 3 junk food strikes = death
         </p>
     </div>

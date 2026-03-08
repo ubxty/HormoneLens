@@ -1,9 +1,9 @@
 import React, { useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Html, ContactShadows, Float, useFBX } from '@react-three/drei';
+import { OrbitControls, Html, ContactShadows, Float, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { SkeletonUtils } from 'three-stdlib';
-import characterFbxUrl from './Ch09_nonPBR.fbx?url';
+import characterGlbUrl from './Ch09_nonPBR.glb?url';
 
 const HORMONE_NODES = [
   { id: 'pituitary', label: 'Pituitary Gland', info: 'Master endocrine regulator · HPA Axis',     pos: [0, 1.64, 0.14],    r: 0.032 },
@@ -136,7 +136,7 @@ function HormoneNode({ node, color, intensity, isHovered, onHover, statusText })
 }
 
 function useCharacterModel() {
-  const source = useFBX(characterFbxUrl);
+  const { scene: source } = useGLTF(characterGlbUrl);
 
   return useMemo(function () {
     const cloned = SkeletonUtils.clone(source);
