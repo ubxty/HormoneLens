@@ -15,6 +15,7 @@ export default function TourSpeechBubble({
     onSkip,
     onFinish,
     isLast = false,
+    tailSide = 'right',
 }) {
     const [charIdx, setCharIdx] = useState(0);
     const [doneTyping, setDoneTyping] = useState(false);
@@ -50,15 +51,20 @@ export default function TourSpeechBubble({
             fontFamily: 'system-ui, -apple-system, sans-serif',
             position: 'relative',
         }}>
-            {/* Tail pointing right */}
+            {/* Tail pointing toward character */}
             <div style={{
                 position: 'absolute',
-                right: -11,
+                ...(tailSide === 'right' ? {
+                    right: -11,
+                    borderLeft: '11px solid #fff',
+                } : {
+                    left: -11,
+                    borderRight: '11px solid #fff',
+                }),
                 top: 28,
                 width: 0, height: 0,
                 borderTop: '9px solid transparent',
                 borderBottom: '9px solid transparent',
-                borderLeft: '11px solid #fff',
                 filter: 'drop-shadow(2px 0 1px rgba(124,58,237,0.05))',
             }} />
 

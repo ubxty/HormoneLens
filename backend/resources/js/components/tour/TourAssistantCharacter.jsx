@@ -1,14 +1,17 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, ContactShadows, useFBX } from '@react-three/drei';
 import * as THREE from 'three';
-import { SkeletonUtils } from 'three-stdlib';
+import { SkeletonUtils, FBXLoader } from 'three-stdlib';
 
 import characterUrl from '../Standing Idle(1).fbx?url';
+import wavingUrl from '../Waving.fbx?url';
+import clappingUrl from '../Clapping.fbx?url';
 
 const TARGET_HEIGHT = 1.7;
+const CROSSFADE_DURATION = 0.35;
 
-/* Retarget animation tracks (same logic as onboarding) */
+/* Retarget animation tracks */
 function retargetClip(clip, targetRoot) {
     const nodeNames = new Set();
     targetRoot.traverse((n) => { if (n.name) nodeNames.add(n.name); });
@@ -37,11 +40,16 @@ function retargetClip(clip, targetRoot) {
     return cloned;
 }
 
-/* Inner 3D mesh */
-function CharacterMesh({ isSpeaking }) {
+/* Inner 3D mesh with multi-animation support */
+function CharacterMesh({ isSpeaking, animationState = 'idle' }) {
     const groupRef = useRef();
     const mixerRef = useRef(null);
+    const actionsRef = useRef({});
+    const currentActionRef = useRef(null);
     const source = useFBX(characterUrl);
+
+    const waveFbx = useLoader(FBXLoader, wavingUrl);
+    const clapFbx = useLoader(FBXLoader, clappingUrl);
 
     const model = useMemo(() => {
         const cloned = SkeletonUtils.clone(source);
@@ -63,17 +71,67 @@ function CharacterMesh({ isSpeaking }) {
         if (!model) return;
         const mixer = new THREE.AnimationMixer(model);
         mixerRef.current = mixer;
+        const actions = {};
 
         if (source.animations?.length) {
             const clip = retargetClip(source.animations[0], model);
             if (clip.tracks.length) {
-                const action = mixer.clipAction(clip);
-                action.setLoop(THREE.LoopRepeat, Infinity);
-                action.play();
+                actions.idle = mixer.clipAction(clip);
+                actions.idle.setLoop(THREE.LoopRepeat, Infinity);
             }
         }
-        return () => { mixer.stopAllAction(); mixer.uncacheRoot(model); };
-    }, [model, source]);
+
+        if (waveFbx.animations?.length) {
+            const clip = retargetClip(waveFbx.animations[0], model);
+            if (clip.tracks.length) {
+                actions.wave = mixer.clipAction(clip);
+                actions.wave.setLoop(THREE.LoopRepeat, 2);
+                actions.wave.clampWhenFinished = true;
+            }
+        }
+
+        if (clapFbx.animations?.length) {
+            const clip = retargetClip(clapFbx.animations[0], model);
+            if (clip.tracks.length) {
+                actions.clap = mixer.clipAction(clip);
+                actions.clap.setLoop(THREE.LoopRepeat, 2);
+                actions.clap.clampWhenFinished = true;
+            }
+        }
+
+        actionsRef.current = actions;
+
+        if (actions.idle) {
+            actions.idle.play();
+            currentActionRef.current = actions.idle;
+        }
+
+        const onFinished = (e) => {
+            if (e.action !== actions.idle && actions.idle) {
+                e.action.fadeOut(CROSSFADE_DURATION);
+                actions.idle.reset().fadeIn(CROSSFADE_DURATION).play();
+                currentActionRef.current = actions.idle;
+            }
+        };
+        mixer.addEventListener('finished', onFinished);
+
+        return () => {
+            mixer.removeEventListener('finished', onFinished);
+            mixer.stopAllAction();
+            mixer.uncacheRoot(model);
+        };
+    }, [model, source, waveFbx, clapFbx]);
+
+    useEffect(() => {
+        const actions = actionsRef.current;
+        const target = actions[animationState];
+        const current = currentActionRef.current;
+        if (!target || target === current) return;
+
+        if (current) current.fadeOut(CROSSFADE_DURATION);
+        target.reset().fadeIn(CROSSFADE_DURATION).play();
+        currentActionRef.current = target;
+    }, [animationState]);
 
     const normalized = useMemo(() => {
         const box = new THREE.Box3().setFromObject(model);
@@ -113,8 +171,8 @@ function CharacterMesh({ isSpeaking }) {
     );
 }
 
-/* Exported Canvas wrapper — compact for tour use */
-export default function TourAssistantCharacter({ isSpeaking = false }) {
+/* Exported Canvas wrapper */
+export default function TourAssistantCharacter({ isSpeaking = false, animationState = 'idle' }) {
     return (
         <Canvas
             camera={{ position: [0, 0.5, 2.8], fov: 38, near: 0.1, far: 50 }}
@@ -128,7 +186,7 @@ export default function TourAssistantCharacter({ isSpeaking = false }) {
             <directionalLight position={[-2, 3, -4]} intensity={0.2} color="#c084fc" />
             <hemisphereLight skyColor="#ede9fe" groundColor="#f5f3ff" intensity={0.5} />
 
-            <CharacterMesh isSpeaking={isSpeaking} />
+            <CharacterMesh isSpeaking={isSpeaking} animationState={animationState} />
 
             <ContactShadows
                 position={[0, -0.48, 0]}

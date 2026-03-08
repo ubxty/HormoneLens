@@ -33,7 +33,6 @@ class BedrockService
                 userMessage: $userMessage,
                 maxTokens: $maxTokens,
                 temperature: $temperature,
-                pricing: true,
             );
 
             $response = $this->guardrails->validateResponse($result['response']);
@@ -137,7 +136,6 @@ class BedrockService
                 userMessage: $userMessage,
                 maxTokens: $maxTokens,
                 temperature: $temperature,
-                pricing: true,
             );
 
             $response = $this->guardrails->validateResponse($result['response']);

@@ -1,12 +1,17 @@
-import React, { useRef, useEffect, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, ContactShadows, useFBX } from '@react-three/drei';
 import * as THREE from 'three';
 import { SkeletonUtils } from 'three-stdlib';
+import { FBXLoader } from 'three-stdlib';
 
 import characterUrl from '../Standing Idle(1).fbx?url';
+import wavingUrl from '../Waving.fbx?url';
+import clappingUrl from '../Clapping.fbx?url';
+import spinUrl from '../Northern Soul Spin Combo.fbx?url';
 
 const TARGET_HEIGHT = 1.7;
+const CROSSFADE_DURATION = 0.4;
 
 /* ── Retarget animation tracks ── */
 function retargetClip(clip, targetRoot) {
@@ -37,11 +42,26 @@ function retargetClip(clip, targetRoot) {
     return retargeted;
 }
 
-/* ── Inner 3D character ── */
-function CharacterMesh({ isSpeaking }) {
+/* ── Animation state: idle | wave | clap | spin ── */
+const ANIM_URLS = {
+    idle: null, // embedded in the character FBX
+    wave: wavingUrl,
+    clap: clappingUrl,
+    spin: spinUrl,
+};
+
+/* ── Inner 3D character with multi-animation support ── */
+function CharacterMesh({ animationState, isSpeaking }) {
     const groupRef = useRef();
     const mixerRef = useRef(null);
+    const actionsRef = useRef({});
+    const currentActionRef = useRef(null);
     const source = useFBX(characterUrl);
+
+    /* Load external animation FBXes */
+    const waveFbx = useLoader(FBXLoader, wavingUrl);
+    const clapFbx = useLoader(FBXLoader, clappingUrl);
+    const spinFbx = useLoader(FBXLoader, spinUrl);
 
     const model = useMemo(() => {
         const cloned = SkeletonUtils.clone(source);
@@ -59,23 +79,89 @@ function CharacterMesh({ isSpeaking }) {
         return cloned;
     }, [source]);
 
-    /* Set up mixer + idle animation */
+    /* Set up mixer + all animations */
     useEffect(() => {
         if (!model) return;
         const mixer = new THREE.AnimationMixer(model);
         mixerRef.current = mixer;
+        const actions = {};
 
+        /* Idle clip from the character FBX */
         if (source.animations?.length) {
             const clip = retargetClip(source.animations[0], model);
             if (clip.tracks.length) {
-                const action = mixer.clipAction(clip);
-                action.setLoop(THREE.LoopRepeat, Infinity);
-                action.play();
+                actions.idle = mixer.clipAction(clip);
+                actions.idle.setLoop(THREE.LoopRepeat, Infinity);
             }
         }
 
-        return () => { mixer.stopAllAction(); mixer.uncacheRoot(model); };
-    }, [model, source]);
+        /* Wave */
+        if (waveFbx.animations?.length) {
+            const clip = retargetClip(waveFbx.animations[0], model);
+            if (clip.tracks.length) {
+                actions.wave = mixer.clipAction(clip);
+                actions.wave.setLoop(THREE.LoopRepeat, 2);
+                actions.wave.clampWhenFinished = true;
+            }
+        }
+
+        /* Clap */
+        if (clapFbx.animations?.length) {
+            const clip = retargetClip(clapFbx.animations[0], model);
+            if (clip.tracks.length) {
+                actions.clap = mixer.clipAction(clip);
+                actions.clap.setLoop(THREE.LoopRepeat, 3);
+                actions.clap.clampWhenFinished = true;
+            }
+        }
+
+        /* Spin */
+        if (spinFbx.animations?.length) {
+            const clip = retargetClip(spinFbx.animations[0], model);
+            if (clip.tracks.length) {
+                actions.spin = mixer.clipAction(clip);
+                actions.spin.setLoop(THREE.LoopOnce, 1);
+                actions.spin.clampWhenFinished = true;
+            }
+        }
+
+        actionsRef.current = actions;
+
+        /* Start idle */
+        if (actions.idle) {
+            actions.idle.play();
+            currentActionRef.current = actions.idle;
+        }
+
+        /* Return to idle when a non-looping animation finishes */
+        const onFinished = (e) => {
+            const finishedAction = e.action;
+            if (finishedAction !== actions.idle && actions.idle) {
+                finishedAction.fadeOut(CROSSFADE_DURATION);
+                actions.idle.reset().fadeIn(CROSSFADE_DURATION).play();
+                currentActionRef.current = actions.idle;
+            }
+        };
+        mixer.addEventListener('finished', onFinished);
+
+        return () => {
+            mixer.removeEventListener('finished', onFinished);
+            mixer.stopAllAction();
+            mixer.uncacheRoot(model);
+        };
+    }, [model, source, waveFbx, clapFbx, spinFbx]);
+
+    /* Transition animations on state change */
+    useEffect(() => {
+        const actions = actionsRef.current;
+        const target = actions[animationState];
+        const current = currentActionRef.current;
+        if (!target || target === current) return;
+
+        if (current) current.fadeOut(CROSSFADE_DURATION);
+        target.reset().fadeIn(CROSSFADE_DURATION).play();
+        currentActionRef.current = target;
+    }, [animationState]);
 
     /* Normalize size */
     const normalized = useMemo(() => {
@@ -100,7 +186,7 @@ function CharacterMesh({ isSpeaking }) {
         if (isSpeaking) {
             groupRef.current.rotation.y = Math.sin(t * 0.7) * 0.02;
         } else {
-            groupRef.current.rotation.y *= 0.95; // ease back
+            groupRef.current.rotation.y *= 0.95;
         }
     });
 
@@ -119,10 +205,10 @@ function CharacterMesh({ isSpeaking }) {
 }
 
 /* ── Exported Canvas wrapper ── */
-export default function AssistantCharacter({ isSpeaking = false }) {
+export default function AssistantCharacter({ isSpeaking = false, animationState = 'idle' }) {
     return (
         <Canvas
-            camera={{ position: [0, 0.5, 2.8], fov: 38, near: 0.1, far: 50 }}
+            camera={{ position: [0, 0.55, 3.2], fov: 40, near: 0.1, far: 50 }}
             gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
             dpr={[1, 1.5]}
             style={{ background: 'transparent', width: '100%', height: '100%' }}
@@ -133,12 +219,12 @@ export default function AssistantCharacter({ isSpeaking = false }) {
             <directionalLight position={[-2, 3, -4]} intensity={0.2} color="#c084fc" />
             <hemisphereLight skyColor="#ede9fe" groundColor="#f5f3ff" intensity={0.5} />
 
-            <CharacterMesh isSpeaking={isSpeaking} />
+            <CharacterMesh isSpeaking={isSpeaking} animationState={animationState} />
 
             <ContactShadows
                 position={[0, -0.48, 0]}
                 opacity={0.25}
-                scale={2}
+                scale={2.5}
                 blur={2.5}
                 far={1.2}
                 color="#7c3aed"
@@ -146,7 +232,7 @@ export default function AssistantCharacter({ isSpeaking = false }) {
             <OrbitControls
                 enableZoom={false}
                 enablePan={false}
-                target={[0, 0.45, 0]}
+                target={[0, 0.5, 0]}
                 minPolarAngle={Math.PI * 0.35}
                 maxPolarAngle={Math.PI * 0.65}
                 enableDamping
