@@ -11,7 +11,10 @@ use App\Http\Controllers\FoodImpactController;
 use App\Http\Controllers\HealthProfileController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\RagController;
+use App\Http\Controllers\PredictionController;
+use App\Http\Controllers\SimulationCompareController;
 use App\Http\Controllers\SimulationController;
+use App\Http\Controllers\SimulationSessionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -69,6 +72,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Simulations ──────────────────────────────────
     Route::prefix('simulations')->group(function () {
         Route::post('/run', [SimulationController::class, 'run']);
+        Route::post('/chain', [SimulationSessionController::class, 'chain']);
+        Route::post('/compare', SimulationCompareController::class);
+        Route::get('/chain/{id}', [SimulationSessionController::class, 'chain_history']);
         Route::get('/', [SimulationController::class, 'index']);
         Route::get('/{id}', [SimulationController::class, 'show']);
     });
@@ -96,4 +102,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── RAG Knowledge Base ───────────────────────────
     Route::middleware('throttle:rag')->post('/rag/query', RagController::class);
     Route::middleware('throttle:rag')->post('/rag/query-stream', [RagController::class, 'stream']);
+
+    // ── Predictions ──────────────────────────────────
+    Route::prefix('predictions')->group(function () {
+        Route::get('/', [PredictionController::class, 'all']);
+        Route::get('/cortisol', [PredictionController::class, 'cortisol']);
+        Route::get('/androgen', [PredictionController::class, 'androgen']);
+        Route::get('/cycle', [PredictionController::class, 'cycle']);
+        Route::get('/hba1c', [PredictionController::class, 'hba1c']);
+        Route::get('/long-term', [PredictionController::class, 'longTerm']);
+    });
 });

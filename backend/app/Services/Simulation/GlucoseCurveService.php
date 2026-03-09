@@ -2,21 +2,28 @@
 
 namespace App\Services\Simulation;
 
+use App\Models\AiSetting;
 use App\Models\FoodGlycemicData;
+use App\Services\AI\BedrockService;
+use App\Services\SimulationCacheService;
 
 class GlucoseCurveService
 {
+    public function __construct(
+        private readonly ?BedrockService $bedrock = null,
+    ) {}
     /**
      * Generate a time-dependent glucose response curve.
      *
      * @param  string  $foodItem       Name of food
      * @param  array   $snapshot       Digital twin snapshot_data
      * @param  string|null  $mealTime  Optional: 'morning','afternoon','evening','night'
+     * @param  string|null  $quantity  Optional: quantity descriptor like '2 cups', '300g'
      * @return array{curve: array, peak: array, food: array, modifiers: array}
      */
-    public function predict(string $foodItem, array $snapshot, ?string $mealTime = null): array
+    public function predict(string $foodItem, array $snapshot, ?string $mealTime = null, ?string $quantity = null): array
     {
-        $food = FoodGlycemicData::findByName($foodItem);
+        $food = SimulationCacheService::foodData($foodItem, fn () => FoodGlycemicData::findByName($foodItem));
 
         // Fallback estimation for unknown foods
         if (!$food) {
@@ -26,11 +33,12 @@ class GlucoseCurveService
         $hp = $snapshot['health_profile'] ?? [];
         $baseline = $this->extractBaseline($snapshot);
         $modifiers = $this->computeModifiers($hp, $mealTime);
+        $quantityMultiplier = $this->parseQuantityMultiplier($quantity, $food->serving_size ?? '1 serving');
 
-        // Adjusted spike considering all cross-factors
-        $adjustedSpike = $food->typical_spike_mg_dl * $modifiers['combined'];
+        // Adjusted spike considering all cross-factors and quantity
+        $adjustedSpike = $food->typical_spike_mg_dl * $modifiers['combined'] * $quantityMultiplier;
         $adjustedPeakTime = (int) round($food->peak_time_minutes * $modifiers['peak_time_factor']);
-        $adjustedRecovery = (int) round($food->recovery_time_minutes * $modifiers['recovery_factor']);
+        $adjustedRecovery = (int) round($food->recovery_time_minutes * $modifiers['recovery_factor'] * min(1.5, $quantityMultiplier));
 
         $curve = $this->buildCurve($baseline, $adjustedSpike, $adjustedPeakTime, $adjustedRecovery);
         $peakGlucose = $baseline + $adjustedSpike;
@@ -47,8 +55,11 @@ class GlucoseCurveService
                 'name' => $food instanceof FoodGlycemicData ? $food->food_item : $food->food_item,
                 'glycemic_index' => $food->glycemic_index,
                 'glycemic_load' => $food->glycemic_load,
+                'glycemic_load_adjusted' => round(($food->glycemic_load ?? 0) * $quantityMultiplier, 1),
                 'category' => $food->category,
                 'serving_size' => $food->serving_size,
+                'quantity' => $quantity ?? '1 serving',
+                'quantity_multiplier' => round($quantityMultiplier, 2),
                 'alternatives' => $food instanceof FoodGlycemicData ? ($food->alternatives ?? []) : ($food->alternatives ?? []),
                 'from_database' => $food instanceof FoodGlycemicData,
             ],
@@ -209,10 +220,19 @@ class GlucoseCurveService
     }
 
     /**
-     * Estimate glycemic data for unknown foods using conservative defaults.
+     * Estimate glycemic data for unknown foods.
+     * Uses AI (Bedrock) when available to get better estimates (A4),
+     * falls back to conservative defaults.
      */
     private function estimateGlycemicData(string $foodItem): object
     {
+        if ($this->bedrock && AiSetting::getValue('simulation_ai_explanation', true)) {
+            $aiEstimate = $this->estimateWithAI($foodItem);
+            if ($aiEstimate) {
+                return $aiEstimate;
+            }
+        }
+
         return (object) [
             'food_item' => $foodItem,
             'category' => 'unknown',
@@ -224,5 +244,125 @@ class GlucoseCurveService
             'serving_size' => '1 serving',
             'alternatives' => [],
         ];
+    }
+
+    /**
+     * Use AI to estimate glycemic data for unknown foods (A4).
+     */
+    private function estimateWithAI(string $foodItem): ?object
+    {
+        $prompt = <<<'PROMPT'
+You are a nutritional database. Given a food item, return ONLY a JSON object with these keys:
+- "glycemic_index": integer 0-100
+- "glycemic_load": integer per standard serving
+- "typical_spike_mg_dl": typical blood sugar spike in mg/dL for a diabetic person
+- "peak_time_minutes": minutes until peak glucose after eating
+- "recovery_time_minutes": minutes to return near baseline
+- "serving_size": standard serving description
+- "category": one of "grain", "fruit", "vegetable", "dairy", "protein", "snack", "beverage", "sweet", "mixed"
+- "alternatives": array of 3 healthier alternatives (strings)
+Return ONLY valid JSON.
+PROMPT;
+
+        $result = $this->bedrock->ask($prompt, "Food item: {$foodItem}", [
+            'max_tokens' => 200,
+            'temperature' => 0.1,
+        ]);
+
+        if (!$result['success']) {
+            return null;
+        }
+
+        $parsed = json_decode($result['response'], true);
+        if (!is_array($parsed)) {
+            if (preg_match('/\{.*\}/s', $result['response'], $matches)) {
+                $parsed = json_decode($matches[0], true);
+            }
+        }
+
+        if (!is_array($parsed) || !isset($parsed['glycemic_index'])) {
+            return null;
+        }
+
+        // Clamp values to safe ranges
+        return (object) [
+            'food_item' => $foodItem,
+            'category' => $parsed['category'] ?? 'unknown',
+            'glycemic_index' => max(0, min(100, (int) $parsed['glycemic_index'])),
+            'glycemic_load' => max(0, min(60, (int) ($parsed['glycemic_load'] ?? 15))),
+            'typical_spike_mg_dl' => max(5, min(80, (int) ($parsed['typical_spike_mg_dl'] ?? 30))),
+            'peak_time_minutes' => max(10, min(120, (int) ($parsed['peak_time_minutes'] ?? 45))),
+            'recovery_time_minutes' => max(30, min(240, (int) ($parsed['recovery_time_minutes'] ?? 90))),
+            'serving_size' => $parsed['serving_size'] ?? '1 serving',
+            'alternatives' => array_slice($parsed['alternatives'] ?? [], 0, 5),
+        ];
+    }
+
+    /**
+     * Parse a quantity string into a multiplier relative to one standard serving.
+     * Examples: '2 cups' → 2.0, '300g' → depends on serving size, '0.5 bowl' → 0.5
+     */
+    private function parseQuantityMultiplier(?string $quantity, string $standardServing): float
+    {
+        if ($quantity === null || trim($quantity) === '') {
+            return 1.0;
+        }
+
+        $qty = strtolower(trim($quantity));
+
+        // Extract leading number (supports decimals and fractions)
+        if (preg_match('/^(\d+(?:\.\d+)?)/', $qty, $matches)) {
+            $number = (float) $matches[1];
+
+            // Check if standard serving also has a number to compare
+            $standardNumber = 1.0;
+            if (preg_match('/(\d+(?:\.\d+)?)/', strtolower($standardServing), $stdMatches)) {
+                $standardNumber = (float) $stdMatches[1];
+            }
+
+            // If units match, compute ratio
+            $qtyUnit = preg_replace('/^[\d.\s]+/', '', $qty);
+            $stdUnit = preg_replace('/^[\d.\s]+/', '', strtolower($standardServing));
+
+            if ($qtyUnit && $stdUnit && str_contains($stdUnit, $qtyUnit)) {
+                return max(0.1, $number / max(0.01, $standardNumber));
+            }
+
+            // Weight-based conversion: grams
+            if (str_contains($qty, 'g') && !str_contains($qty, 'glass')) {
+                $grams = $number;
+                $stdGrams = $this->extractGrams($standardServing);
+                if ($stdGrams > 0) {
+                    return max(0.1, $grams / $stdGrams);
+                }
+                // Default: assume 1 serving = 150g
+                return max(0.1, $grams / 150.0);
+            }
+
+            // Generic numeric multiplier ("2 servings", "3 pieces", etc.)
+            return max(0.1, min(5.0, $number));
+        }
+
+        // Descriptive quantities
+        return match (true) {
+            str_contains($qty, 'half') || str_contains($qty, '1/2') => 0.5,
+            str_contains($qty, 'quarter') || str_contains($qty, '1/4') => 0.25,
+            str_contains($qty, 'double') => 2.0,
+            str_contains($qty, 'triple') => 3.0,
+            str_contains($qty, 'large') || str_contains($qty, 'big') => 1.5,
+            str_contains($qty, 'small') || str_contains($qty, 'little') => 0.6,
+            default => 1.0,
+        };
+    }
+
+    /**
+     * Extract gram weight from a serving size string.
+     */
+    private function extractGrams(string $serving): float
+    {
+        if (preg_match('/(\d+(?:\.\d+)?)\s*g\b/', strtolower($serving), $matches)) {
+            return (float) $matches[1];
+        }
+        return 0.0;
     }
 }

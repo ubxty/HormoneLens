@@ -7,16 +7,54 @@ class GuardrailService
     private const MAX_INPUT_LENGTH = 2000;
 
     /**
+     * Patterns that indicate prompt injection attempts.
+     */
+    private const INJECTION_PATTERNS = [
+        '/\b(SYSTEM|ASSISTANT|HUMAN):/i',
+        '/\bignore\s+(all\s+)?(previous|above|prior)\s+(instructions?|prompts?|rules?)/i',
+        '/\bforget\s+(everything|all|your)\b/i',
+        '/\byou\s+are\s+now\b/i',
+        '/\bact\s+as\s+(if|a)\b/i',
+        '/\bnew\s+instructions?\s*:/i',
+        '/\boverride\s+(system|safety|guardrail)/i',
+        '/\bdisregard\s+(safety|previous|all)/i',
+        '/\bpretend\s+(you|to\s+be)/i',
+        '/\bjailbreak/i',
+        '/\bDAN\s*mode/i',
+        '/```\s*(system|prompt)/i',
+        '/\[\s*(SYSTEM|INST)\s*\]/i',
+        '/<\|im_start\|>/i',
+    ];
+
+    /**
      * Sanitize user input before sending to Bedrock.
      */
     public function sanitizeInput(string $input): string
     {
         $input = mb_substr(trim($input), 0, self::MAX_INPUT_LENGTH);
 
-        // Remove potential prompt injection markers
-        $input = preg_replace('/\b(SYSTEM|ASSISTANT|HUMAN):/i', '', $input);
+        // Remove prompt injection patterns
+        foreach (self::INJECTION_PATTERNS as $pattern) {
+            $input = preg_replace($pattern, '', $input);
+        }
 
-        return $input;
+        // Remove excessive whitespace left from removals
+        $input = preg_replace('/\s{3,}/', ' ', $input);
+
+        return trim($input);
+    }
+
+    /**
+     * Check if input contains prompt injection attempts.
+     */
+    public function containsInjection(string $input): bool
+    {
+        foreach (self::INJECTION_PATTERNS as $pattern) {
+            if (preg_match($pattern, $input)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

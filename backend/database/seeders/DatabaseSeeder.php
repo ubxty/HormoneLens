@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             DiseaseSeeder::class,
             DiabetesRagSeeder::class,
             PcodRagSeeder::class,
+            ThyroidRagSeeder::class,
             LifestyleNutritionRagSeeder::class,
             AdminDashboardSeeder::class,
             FoodGlycemicSeeder::class,

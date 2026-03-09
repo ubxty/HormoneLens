@@ -32,8 +32,7 @@ class RagTraversalEngine implements RagTraversalInterface
 
         $best = $scored->first();
         if ($best['score'] === 0) {
-            // No matches at all — return first root as fallback
-            $best = $scored->first();
+            return ['path' => [], 'terminal_nodes' => [], 'total_keyword_matches' => 0];
         }
 
         $currentNode = $best['node'];

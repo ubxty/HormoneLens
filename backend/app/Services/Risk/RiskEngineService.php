@@ -6,6 +6,7 @@ use App\Enums\RiskCategory;
 use App\Models\Disease;
 use App\Models\DiseaseField;
 use App\Models\HealthProfile;
+use App\Services\SimulationCacheService;
 
 class RiskEngineService
 {
@@ -191,40 +192,47 @@ class RiskEngineService
      */
     public function recalculateFromSnapshot(array $data): array
     {
-        $hp = new HealthProfile($data['health_profile'] ?? []);
+        $hash = SimulationCacheService::snapshotHash($data);
 
-        // Build disease data map: everything except 'health_profile'
-        $diseaseDataMap = [];
-        foreach ($data as $key => $value) {
-            if ($key !== 'health_profile' && is_array($value)) {
-                $diseaseDataMap[$key] = $value;
+        return SimulationCacheService::riskScore($hash, function () use ($data) {
+            $hp = new HealthProfile($data['health_profile'] ?? []);
+
+            // Build disease data map: everything except 'health_profile'
+            $diseaseDataMap = [];
+            foreach ($data as $key => $value) {
+                if ($key !== 'health_profile' && is_array($value)) {
+                    $diseaseDataMap[$key] = $value;
+                }
             }
-        }
 
-        $metabolic = $this->calculateMetabolicRisk($hp, $diseaseDataMap);
-        $insulin = $this->calculateInsulinResistance($hp, $diseaseDataMap);
-        $hormonal = $this->calculateHormonalImbalance($hp, $diseaseDataMap);
-        $overall = $this->calculateOverallRisk($metabolic, $insulin, $hormonal);
-        $sleepScore = $this->calculateSleepScore((float) ($data['health_profile']['avg_sleep_hours'] ?? 7));
-        $stressScore = $this->calculateStressScore($data['health_profile']['stress_level'] ?? 'medium');
-        $dietScore = $this->calculateDietScore($hp, $diseaseDataMap);
+            $metabolic = $this->calculateMetabolicRisk($hp, $diseaseDataMap);
+            $insulin = $this->calculateInsulinResistance($hp, $diseaseDataMap);
+            $hormonal = $this->calculateHormonalImbalance($hp, $diseaseDataMap);
+            $overall = $this->calculateOverallRisk($metabolic, $insulin, $hormonal);
+            $sleepScore = $this->calculateSleepScore((float) ($data['health_profile']['avg_sleep_hours'] ?? 7));
+            $stressScore = $this->calculateStressScore($data['health_profile']['stress_level'] ?? 'medium');
+            $dietScore = $this->calculateDietScore($hp, $diseaseDataMap);
 
-        return [
-            'metabolic_health_score' => round($metabolic, 2),
-            'insulin_resistance_score' => round($insulin, 2),
-            'sleep_score' => round($sleepScore, 2),
-            'stress_score' => round($stressScore, 2),
-            'diet_score' => round($dietScore, 2),
-            'overall_risk_score' => round($overall, 2),
-            'risk_category' => $this->categorizeRisk($overall)->value,
-        ];
+            return [
+                'metabolic_health_score' => round($metabolic, 2),
+                'insulin_resistance_score' => round($insulin, 2),
+                'sleep_score' => round($sleepScore, 2),
+                'stress_score' => round($stressScore, 2),
+                'diet_score' => round($dietScore, 2),
+                'overall_risk_score' => round($overall, 2),
+                'risk_category' => $this->categorizeRisk($overall)->value,
+            ];
+        });
     }
 
     // ── Private helpers ──────────────────────────────
 
+    /** @var array<string, \Illuminate\Database\Eloquent\Collection> Cached disease fields keyed by disease slug */
+    private array $diseaseFieldCache = [];
+
     /**
      * Compute total risk impact for a specific score type from all disease data.
-     * Reads risk_config from disease_fields table dynamically.
+     * Reads risk_config from disease_fields table dynamically, with caching.
      */
     private function computeDiseaseImpact(array $diseaseDataMap, string $scoreType): float
     {
@@ -235,14 +243,10 @@ class RiskEngineService
                 continue;
             }
 
-            $disease = Disease::where('slug', $diseaseSlug)->first();
-            if (!$disease) {
+            $fields = $this->getDiseaseFields($diseaseSlug);
+            if ($fields === null) {
                 continue;
             }
-
-            $fields = DiseaseField::where('disease_id', $disease->id)
-                ->whereNotNull('risk_config')
-                ->get();
 
             foreach ($fields as $field) {
                 $config = $field->risk_config;
@@ -258,13 +262,36 @@ class RiskEngineService
                 foreach ($config['rules'] ?? [] as $rule) {
                     if ($this->evaluateRule($userValue, $rule)) {
                         $totalImpact += (float) ($rule['impact'] ?? 0);
-                        break; // First matching rule wins per field
+                        break;
                     }
                 }
             }
         }
 
         return $totalImpact;
+    }
+
+    /**
+     * Get disease fields with risk_config for a given slug, with caching.
+     */
+    private function getDiseaseFields(string $diseaseSlug): ?\Illuminate\Database\Eloquent\Collection
+    {
+        if (isset($this->diseaseFieldCache[$diseaseSlug])) {
+            return $this->diseaseFieldCache[$diseaseSlug];
+        }
+
+        $disease = Disease::where('slug', $diseaseSlug)->first();
+        if (!$disease) {
+            $this->diseaseFieldCache[$diseaseSlug] = null;
+            return null;
+        }
+
+        $fields = DiseaseField::where('disease_id', $disease->id)
+            ->whereNotNull('risk_config')
+            ->get();
+
+        $this->diseaseFieldCache[$diseaseSlug] = $fields;
+        return $fields;
     }
 
     /**

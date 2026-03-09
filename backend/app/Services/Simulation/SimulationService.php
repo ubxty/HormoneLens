@@ -14,6 +14,8 @@ use App\Services\Alerts\AlertService;
 use App\Services\DigitalTwin\DigitalTwinService;
 use App\Services\Risk\RiskEngineService;
 use App\Services\Simulation\GlucoseCurveService;
+use App\Services\Prediction\CortisolPredictionService;
+use App\Services\Prediction\CyclePredictionService;
 
 class SimulationService
 {
@@ -25,6 +27,8 @@ class SimulationService
         private readonly SimulationRepository $simulationRepo,
         private readonly BedrockService $bedrock,
         private readonly GlucoseCurveService $glucoseCurve,
+        private readonly CortisolPredictionService $cortisolPrediction,
+        private readonly CyclePredictionService $cyclePrediction,
     ) {}
 
     /**
@@ -73,6 +77,7 @@ class SimulationService
             'results' => [
                 'scores' => $newScores,
                 'reasoning_path' => $ragResult['reasoning_path'],
+                'predictions' => $this->generatePredictions($modifiedData),
                 'ai_metadata' => $aiExplanation['success'] ? [
                     'model'  => $aiExplanation['model_used'],
                     'tokens' => $aiExplanation['input_tokens'] + $aiExplanation['output_tokens'],
@@ -82,6 +87,63 @@ class SimulationService
         ]);
 
         // Evaluate alerts
+        $this->alertService->evaluate($user, [
+            'simulated_risk_score' => $simulatedRisk,
+            'input_data' => $input,
+            'modified_twin_data' => $modifiedData,
+            'type' => $type->value,
+            'rag_explanation' => $ragResult['answer'],
+        ], $simulation->id);
+
+        return $simulation->load('alerts');
+    }
+
+    /**
+     * Simulate from an existing snapshot (AR3: chained simulations).
+     * Instead of using the active twin, uses the provided snapshot as base.
+     */
+    public function simulateFromSnapshot(User $user, array $input, array $baseSnapshot, float $baseRiskScore, int $parentSimId): Simulation
+    {
+        $twin = $this->twinService->getActive($user);
+        if (!$twin) {
+            throw new \RuntimeException('No active Digital Twin found. Please generate one first.');
+        }
+
+        $type = SimulationType::from($input['type']);
+        $input['parent_simulation_id'] = $parentSimId;
+
+        $modifiedData = $this->applyLifestyleModifier($baseSnapshot, $type, $input);
+        $newScores = $this->riskEngine->recalculateFromSnapshot($modifiedData);
+
+        $originalRisk = $baseRiskScore;
+        $simulatedRisk = (float) $newScores['overall_risk_score'];
+        $riskChange = round($simulatedRisk - $originalRisk, 2);
+
+        $diseaseContext = $baseSnapshot['health_profile']['disease_type'] ?? null;
+        $ragResult = $this->ragSearch->search($input['description'] ?? $input['type'], $diseaseContext);
+        $aiExplanation = $this->generateAIExplanation($type, $input, $originalRisk, $simulatedRisk, $ragResult);
+
+        $simulation = $this->simulationRepo->create([
+            'user_id' => $user->id,
+            'digital_twin_id' => $twin->id,
+            'type' => $type->value,
+            'input_data' => $input,
+            'modified_twin_data' => $modifiedData,
+            'original_risk_score' => $originalRisk,
+            'simulated_risk_score' => $simulatedRisk,
+            'risk_change' => $riskChange,
+            'risk_category_before' => $this->riskEngine->categorizeRisk($originalRisk)->value,
+            'risk_category_after' => $newScores['risk_category'],
+            'rag_explanation' => $aiExplanation['success'] ? $aiExplanation['response'] : ($ragResult['answer'] ?? 'No explanation available.'),
+            'rag_confidence' => $ragResult['confidence'],
+            'results' => [
+                'scores' => $newScores,
+                'reasoning_path' => $ragResult['reasoning_path'],
+                'predictions' => $this->generatePredictions($modifiedData),
+                'chained_from' => $parentSimId,
+            ],
+        ]);
+
         $this->alertService->evaluate($user, [
             'simulated_risk_score' => $simulatedRisk,
             'input_data' => $input,
@@ -107,9 +169,10 @@ class SimulationService
         $diseaseContext = $snapshotData['health_profile']['disease_type'] ?? null;
         $foodItem = $input['food_item'];
         $mealTime = $input['meal_time'] ?? null;
+        $quantity = $input['quantity'] ?? null;
 
         // Generate glucose curve prediction with cross-factor interactions
-        $curveResult = $this->glucoseCurve->predict($foodItem, $snapshotData, $mealTime);
+        $curveResult = $this->glucoseCurve->predict($foodItem, $snapshotData, $mealTime, $quantity);
 
         // Get RAG explanation for food impact
         $ragResult = $this->ragSearch->search(
@@ -157,6 +220,7 @@ class SimulationService
                 'baseline_mg_dl' => $curveResult['baseline_mg_dl'],
                 'food_data' => $curveResult['food'],
                 'modifiers' => $curveResult['modifiers'],
+                'predictions' => $this->generatePredictions($modifiedData),
                 'ai_metadata' => $aiFoodAnalysis['success'] ? [
                     'model'  => $aiFoodAnalysis['model_used'],
                     'tokens' => $aiFoodAnalysis['input_tokens'] + $aiFoodAnalysis['output_tokens'],
@@ -188,17 +252,92 @@ class SimulationService
         switch ($type) {
             case SimulationType::MEAL:
                 $description = strtolower($input['description'] ?? '');
-                if (str_contains($description, 'reduce sugar') || str_contains($description, 'less sugar')) {
-                    // Positive change: improve sugar cravings across all diseases
+                $mealParams = $input['parameters'] ?? [];
+                $applied = false;
+
+                // Keyword-based modifiers
+                if (str_contains($description, 'reduce sugar') || str_contains($description, 'less sugar') || str_contains($description, 'no sugar') || str_contains($description, 'cut sugar')) {
                     foreach ($modified as $key => &$data) {
                         if ($key !== 'health_profile' && is_array($data) && isset($data['sugar_cravings'])) {
                             $data['sugar_cravings'] = 'rare';
                         }
                     }
                     unset($data);
+                    $applied = true;
                 }
-                if (str_contains($description, 'more vegetables') || str_contains($description, 'balanced diet')) {
+                if (str_contains($description, 'more sugar') || str_contains($description, 'extra sugar') || str_contains($description, 'sweet') || str_contains($description, 'dessert')) {
+                    foreach ($modified as $key => &$data) {
+                        if ($key !== 'health_profile' && is_array($data) && isset($data['sugar_cravings'])) {
+                            $data['sugar_cravings'] = 'frequent';
+                        }
+                    }
+                    unset($data);
+                    $applied = true;
+                }
+                if (str_contains($description, 'more vegetables') || str_contains($description, 'balanced diet') || str_contains($description, 'healthy') || str_contains($description, 'salad') || str_contains($description, 'fruits')) {
                     $modified['health_profile']['eating_habits'] = 'balanced diet with vegetables and whole grains';
+                    $applied = true;
+                }
+                if (str_contains($description, 'skip meal') || str_contains($description, 'fasting') || str_contains($description, 'skip breakfast') || str_contains($description, 'skip lunch')) {
+                    $modified['health_profile']['eating_habits'] = 'irregular meals with skipped meals';
+                    foreach ($modified as $key => &$data) {
+                        if ($key !== 'health_profile' && is_array($data) && isset($data['avg_blood_sugar'])) {
+                            $data['avg_blood_sugar'] = max(70, ($data['avg_blood_sugar'] ?? 120) - 15);
+                        }
+                    }
+                    unset($data);
+                    $applied = true;
+                }
+                if (str_contains($description, 'junk food') || str_contains($description, 'fast food') || str_contains($description, 'fried') || str_contains($description, 'processed')) {
+                    $modified['health_profile']['eating_habits'] = 'high processed and fried food intake';
+                    foreach ($modified as $key => &$data) {
+                        if ($key !== 'health_profile' && is_array($data) && isset($data['avg_blood_sugar'])) {
+                            $data['avg_blood_sugar'] = min(350, ($data['avg_blood_sugar'] ?? 120) + 30);
+                        }
+                        if ($key !== 'health_profile' && is_array($data) && isset($data['sugar_cravings'])) {
+                            $data['sugar_cravings'] = 'frequent';
+                        }
+                    }
+                    unset($data);
+                    $applied = true;
+                }
+                if (str_contains($description, 'high protein') || str_contains($description, 'protein rich') || str_contains($description, 'eggs') || str_contains($description, 'chicken') || str_contains($description, 'paneer') || str_contains($description, 'dal')) {
+                    $modified['health_profile']['eating_habits'] = 'high protein balanced diet';
+                    $applied = true;
+                }
+                if (str_contains($description, 'low carb') || str_contains($description, 'keto') || str_contains($description, 'no carbs')) {
+                    foreach ($modified as $key => &$data) {
+                        if ($key !== 'health_profile' && is_array($data) && isset($data['avg_blood_sugar'])) {
+                            $data['avg_blood_sugar'] = max(70, ($data['avg_blood_sugar'] ?? 120) - 20);
+                        }
+                    }
+                    unset($data);
+                    $modified['health_profile']['eating_habits'] = 'low carbohydrate diet';
+                    $applied = true;
+                }
+
+                // If no keyword matched, use AI to interpret the meal description
+                if (!$applied && !empty($description)) {
+                    $aiInterpretation = $this->interpretMealWithAI($description);
+                    if ($aiInterpretation) {
+                        if (isset($aiInterpretation['eating_habits'])) {
+                            $modified['health_profile']['eating_habits'] = $aiInterpretation['eating_habits'];
+                        }
+                        if (isset($aiInterpretation['sugar_impact'])) {
+                            $impact = $aiInterpretation['sugar_impact'];
+                            foreach ($modified as $key => &$data) {
+                                if ($key !== 'health_profile' && is_array($data)) {
+                                    if (isset($data['avg_blood_sugar']) && is_numeric($impact)) {
+                                        $data['avg_blood_sugar'] = (float) min(350, max(70, ($data['avg_blood_sugar'] ?? 120) + $impact));
+                                    }
+                                    if (isset($data['sugar_cravings']) && isset($aiInterpretation['cravings'])) {
+                                        $data['sugar_cravings'] = $aiInterpretation['cravings'];
+                                    }
+                                }
+                            }
+                            unset($data);
+                        }
+                    }
                 }
                 break;
 
@@ -210,6 +349,11 @@ class SimulationService
             case SimulationType::STRESS:
                 $stressLevel = $input['parameters']['stress_level'] ?? 'low';
                 $modified['health_profile']['stress_level'] = $stressLevel;
+                break;
+
+            case SimulationType::ACTIVITY:
+                $activityLevel = $input['parameters']['activity_level'] ?? 'moderate';
+                $modified['health_profile']['physical_activity'] = $activityLevel;
                 break;
         }
 
@@ -223,34 +367,21 @@ class SimulationService
     private function applyFoodModifier(array $snapshot, string $foodItem, array $ragResult, array $curveResult = []): array
     {
         $modified = $snapshot;
-        $foodLower = strtolower($foodItem);
 
-        // Use curve data for glycemic classification
-        $gi = $curveResult['food']['glycemic_index'] ?? null;
+        // Use curve data for glycemic classification — always available from GlucoseCurveService
+        $gi = $curveResult['food']['glycemic_index'] ?? 55;
+        $gl = $curveResult['food']['glycemic_load_adjusted'] ?? $curveResult['food']['glycemic_load'] ?? 15;
         $spike = $curveResult['peak']['glucose_mg_dl'] ?? null;
         $baseline = $curveResult['baseline_mg_dl'] ?? 100;
 
-        if ($gi !== null) {
-            $isHighGi = $gi >= 60;
-            $isLowGi = $gi <= 45;
-            $adjustedSpike = $spike ? ($spike - $baseline) : ($isHighGi ? 40 : ($isLowGi ? -15 : 10));
-        } else {
-            // Legacy fallback for hardcoded foods
-            $highGiFoods = ['white rice', 'sugar', 'candy', 'soda', 'white bread', 'potato', 'fries',
-                'pastry', 'cake', 'jalebi', 'gulab jamun', 'maida', 'pizza', 'naan'];
-            $lowGiFoods = ['brown rice', 'quinoa', 'oats', 'salad', 'vegetables', 'dal', 'lentils',
-                'sprouts', 'nuts', 'yogurt', 'curd'];
+        $isHighGi = $gi >= 60;
+        $isLowGi = $gi <= 45;
 
-            $isHighGi = false;
-            $isLowGi = false;
-            foreach ($highGiFoods as $food) {
-                if (str_contains($foodLower, $food)) { $isHighGi = true; break; }
-            }
-            foreach ($lowGiFoods as $food) {
-                if (str_contains($foodLower, $food)) { $isLowGi = true; break; }
-            }
-            $adjustedSpike = $isHighGi ? 40 : ($isLowGi ? -15 : 10);
-        }
+        // Use glycemic load (GL) for spike calculation when available (S8: GL sensitivity)
+        // GL better represents actual blood sugar impact than GI alone
+        $adjustedSpike = $spike
+            ? ($spike - $baseline)
+            : $this->estimateSpikeFromGL($gl, $gi);
 
         // Apply blood sugar modifiers to any disease that has avg_blood_sugar
         foreach ($modified as $key => &$data) {
@@ -261,17 +392,17 @@ class SimulationService
             if (isset($data['avg_blood_sugar'])) {
                 $newSugar = ($data['avg_blood_sugar'] ?? 120) + $adjustedSpike;
                 $data['avg_blood_sugar'] = (float) min(350, max(70, $newSugar));
-                if ($isHighGi) {
+                if ($gl >= 20 || $isHighGi) {
                     $data['sugar_cravings'] = $data['sugar_cravings'] ?? 'frequent';
-                } elseif ($isLowGi && isset($data['sugar_cravings'])) {
+                } elseif (($gl <= 10 && $isLowGi) && isset($data['sugar_cravings'])) {
                     $data['sugar_cravings'] = 'rare';
                 }
             }
 
             if (!isset($data['avg_blood_sugar']) && isset($data['sugar_cravings'])) {
-                if ($isHighGi) {
+                if ($gl >= 20 || $isHighGi) {
                     $data['sugar_cravings'] = 'frequent';
-                } elseif ($isLowGi) {
+                } elseif ($gl <= 10 && $isLowGi) {
                     $data['sugar_cravings'] = 'rare';
                 }
             }
@@ -279,6 +410,23 @@ class SimulationService
         unset($data);
 
         return $modified;
+    }
+
+    /**
+     * Estimate blood sugar spike from glycemic load when curve data isn't available.
+     * GL is a better predictor than GI because it accounts for portion size.
+     */
+    private function estimateSpikeFromGL(float $gl, float $gi): float
+    {
+        // GL-based estimation: High GL (>20) = significant spike, Low GL (<10) = minimal
+        return match (true) {
+            $gl >= 30 => 50,
+            $gl >= 20 => 35,
+            $gl >= 15 => 20,
+            $gl >= 10 => 10,
+            $gl >= 5  => 0,
+            default   => -10,
+        };
     }
 
     /**
@@ -315,7 +463,7 @@ class SimulationService
     private function generateAIExplanation(SimulationType $type, array $input, float $originalRisk, float $simulatedRisk, array $ragResult): array
     {
         if (!AiSetting::getValue('simulation_ai_explanation', true)) {
-            return $this->bedrock->ask('', ''); // returns errorResult since AI disabled
+            return ['success' => false, 'response' => ''];
         }
 
         $systemPrompt = PromptTemplates::simulationExplanation();
@@ -358,5 +506,60 @@ class SimulationService
         }
 
         return $this->buildFoodAlternatives($foodItem);
+    }
+
+    /**
+     * Use AI to interpret a free-text meal description when keywords don't match.
+     * Returns parsed meal impact or null on failure.
+     */
+    private function interpretMealWithAI(string $description): ?array
+    {
+        if (!AiSetting::getValue('simulation_ai_explanation', true)) {
+            return null;
+        }
+
+        $systemPrompt = <<<'PROMPT'
+You are a metabolic analysis engine. Given a meal description, return ONLY a JSON object with:
+- "eating_habits": a short description of the diet pattern (e.g., "high carb meal", "balanced protein-rich meal")
+- "sugar_impact": estimated blood sugar change in mg/dL (positive = increase, negative = decrease), integer between -30 and +50
+- "cravings": one of "frequent", "occasional", "rare"
+Return ONLY valid JSON, no explanation.
+PROMPT;
+
+        $result = $this->bedrock->ask($systemPrompt, "Meal description: {$description}", [
+            'max_tokens' => 150,
+            'temperature' => 0.1,
+        ]);
+
+        if (!$result['success']) {
+            return null;
+        }
+
+        $parsed = json_decode($result['response'], true);
+        if (!is_array($parsed)) {
+            // Try extracting JSON from response
+            if (preg_match('/\{.*\}/s', $result['response'], $matches)) {
+                $parsed = json_decode($matches[0], true);
+            }
+        }
+
+        return is_array($parsed) ? $parsed : null;
+    }
+
+    /**
+     * Generate hormonal predictions from modified snapshot data.
+     */
+    private function generatePredictions(array $modifiedData): array
+    {
+        $predictions = [
+            'cortisol' => $this->cortisolPrediction->predict($modifiedData),
+        ];
+
+        // PCOS-specific predictions
+        if (isset($modifiedData['pcod']) || isset($modifiedData['pcos'])) {
+            $predictions['cycle'] = $this->cyclePrediction->predict($modifiedData);
+        }
+
+        return $predictions;
     }
 }
