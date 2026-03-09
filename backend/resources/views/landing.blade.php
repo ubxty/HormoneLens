@@ -52,6 +52,18 @@
             transform: translateY(0);
         }
 
+        /* ═══ Navbar brand logo ═══ */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-brand img {
+            height: 48px;
+            width: auto;
+            display: block;
+            object-fit: contain;
+        }
+
         /* ═══ Logo gradient text ═══ */
         .logo-gradient {
             background: linear-gradient(90deg, #7C3AED, #A78BFA);
@@ -686,15 +698,10 @@
 {{-- ═══════════ NAVBAR ═══════════ --}}
 <nav id="mainNav" class="nav-glass">
     <div class="max-w-[1200px] mx-auto flex items-center justify-between px-6 h-16">
-        <a href="/" class="flex items-center gap-2 font-bold min-w-0 flex-shrink-0">
-            <span class="text-brand-600 flex-shrink-0 text-lg sm:text-xl">🔬</span>
-            <span class="flex flex-col leading-tight min-w-0">
-                <span class="flex items-center gap-1.5">
-                    <span class="logo-gradient font-extrabold tracking-tight text-sm sm:text-lg whitespace-nowrap">HormoneLens AI</span>
-                    <span class="engine-dot inline-block w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                </span>
-                <span class="hidden sm:block text-[9px] font-medium tracking-widest text-gray-400 uppercase">Predictive Hormone Intelligence Engine</span>
-            </span>
+        <a href="/" class="flex-shrink-0">
+            <div class="navbar-brand">
+                <img src="/images/hormonelogo-navbar.png" alt="HormoneLens Logo">
+            </div>
         </a>
         <div class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-500">
             <a href="#features" class="hover:text-violet-700 transition-colors duration-200">Features</a>

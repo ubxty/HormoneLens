@@ -14,6 +14,7 @@ use App\Services\Alerts\AlertService;
 use App\Services\DigitalTwin\DigitalTwinService;
 use App\Services\Risk\RiskEngineService;
 use App\Services\Simulation\GlucoseCurveService;
+use Illuminate\Support\Facades\Log;
 
 class SimulationService
 {
@@ -32,8 +33,11 @@ class SimulationService
      */
     public function simulateLifestyleChange(User $user, array $input): Simulation
     {
+        Log::info('Simulation triggered', ['user' => $user->id, 'input' => $input]);
+
         $twin = $this->twinService->getActive($user);
         if (!$twin) {
+            Log::warning('Simulation failed: no active twin', ['user' => $user->id]);
             throw new \RuntimeException('No active Digital Twin found. Please generate one first.');
         }
 
@@ -48,6 +52,13 @@ class SimulationService
         $originalRisk = (float) $twin->overall_risk_score;
         $simulatedRisk = (float) $newScores['overall_risk_score'];
         $riskChange = round($simulatedRisk - $originalRisk, 2);
+
+        Log::info('Simulation scores calculated', [
+            'original_risk' => $originalRisk,
+            'simulated_risk' => $simulatedRisk,
+            'risk_change' => $riskChange,
+            'scores' => $newScores,
+        ]);
 
         // Get RAG explanation
         $diseaseContext = $snapshotData['health_profile']['disease_type'] ?? null;
@@ -98,8 +109,11 @@ class SimulationService
      */
     public function simulateFoodImpact(User $user, array $input): Simulation
     {
+        Log::info('Food impact simulation triggered', ['user' => $user->id, 'input' => $input]);
+
         $twin = $this->twinService->getActive($user);
         if (!$twin) {
+            Log::warning('Food impact failed: no active twin', ['user' => $user->id]);
             throw new \RuntimeException('No active Digital Twin found. Please generate one first.');
         }
 
@@ -110,6 +124,13 @@ class SimulationService
 
         // Generate glucose curve prediction with cross-factor interactions
         $curveResult = $this->glucoseCurve->predict($foodItem, $snapshotData, $mealTime);
+
+        Log::info('Food impact glucose curve', [
+            'food' => $foodItem,
+            'from_database' => $curveResult['food']['from_database'] ?? false,
+            'peak_glucose' => $curveResult['peak']['glucose_mg_dl'] ?? null,
+            'gi' => $curveResult['food']['glycemic_index'] ?? null,
+        ]);
 
         // Get RAG explanation for food impact
         $ragResult = $this->ragSearch->search(
