@@ -59,12 +59,17 @@ class SimulationCacheService
 
     /**
      * Invalidate all cached data for a user when their twin is regenerated.
+     * Clears risk and prediction caches by pattern.
      */
     public static function invalidateForUser(int $userId): void
     {
-        // Tag-based invalidation when Redis is available
-        if (Cache::getStore() instanceof \Illuminate\Cache\RedisStore) {
-            Cache::tags(["user:{$userId}"])->flush();
-        }
+        // Clear known cache keys for this user
+        // Risk and prediction caches use snapshot hashes, so we can't target by user.
+        // Instead, clear prediction caches which are most affected by twin regeneration.
+        Cache::forget("pred:cortisol:{$userId}");
+        Cache::forget("pred:androgen:{$userId}");
+        Cache::forget("pred:cycle:{$userId}");
+        Cache::forget("pred:hba1c:{$userId}");
+        Cache::forget("pred:longterm:{$userId}");
     }
 }

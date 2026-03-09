@@ -73,14 +73,13 @@ class SimulationSessionController extends Controller
             ], 404);
         }
 
-        // Walk the chain forward from root
+        // Walk the chain forward from root (max 50 to prevent runaway loops)
         $chain = collect([$rootSim]);
         $currentId = $rootSim->id;
 
-        // Find children that reference this simulation as parent
-        while (true) {
+        for ($i = 0; $i < 50; $i++) {
             $child = \App\Models\Simulation::where('user_id', $request->user()->id)
-                ->whereJsonContains('input_data->parent_simulation_id', $currentId)
+                ->where('input_data->parent_simulation_id', $currentId)
                 ->first();
 
             if (!$child) break;

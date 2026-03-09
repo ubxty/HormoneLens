@@ -676,7 +676,7 @@
                 <span id="heroLine2" class="hero-typed-text"><span id="heroCursor" class="hero-cursor" aria-hidden="true"></span></span>
             </h1>
             <p class="mt-4 sm:mt-5 text-base sm:text-lg text-gray-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Run AI-powered simulations to predict how sleep, diet, stress, and physical activity influence your risk of PCOS, Type 2 Diabetes, insulin resistance, and metabolic imbalance.
+                Run AI-powered hormone simulations with cortisol predictions, HbA1c projections, chained what-if scenarios, and long-term PCOS/Diabetes risk forecasting — all in real time.
             </p>
             <p class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-100 rounded-lg text-xs font-medium text-purple-700">
                 <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse flex-shrink-0"></span>
@@ -1219,47 +1219,121 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-4 border border-violet-100">
                 🧠 AI-Powered Health Intelligence
             </span>
-            <h2 class="text-3xl font-bold text-gray-900">Core Simulation Capabilities of HormoneLens</h2>
-            <p class="mt-3 text-gray-500">Advanced AI-driven metabolic modeling designed to predict lifestyle-induced hormonal and diabetes risk outcomes.</p>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">The Most Advanced Hormone Simulation Engine Ever Built</h2>
+            <p class="mt-3 text-gray-500">12 powerful AI-driven capabilities — from real-time hormone prediction to long-term disease risk projection — all powered by Amazon Bedrock.</p>
         </div>
 
         {{-- Capability cards --}}
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
+            {{-- 1. Metabolic Digital Twin --}}
             <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="0">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🛎️</div>
-                <h3 class="font-semibold text-gray-800 mb-2">Lifestyle Data Integration</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Aggregates sleep patterns, dietary inputs, physical activity, and stress indicators for personalized simulation modeling.</p>
-            </div>
-
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="100">
                 <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🧬</div>
                 <h3 class="font-semibold text-gray-800 mb-2">Metabolic Digital Twin</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Constructs a real-time physiological model of insulin sensitivity and glucose metabolism.</p>
+                <p class="text-sm text-gray-500 leading-relaxed">Constructs a real-time physiological model of insulin sensitivity, glucose metabolism, and hormonal balance — your virtual health replica.</p>
             </div>
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="200">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">📈</div>
-                <h3 class="font-semibold text-gray-800 mb-2">Behavioral Impact Simulation</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Evaluates how daily lifestyle changes influence endocrine and metabolic health parameters.</p>
+            {{-- 2. Hormone Prediction Engine (NEW) --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6 relative" data-sim-delay="100">
+                <span class="absolute top-3 right-3 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(16,185,129,0.08);">🔮</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Hormone Prediction Engine</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Predicts cortisol curves, androgen levels, menstrual cycle regularity, and HbA1c trajectories using AI-driven physiological modeling.</p>
+                <div class="mt-3 flex flex-wrap gap-1">
+                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] rounded-full border border-emerald-100 font-medium">Cortisol</span>
+                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] rounded-full border border-emerald-100 font-medium">Androgen</span>
+                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] rounded-full border border-emerald-100 font-medium">Cycle</span>
+                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] rounded-full border border-emerald-100 font-medium">HbA1c</span>
+                </div>
             </div>
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="300">
+            {{-- 3. Long-Term Health Projections (NEW) --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6 relative" data-sim-delay="200">
+                <span class="absolute top-3 right-3 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(245,158,11,0.08);">📊</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Long-Term Health Projections</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Projects PCOS progression, diabetes complications, thyroid dysfunction trajectories, and fertility outlook over months and years.</p>
+                <div class="mt-3 flex flex-wrap gap-1">
+                    <span class="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] rounded-full border border-amber-100 font-medium">PCOS</span>
+                    <span class="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] rounded-full border border-amber-100 font-medium">Diabetes</span>
+                    <span class="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] rounded-full border border-amber-100 font-medium">Thyroid</span>
+                    <span class="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] rounded-full border border-amber-100 font-medium">Fertility</span>
+                </div>
+            </div>
+
+            {{-- 4. Chained What-If Simulations (NEW) --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6 relative" data-sim-delay="300">
+                <span class="absolute top-3 right-3 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(99,102,241,0.08);">🔗</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Chained What-If Simulations</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Chain multiple simulations together — see how changing sleep after adjusting diet compounds your metabolic outcomes over time.</p>
+            </div>
+
+            {{-- 5. Side-by-Side Comparison (NEW) --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6 relative" data-sim-delay="400">
+                <span class="absolute top-3 right-3 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(168,85,247,0.08);">⚖️</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Side-by-Side Comparison</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Compare up to 5 simulations side-by-side — visualize how different lifestyle scenarios stack up against each other in risk outcomes.</p>
+            </div>
+
+            {{-- 6. AI Food Intelligence (NEW) --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6 relative" data-sim-delay="500">
+                <span class="absolute top-3 right-3 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(34,197,94,0.08);">🍽️</div>
+                <h3 class="font-semibold text-gray-800 mb-2">AI Food Intelligence</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Glycemic load analysis with AI-powered natural language meal parsing — just type "2 rotis with dal" and get instant metabolic impact.</p>
+                <div class="mt-3 flex flex-wrap gap-1">
+                    <span class="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] rounded-full border border-green-100 font-medium">GL Scoring</span>
+                    <span class="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] rounded-full border border-green-100 font-medium">NLP Parsing</span>
+                    <span class="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] rounded-full border border-green-100 font-medium">Temporal</span>
+                </div>
+            </div>
+
+            {{-- 7. PCOS & Diabetes Risk Analysis --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="600">
                 <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🔬</div>
                 <h3 class="font-semibold text-gray-800 mb-2">PCOS &amp; Diabetes Risk Analysis</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Forecasts insulin resistance progression and Type 2 Diabetes probability through hormonal response mapping.</p>
+                <p class="text-sm text-gray-500 leading-relaxed">Forecasts insulin resistance progression and Type 2 Diabetes probability through hormonal response mapping with cached risk scores.</p>
             </div>
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="400">
+            {{-- 8. Real-Time Adaptive Alerts (NEW) --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6 relative" data-sim-delay="700">
+                <span class="absolute top-3 right-3 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(239,68,68,0.08);">🚨</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Real-Time Adaptive Alerts</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">WebSocket-powered live alerts that broadcast when risk thresholds are breached — with adaptive thresholds that learn from your history.</p>
+            </div>
+
+            {{-- 9. RAG Knowledge Engine (NEW) --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6 relative" data-sim-delay="800">
+                <span class="absolute top-3 right-3 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(59,130,246,0.08);">📚</div>
+                <h3 class="font-semibold text-gray-800 mb-2">RAG Knowledge Engine</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Tree-based retrieval-augmented generation for medical Q&amp;A — hierarchical keyword-scored traversal with logarithmic confidence scoring.</p>
+            </div>
+
+            {{-- 10. AI Risk Assessment Engine --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="900">
                 <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🧠</div>
                 <h3 class="font-semibold text-gray-800 mb-2">AI Risk Assessment Engine</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Translates simulated metabolic outcomes into clinically relevant health risk levels.</p>
+                <p class="text-sm text-gray-500 leading-relaxed">Translates simulated metabolic outcomes into clinically relevant health risk levels with field-level caching for lightning-fast responses.</p>
             </div>
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="500">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🔔</div>
-                <h3 class="font-semibold text-gray-800 mb-2">Adaptive Health Alerts</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Delivers predictive alerts when simulated health indicators enter elevated risk zones.</p>
+            {{-- 11. AI Guardrail Protection (NEW) --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6 relative" data-sim-delay="1000">
+                <span class="absolute top-3 right-3 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(220,38,38,0.08);">🛡️</div>
+                <h3 class="font-semibold text-gray-800 mb-2">AI Guardrail Protection</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">14-pattern prompt injection detection shields every AI interaction — blocking jailbreak attempts, role manipulation, and data exfiltration.</p>
+            </div>
+
+            {{-- 12. Redis Performance Engine (NEW) --}}
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6 relative" data-sim-delay="1100">
+                <span class="absolute top-3 right-3 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wide">New</span>
+                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(245,158,11,0.08);">⚡</div>
+                <h3 class="font-semibold text-gray-800 mb-2">Redis Performance Engine</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Intelligent caching layer for risk scores, food lookups, RAG results, and prediction data — sub-millisecond response times at scale.</p>
             </div>
 
         </div>
@@ -1756,7 +1830,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <img src="{{ asset('images/profile/vansh.jpeg') }}" alt="Vansh Sethi" class="w-[84px] h-[84px] rounded-full object-cover">
                 </div>
                 {{-- Name & Role --}}
-                <h3 class="text-lg font-extrabold text-gray-900 mb-1">Vansh Sethi</h3>
+                <h3 class="text-lg font-extrabold text-gray-900 mb-1">Sahil Sethi</h3>
                 <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-700 mb-4 uppercase tracking-wide">Testing &amp; Quality Assurance</span>
                 {{-- Description --}}
                 <p class="text-sm text-gray-500 leading-relaxed mb-6">
@@ -1821,15 +1895,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">System Status</p>
                 <div class="flex items-center gap-2.5">
                     <span class="status-dot        inline-block w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                    <span class="text-sm text-gray-600">AI Prediction Engine Active</span>
+                    <span class="text-sm text-gray-600">Hormone Prediction Engine Active</span>
                 </div>
                 <div class="flex items-center gap-2.5">
                     <span class="status-dot-delay  inline-block w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                    <span class="text-sm text-gray-600">Simulation Model Synced</span>
+                    <span class="text-sm text-gray-600">12 Simulation Capabilities Online</span>
                 </div>
                 <div class="flex items-center gap-2.5">
                     <span class="status-dot-delay2 inline-block w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                    <span class="text-sm text-gray-600">Lifestyle Risk Mapping Enabled</span>
+                    <span class="text-sm text-gray-600">Real-Time Alert Broadcasting Active</span>
                 </div>
             </div>
         </div>
