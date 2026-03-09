@@ -16,6 +16,7 @@ export default function TourSpeechBubble({
     onFinish,
     isLast = false,
     tailSide = 'right',
+    width = 320,
 }) {
     const [charIdx, setCharIdx] = useState(0);
     const [doneTyping, setDoneTyping] = useState(false);
@@ -46,10 +47,11 @@ export default function TourSpeechBubble({
             border: '1.5px solid #e9e5f5',
             borderRadius: 20,
             padding: '20px 22px 16px',
-            width: 340,
+            width,
             boxShadow: '0 8px 32px rgba(124,58,237,0.10), 0 2px 8px rgba(0,0,0,0.06)',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             position: 'relative',
+            boxSizing: 'border-box',
         }}>
             {/* Tail pointing toward character */}
             <div style={{

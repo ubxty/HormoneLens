@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>HormoneLens AI — Predictive Metabolic Simulation Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -448,14 +449,19 @@
         .ob-cta-btn {
             position: relative;
             z-index: 1;
-            display: block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             background: linear-gradient(135deg, #7C3AED, #A78BFA);
-            border-radius: 14px;
-            padding: 16px 40px;
-            font-size: 16px;
+            border-radius: 10px;
+            height: 44px;
+            padding: 0 20px;
+            font-size: 14px;
             font-weight: 600;
             color: #fff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            transition: all 0.2s ease;
             animation: obGlowPulse 2s ease-in-out infinite;
         }
         .ob-cta-btn:hover {
@@ -606,13 +612,80 @@
             border-radius: 2px;
             animation: cursorBlink 0.75s step-end infinite;
         }
+
+        /* ═══════════════════════════════════════════════════
+           DESIGN SYSTEM  —  Compact SaaS Spacing System
+           ═══════════════════════════════════════════════════
+           Scale:  4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64 px
+           Section padding:  64 px top & bottom
+           Container:        max-width 1200px · 24px side padding
+           Card padding:     20 px
+           Button:           height 44px · padding 10px 20px · radius 10px
+           Grid gap:         24 px
+        ═══════════════════════════════════════════════════ */
+
+        /* ── Hero: 64 px vertical padding ── */
+        .hero { padding-top: 64px; padding-bottom: 64px; }
+
+        /* ── Primary CTA button ── */
+        .btn-primary {
+            display:         inline-flex;
+            align-items:     center;
+            justify-content: center;
+            gap:             8px;
+            height:          44px;
+            padding:         0 20px;
+            border-radius:   10px;
+            font-weight:     600;
+            font-size:       14px;
+            line-height:     1;
+            background:      linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+            color:           #fff;
+            border:          none;
+            text-decoration: none;
+            cursor:          pointer;
+            white-space:     nowrap;
+            transition:      all 0.2s ease;
+            box-shadow:      0 2px 12px rgba(99,102,241,0.22);
+        }
+        .btn-primary:hover {
+            transform:  translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99,102,241,0.38);
+        }
+
+        /* ── Secondary / outline button ── */
+        .btn-secondary {
+            display:         inline-flex;
+            align-items:     center;
+            justify-content: center;
+            gap:             8px;
+            height:          44px;
+            padding:         0 20px;
+            border-radius:   10px;
+            font-weight:     600;
+            font-size:       14px;
+            line-height:     1;
+            background:      #fff;
+            color:           #374151;
+            border:          1.5px solid #e5e7eb;
+            text-decoration: none;
+            cursor:          pointer;
+            white-space:     nowrap;
+            transition:      all 0.2s ease;
+        }
+        .btn-secondary:hover {
+            transform:    translateY(-2px);
+            border-color: rgba(124,58,237,0.5);
+            background:   #faf5ff;
+            box-shadow:   0 4px 10px rgba(0,0,0,0.06);
+        }
     </style>
 </head>
 <body class="bg-white text-gray-800 antialiased">
 
 {{-- ═══════════ NAVBAR ═══════════ --}}
 <nav id="mainNav" class="nav-glass">
-    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
+    <div class="max-w-[1200px] mx-auto flex items-center justify-between px-6 h-16">
         <a href="/" class="flex items-center gap-2 font-bold min-w-0 flex-shrink-0">
             <span class="text-brand-600 flex-shrink-0 text-lg sm:text-xl">🔬</span>
             <span class="flex flex-col leading-tight min-w-0">
@@ -632,7 +705,7 @@
             <a href="{{ route('login') }}"
                class="hidden sm:block text-sm font-medium text-gray-500 hover:text-violet-700 transition-colors duration-200">Log in</a>
             <a href="{{ route('register') }}"
-               class="hidden sm:inline-block px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md shadow-violet-200/50">
+               class="hidden sm:inline-flex px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-violet-200/50 items-center gap-1.5">
                 Get Started</a>
             {{-- Mobile hamburger --}}
             <button id="mobileMenuBtn" class="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-lg border border-gray-200 bg-white/80 gap-[5px] flex-shrink-0" aria-label="Toggle navigation menu">
@@ -655,7 +728,7 @@
     </div>
 </nav>
 
-<section class="relative pb-20 lg:pb-24 overflow-hidden bg-gradient-to-b from-white via-brand-50/30 to-white" style="padding-top:20px; margin-top:64px;">
+<section class="hero relative overflow-hidden bg-gradient-to-b from-white via-brand-50/30 to-white" style="margin-top:64px;">
     {{-- AI floating particles (background) --}}
     <div class="ai-particle ai-particle-1"></div>
     <div class="ai-particle ai-particle-2"></div>
@@ -664,32 +737,32 @@
     <div class="absolute top-20 -left-40 w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 float-anim"></div>
     <div class="absolute top-40 -right-40 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 float-anim-delay"></div>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+    <div class="relative max-w-[1200px] mx-auto px-6 grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
         {{-- Left: copy --}}
         <div class="fade-up text-center lg:text-left">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-brand-50 text-brand-700 mb-5 sm:mb-6 border border-brand-100">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-brand-50 text-brand-700 mb-4 border border-brand-100">
                 🧬 AI-Powered Metabolic Simulation Engine
             </span>
-            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight hero-type-wrap"
+            <h1 class="text-[38px] sm:text-[42px] font-extrabold tracking-tight hero-type-wrap leading-[1.1]"
                 aria-label="See Your Health Before You Live It!">
                 <span id="heroLine1" class="hero-typed-text"></span>
                 <span id="heroLine2" class="hero-typed-text"><span id="heroCursor" class="hero-cursor" aria-hidden="true"></span></span>
             </h1>
-            <p class="mt-4 sm:mt-5 text-base sm:text-lg text-gray-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+            <p class="mt-4 text-base text-gray-500 max-w-[540px] mx-auto lg:mx-0 leading-relaxed">
                 Run AI-powered simulations to predict how sleep, diet, stress, and physical activity influence your risk of PCOS, Type 2 Diabetes, insulin resistance, and metabolic imbalance.
             </p>
-            <p class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-100 rounded-lg text-xs font-medium text-purple-700">
+            <p class="mt-3 inline-flex items-center gap-2 px-2.5 py-1 bg-purple-50 border border-purple-100 rounded-lg text-xs font-medium text-purple-700">
                 <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse flex-shrink-0"></span>
                 Designed for PCOS, Thyroid Dysfunction, Type 2 Diabetes &amp; Insulin Resistance Monitoring
             </p>
-            <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-center lg:items-start justify-center lg:justify-start">
+            <div class="mt-5 flex flex-col sm:flex-row flex-wrap gap-3 items-center lg:items-start justify-center lg:justify-start">
                 <a href="{{ route('register') }}"
-                   class="w-full sm:w-auto group px-5 sm:px-6 py-3.5 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-brand-200/50 text-sm flex items-center justify-center gap-2">
+                   class="btn-primary w-full sm:w-auto group">
                     <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg>
                     Run My Hormone Simulation
                 </a>
                 <a href="#how"
-                   class="w-full sm:w-auto px-5 sm:px-6 py-3.5 bg-white border border-gray-200 hover:border-brand-300 hover:bg-brand-50 text-gray-700 font-semibold rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-sm">
+                   class="btn-secondary w-full sm:w-auto">
                     <svg class="w-4 h-4 text-brand-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM9.555 7.168A1 1 0 0 0 8 8v4a1 1 0 0 0 1.555.832l3-2a1 1 0 0 0 0-1.664l-3-2Z" clip-rule="evenodd"/></svg>
                     Explore How It Works
                 </a>
@@ -724,9 +797,9 @@
                 </svg>
             </div>
 
-            <div class="relative bg-white rounded-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.12)] border border-gray-100/80 p-4 sm:p-6 max-w-sm sm:max-w-md mx-auto ring-1 ring-black/[0.03]" style="z-index:12;">
+            <div class="relative bg-white rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.10)] border border-gray-100/80 p-4 max-w-sm sm:max-w-md mx-auto ring-1 ring-black/[0.03]" style="z-index:12;">
                 {{-- Top label --}}
-                <div class="flex items-center gap-2 mb-4 sm:mb-5 pb-3 border-b border-gray-100">
+                <div class="flex items-center gap-2 mb-3 pb-2.5 border-b border-gray-100">
                     <span class="flex h-2 w-2 relative flex-shrink-0">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -735,26 +808,26 @@
                 </div>
 
                 {{-- Overall Risk Score --}}
-                <div class="flex items-center justify-between mb-4 sm:mb-5">
+                <div class="flex items-center justify-between mb-3">
                     <div>
                         <p class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Overall Risk Score</p>
-                        <p class="text-4xl sm:text-5xl font-extrabold text-amber-500 score-num" data-countup="68.4" data-decimals="1">0.0</p>
+                        <p class="text-4xl font-extrabold text-amber-500 score-num" data-countup="68.4" data-decimals="1">0.0</p>
                     </div>
                     <span class="px-3 sm:px-3.5 py-1 sm:py-1.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full tracking-wide">⚠ MEDIUM</span>
                 </div>
 
                 {{-- Score cards --}}
-                <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-5">
-                    <div class="text-center p-2 sm:p-3 bg-indigo-50/80 rounded-xl border border-indigo-100/50">
-                        <p class="text-lg sm:text-xl font-bold text-indigo-600 score-num" data-countup="82.5" data-decimals="1">0.0</p>
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <div class="text-center p-2 bg-indigo-50/80 rounded-xl border border-indigo-100/50">
+                        <p class="text-lg font-bold text-indigo-600 score-num" data-countup="82.5" data-decimals="1">0.0</p>
                         <p class="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 font-medium">Metabolic</p>
                     </div>
-                    <div class="text-center p-2 sm:p-3 bg-purple-50/80 rounded-xl border border-purple-100/50">
-                        <p class="text-lg sm:text-xl font-bold text-purple-600 score-num" data-countup="55.0" data-decimals="1">0.0</p>
+                    <div class="text-center p-2 bg-purple-50/80 rounded-xl border border-purple-100/50">
+                        <p class="text-lg font-bold text-purple-600 score-num" data-countup="55.0" data-decimals="1">0.0</p>
                         <p class="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 font-medium">Insulin Res.</p>
                     </div>
-                    <div class="text-center p-2 sm:p-3 bg-blue-50/80 rounded-xl border border-blue-100/50">
-                        <p class="text-lg sm:text-xl font-bold text-blue-600 score-num" data-countup="70.0" data-decimals="1">0.0</p>
+                    <div class="text-center p-2 bg-blue-50/80 rounded-xl border border-blue-100/50">
+                        <p class="text-lg font-bold text-blue-600 score-num" data-countup="70.0" data-decimals="1">0.0</p>
                         <p class="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 font-medium">Sleep Score</p>
                     </div>
                 </div>
@@ -1022,9 +1095,9 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 {{-- ═══════════ HEALTHY SNAKE GAME ═══════════ --}}
-<section id="sleep-game" class="py-14 sm:py-16 lg:py-20 bg-gradient-to-b from-white via-purple-50/40 to-white overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="text-center mb-10">
+<section id="sleep-game" class="py-16 bg-gradient-to-b from-white via-purple-50/40 to-white overflow-hidden">
+    <div class="max-w-[1200px] mx-auto px-6">
+        <div class="text-center mb-6">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 mb-4 border border-purple-100">
                 🐍 Interactive Health Game
             </span>
@@ -1037,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         {{-- Desktop: side-by-side | Mobile: stacked --}}
-        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch">
+        <div class="flex flex-col lg:flex-row gap-5 items-stretch">
 
             {{-- Game iframe --}}
             <div class="lg:flex-[3] min-w-0">
@@ -1211,55 +1284,55 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 {{-- ═══════════ CAPABILITIES ═══════════ --}}
-<section id="features" class="py-16 sm:py-20 bg-gray-50 overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+<section id="features" class="py-16 bg-gray-50 overflow-hidden">
+    <div class="max-w-[1200px] mx-auto px-6">
 
         {{-- Section header --}}
-        <div class="text-center max-w-2xl mx-auto mb-14 fade-up">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-4 border border-violet-100">
+        <div class="text-center max-w-2xl mx-auto mb-6 fade-up">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-3 border border-violet-100">
                 🧠 AI-Powered Health Intelligence
             </span>
-            <h2 class="text-3xl font-bold text-gray-900">Core Simulation Capabilities of HormoneLens</h2>
-            <p class="mt-3 text-gray-500">Advanced AI-driven metabolic modeling designed to predict lifestyle-induced hormonal and diabetes risk outcomes.</p>
+            <h2 class="text-[28px] md:text-[32px] font-extrabold tracking-tight text-gray-900">Core Simulation Capabilities of HormoneLens</h2>
+            <p class="mt-3 text-sm text-gray-500">Advanced AI-driven metabolic modeling designed to predict lifestyle-induced hormonal and diabetes risk outcomes.</p>
         </div>
 
         {{-- Capability cards --}}
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="0">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🛎️</div>
-                <h3 class="font-semibold text-gray-800 mb-2">Lifestyle Data Integration</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Aggregates sleep patterns, dietary inputs, physical activity, and stress indicators for personalized simulation modeling.</p>
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-5" data-sim-delay="0">
+                <div class="w-9 h-9 flex items-center justify-center rounded-xl text-lg mb-3" style="background:rgba(124,58,237,0.08);">🛎️</div>
+                <h3 class="font-semibold text-gray-800 text-sm mb-1.5">Lifestyle Data Integration</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">Aggregates sleep patterns, dietary inputs, physical activity, and stress indicators for personalized simulation modeling.</p>
             </div>
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="100">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🧬</div>
-                <h3 class="font-semibold text-gray-800 mb-2">Metabolic Digital Twin</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Constructs a real-time physiological model of insulin sensitivity and glucose metabolism.</p>
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-5" data-sim-delay="100">
+                <div class="w-9 h-9 flex items-center justify-center rounded-xl text-lg mb-3" style="background:rgba(124,58,237,0.08);">🧬</div>
+                <h3 class="font-semibold text-gray-800 text-sm mb-1.5">Metabolic Digital Twin</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">Constructs a real-time physiological model of insulin sensitivity and glucose metabolism.</p>
             </div>
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="200">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">📈</div>
-                <h3 class="font-semibold text-gray-800 mb-2">Behavioral Impact Simulation</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Evaluates how daily lifestyle changes influence endocrine and metabolic health parameters.</p>
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-5" data-sim-delay="200">
+                <div class="w-9 h-9 flex items-center justify-center rounded-xl text-lg mb-3" style="background:rgba(124,58,237,0.08);">📈</div>
+                <h3 class="font-semibold text-gray-800 text-sm mb-1.5">Behavioral Impact Simulation</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">Evaluates how daily lifestyle changes influence endocrine and metabolic health parameters.</p>
             </div>
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="300">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🔬</div>
-                <h3 class="font-semibold text-gray-800 mb-2">PCOS &amp; Diabetes Risk Analysis</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Forecasts insulin resistance progression and Type 2 Diabetes probability through hormonal response mapping.</p>
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-5" data-sim-delay="300">
+                <div class="w-9 h-9 flex items-center justify-center rounded-xl text-lg mb-3" style="background:rgba(124,58,237,0.08);">🔬</div>
+                <h3 class="font-semibold text-gray-800 text-sm mb-1.5">PCOS &amp; Diabetes Risk Analysis</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">Forecasts insulin resistance progression and Type 2 Diabetes probability through hormonal response mapping.</p>
             </div>
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="400">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🧠</div>
-                <h3 class="font-semibold text-gray-800 mb-2">AI Risk Assessment Engine</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Translates simulated metabolic outcomes into clinically relevant health risk levels.</p>
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-5" data-sim-delay="400">
+                <div class="w-9 h-9 flex items-center justify-center rounded-xl text-lg mb-3" style="background:rgba(124,58,237,0.08);">🧠</div>
+                <h3 class="font-semibold text-gray-800 text-sm mb-1.5">AI Risk Assessment Engine</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">Translates simulated metabolic outcomes into clinically relevant health risk levels.</p>
             </div>
 
-            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-6" data-sim-delay="500">
-                <div class="w-10 h-10 flex items-center justify-center rounded-xl text-xl mb-4" style="background:rgba(124,58,237,0.08);">🔔</div>
-                <h3 class="font-semibold text-gray-800 mb-2">Adaptive Health Alerts</h3>
-                <p class="text-sm text-gray-500 leading-relaxed">Delivers predictive alerts when simulated health indicators enter elevated risk zones.</p>
+            <div class="sim-panel bg-white rounded-xl border border-gray-100 p-5" data-sim-delay="500">
+                <div class="w-9 h-9 flex items-center justify-center rounded-xl text-lg mb-3" style="background:rgba(124,58,237,0.08);">🔔</div>
+                <h3 class="font-semibold text-gray-800 text-sm mb-1.5">Adaptive Health Alerts</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">Delivers predictive alerts when simulated health indicators enter elevated risk zones.</p>
             </div>
 
         </div>
@@ -1267,8 +1340,8 @@ document.addEventListener('DOMContentLoaded', () => {
 </section>
 
 {{-- ═══════════ ONBOARDING BANNER ═══════════ --}}
-<div class="max-w-7xl mx-auto px-4 sm:px-6">
-    <div id="onboardBanner" class="onboard-banner relative overflow-hidden rounded-[20px] border px-6 py-8 sm:px-10 sm:py-10 md:px-16 md:py-12 my-12 sm:my-16"
+<div class="max-w-[1200px] mx-auto px-6">
+    <div id="onboardBanner" class="onboard-banner relative overflow-hidden rounded-2xl border p-6 sm:p-8 my-8"
          style="background:linear-gradient(to right,rgba(124,58,237,0.08),rgba(59,130,246,0.08)); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-color:rgba(255,255,255,0.25);">
 
         {{-- Floating particles --}}
@@ -1283,7 +1356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-4 border border-violet-100">
                     🧬 AI Hormone Simulation
                 </span>
-                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 leading-snug">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2 leading-snug">
                     Activate Your Personalized<br class="hidden sm:block"> Hormone Simulation
                 </h2>
                 <p class="text-gray-500 text-sm leading-relaxed max-w-lg">
@@ -1319,14 +1392,14 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 {{-- ═══════════ DISEASES ═══════════ --}}
-<section id="conditions" class="py-16 sm:py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="text-center max-w-2xl mx-auto mb-14 fade-up">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-4 border border-violet-100">
+<section id="conditions" class="py-16">
+    <div class="max-w-[1200px] mx-auto px-6">
+        <div class="text-center max-w-2xl mx-auto mb-6 fade-up">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-3 border border-violet-100">
                 🔬 Clinical Risk Parameter Mapping
             </span>
-            <h2 class="text-3xl font-bold">Dynamic Health Condition Tracking</h2>
-            <p class="mt-3 text-gray-500">Extensible to any number of conditions — each with custom fields, validation rules, and risk scoring.</p>
+            <h2 class="text-[28px] md:text-[32px] font-extrabold tracking-tight">Dynamic Health Condition Tracking</h2>
+            <p class="mt-3 text-sm text-gray-500">Extensible to any number of conditions — each with custom fields, validation rules, and risk scoring.</p>
         </div>
 
         @php
@@ -1360,7 +1433,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 $delay    = $loop->index * 100;
                 $btnLabel = '+' . count($extra) . ' more ▼';
             @endphp
-            <div class="disease-card bg-white rounded-xl border border-gray-100 p-6 text-center" data-dc-delay="{{ $delay }}">
+            <div class="disease-card bg-white rounded-xl border border-gray-100 p-5 text-center" data-dc-delay="{{ $delay }}">
                 <div class="dc-icon text-4xl mb-3">{{ $d->icon }}</div>
                 <h3 class="font-semibold text-gray-800 mb-1">{{ $d->name }}</h3>
                 <p class="text-xs text-gray-400 mb-3">{{ $d->fields->count() }} tracked fields</p>
@@ -1390,14 +1463,14 @@ document.addEventListener('DOMContentLoaded', () => {
 </section>
 
 {{-- ═══════════ HOW IT WORKS ═══════════ --}}
-<section id="how" class="py-16 sm:py-20 bg-gray-50">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6">
-        <div class="text-center max-w-2xl mx-auto mb-10 fade-up">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-4 border border-violet-100">
+<section id="how" class="py-16 bg-gray-50">
+    <div class="max-w-[1200px] mx-auto px-6">
+        <div class="text-center max-w-2xl mx-auto mb-6 fade-up">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-violet-50 text-violet-700 mb-3 border border-violet-100">
                 ♻️ Continuous AI Simulation Cycle
             </span>
-            <h2 class="text-3xl font-bold">How It Works</h2>
-            <p class="mt-3 text-gray-500">See Your Health Before You Live It!</p>
+            <h2 class="text-[28px] md:text-[32px] font-extrabold tracking-tight">How It Works</h2>
+            <p class="mt-2 text-sm text-gray-500">See Your Health Before You Live It!</p>
         </div>
 
         <div id="simLoopWrap" class="sim-loop-wrap">
@@ -1505,28 +1578,28 @@ document.addEventListener('DOMContentLoaded', () => {
 </section>
 
 {{-- ═══════════ AWS POWERED SECTION ═══════════ --}}
-<section id="aws-powered" class="py-20 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+<section id="aws-powered" class="py-16 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+    <div class="max-w-[1200px] mx-auto px-6">
 
         {{-- Section header --}}
-        <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+        <div class="text-center max-w-3xl mx-auto mb-6">
             <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-widest mb-5">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.75 3a.75.75 0 0 1 .75.75v16.5a.75.75 0 0 1-1.5 0V3.75a.75.75 0 0 1 .75-.75Zm-13.5 0a.75.75 0 0 1 .75.75v16.5a.75.75 0 0 1-1.5 0V3.75a.75.75 0 0 1 .75-.75ZM12 3a.75.75 0 0 1 .75.75v16.5a.75.75 0 0 1-1.5 0V3.75A.75.75 0 0 1 12 3Z"/></svg>
                 ☁️ Enterprise AWS Cloud Infrastructure
             </div>
-            <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
+            <h2 class="text-[28px] sm:text-[32px] font-extrabold tracking-tight text-gray-900 mb-3">
                 Built on the Cloud That Powers <span style="background:linear-gradient(90deg,#FF9900,#FFB347);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">the World</span>
             </h2>
-            <p class="text-gray-500 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+            <p class="text-sm text-gray-500 leading-relaxed max-w-2xl mx-auto">
                 HormoneLens AI is proudly powered by <strong class="text-gray-700">Amazon Web Services</strong> — the world's most trusted cloud. Every simulation, every AI inference, every data point runs on battle-tested AWS infrastructure designed for healthcare-grade reliability and scale.
             </p>
         </div>
 
         {{-- AWS Service Cards --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-14">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
 
             {{-- Amazon Bedrock --}}
-            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:border-amber-200">
+            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:border-amber-200">
                 <div class="flex items-start gap-4 mb-4">
                     <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl" style="background:linear-gradient(135deg,#FF9900,#FFB347);">
                         <span class="text-white text-xl">🤖</span>
@@ -1547,7 +1620,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             {{-- Amazon EC2 --}}
-            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:border-amber-200">
+            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:border-amber-200">
                 <div class="flex items-start gap-4 mb-4">
                     <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl" style="background:linear-gradient(135deg,#e55c00,#FF9900);">
                         <span class="text-white text-xl">⚡</span>
@@ -1568,7 +1641,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             {{-- Amazon RDS --}}
-            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:border-amber-200">
+            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:border-amber-200">
                 <div class="flex items-start gap-4 mb-4">
                     <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl" style="background:linear-gradient(135deg,#2563eb,#3b82f6);">
                         <span class="text-white text-xl">🗄️</span>
@@ -1589,7 +1662,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             {{-- Amazon S3 --}}
-            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:border-amber-200">
+            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:border-amber-200">
                 <div class="flex items-start gap-4 mb-4">
                     <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl" style="background:linear-gradient(135deg,#16a34a,#22c55e);">
                         <span class="text-white text-xl">📦</span>
@@ -1609,29 +1682,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
 
-            {{-- Amazon CloudWatch --}}
-            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:border-amber-200">
+            {{-- Amazon Nova Pro --}}
+            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:border-amber-200">
                 <div class="flex items-start gap-4 mb-4">
                     <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);">
-                        <span class="text-white text-xl">📊</span>
+                        <span class="text-white text-xl">✨</span>
                     </div>
                     <div>
-                        <h3 class="font-bold text-gray-900 text-sm">Amazon CloudWatch</h3>
-                        <span class="text-[10px] font-semibold uppercase tracking-widest text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">Observability</span>
+                        <h3 class="font-bold text-gray-900 text-sm">Amazon Nova Pro</h3>
+                        <span class="text-[10px] font-semibold uppercase tracking-widest text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">Multimodal AI Model</span>
                     </div>
                 </div>
                 <p class="text-sm text-gray-500 leading-relaxed">
-                    Real-time monitoring of AI inference latency, application health, and simulation throughput metrics — ensuring zero blind spots in production.
+                    Powers advanced hormone simulation reasoning and health Q&amp;A via Amazon Bedrock — delivering fast, accurate, multimodal AI inference for complex metabolic predictions.
                 </p>
                 <div class="mt-4 flex flex-wrap gap-1.5">
-                    <span class="px-2 py-0.5 bg-violet-50 text-violet-700 text-[10px] rounded-full border border-violet-100 font-medium">Metrics</span>
-                    <span class="px-2 py-0.5 bg-violet-50 text-violet-700 text-[10px] rounded-full border border-violet-100 font-medium">Alarms</span>
-                    <span class="px-2 py-0.5 bg-violet-50 text-violet-700 text-[10px] rounded-full border border-violet-100 font-medium">Log Insights</span>
+                    <span class="px-2 py-0.5 bg-violet-50 text-violet-700 text-[10px] rounded-full border border-violet-100 font-medium">Text &amp; Vision</span>
+                    <span class="px-2 py-0.5 bg-violet-50 text-violet-700 text-[10px] rounded-full border border-violet-100 font-medium">Low Latency</span>
+                    <span class="px-2 py-0.5 bg-violet-50 text-violet-700 text-[10px] rounded-full border border-violet-100 font-medium">Bedrock Native</span>
                 </div>
             </div>
 
             {{-- IAM + Security --}}
-            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:border-amber-200">
+            <div class="aws-card bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:border-amber-200">
                 <div class="flex items-start gap-4 mb-4">
                     <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl" style="background:linear-gradient(135deg,#dc2626,#f87171);">
                         <span class="text-white text-xl">🔐</span>
@@ -1689,38 +1762,37 @@ document.addEventListener('DOMContentLoaded', () => {
 </section>
 
 {{-- ═══════════ MEET THE TEAM ═══════════ --}}
-<section id="team" class="py-20 sm:py-24 bg-gradient-to-b from-white via-violet-50/30 to-white overflow-hidden">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+<section id="team" class="py-16 bg-gradient-to-b from-white via-violet-50/30 to-white overflow-hidden">
+    <div class="max-w-[1200px] mx-auto px-6">
 
         {{-- Section header --}}
-        <div class="text-center max-w-2xl mx-auto mb-14 sm:mb-16">
+        <div class="text-center max-w-2xl mx-auto mb-6">
             <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold uppercase tracking-widest mb-5">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8z"/></svg>
                 The People Behind It
             </div>
-            <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
+            <h2 class="text-[28px] sm:text-[32px] font-extrabold tracking-tight text-gray-900 mb-3">
                 Meet the <span style="background:linear-gradient(90deg,#7c3aed,#6366f1,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Team</span>
             </h2>
-            <p class="text-gray-500 text-sm sm:text-base leading-relaxed">
+            <p class="text-sm text-gray-500 leading-relaxed">
                 A passionate group of engineers and innovators building AI-powered preventive healthcare for the&nbsp;world.
             </p>
         </div>
 
         {{-- Team cards grid --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
             {{-- Card 1: Ravdeep Singh --}}
-            <div class="team-card bg-white rounded-3xl border border-gray-100 shadow-sm p-8 flex flex-col items-center text-center">
+            <div class="team-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center">
                 {{-- Avatar --}}
-                <div class="team-avatar-ring mb-5">
+                <div class="team-avatar-ring mb-4">
                     <img src="{{ asset('images/profile/ravdeep.jpg') }}" alt="Ravdeep Singh" class="w-[84px] h-[84px] rounded-full object-cover">
                 </div>
                 {{-- Name & Role --}}
-                <h3 class="text-lg font-extrabold text-gray-900 mb-1">Ravdeep Singh</h3>
-                <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-violet-100 text-violet-700 mb-4 uppercase tracking-wide">Team Leader</span>
+                <h3 class="text-base font-extrabold text-gray-900 mb-1">Ravdeep Singh</h3>
+                <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-violet-100 text-violet-700 mb-3 uppercase tracking-wide">Team Leader</span>
                 {{-- Description --}}
-                <p class="text-sm text-gray-500 leading-relaxed mb-6">
-                    <strong class="text-gray-700">Founder</strong> of <strong class="text-gray-700">UBXTY Unboxing Technology</strong> and a software engineer with 10+ years of experience in web, mobile, and cloud development. Leads the vision, planning, and technical implementation with deep expertise in Laravel, Flutter, and scalable product architecture.
+                <p class="text-xs text-gray-500 leading-relaxed mb-4"><strong class="text-gray-700">Founder</strong> of <strong class="text-gray-700">UBXTY Unboxing Technology</strong> and a software engineer with 10+ years of experience in web, mobile, and cloud development. Leads the vision, planning, and technical implementation with deep expertise in Laravel, Flutter, and scalable product architecture.
                 </p>
                 {{-- LinkedIn --}}
                 <a href="https://www.linkedin.com/in/ravdeep-singh-a4544abb/" target="_blank" rel="noopener noreferrer" class="team-linkedin mt-auto">
@@ -1730,16 +1802,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             {{-- Card 2: Jinia Chhabra --}}
-            <div class="team-card bg-white rounded-3xl border border-gray-100 shadow-sm p-8 flex flex-col items-center text-center" style="transition-delay:0.12s">
+            <div class="team-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center" style="transition-delay:0.12s">
                 {{-- Avatar --}}
-                <div class="team-avatar-ring mb-5" style="background:linear-gradient(135deg,#ec4899,#f472b6,#fb7185);">
+                <div class="team-avatar-ring mb-4" style="background:linear-gradient(135deg,#ec4899,#f472b6,#fb7185);">
                     <img src="{{ asset('images/profile/jinia.jpeg') }}" alt="Jinia Chhabra" class="w-[84px] h-[84px] rounded-full object-cover">
                 </div>
                 {{-- Name & Role --}}
-                <h3 class="text-lg font-extrabold text-gray-900 mb-1">Jinia Chhabra</h3>
-                <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-pink-100 text-pink-700 mb-4 uppercase tracking-wide">Development &amp; Documentation</span>
+                <h3 class="text-base font-extrabold text-gray-900 mb-1">Jinia Chhabra</h3>
+                <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-pink-100 text-pink-700 mb-3 uppercase tracking-wide">Development &amp; Documentation</span>
                 {{-- Description --}}
-                <p class="text-sm text-gray-500 leading-relaxed mb-6">
+                <p class="text-xs text-gray-500 leading-relaxed mb-4">
                     <strong class="text-gray-700">Intern</strong> at <strong class="text-gray-700">UBXTY Unboxing Technology</strong>. Contributes to development, documentation, media preparation, and presentation design — bridging the gap between technical ideas and clear communication.
                 </p>
                 {{-- LinkedIn --}}
@@ -1749,24 +1821,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>
             </div>
 
-            {{-- Card 3: Vansh Sethi --}}
-            <div class="team-card bg-white rounded-3xl border border-gray-100 shadow-sm p-8 flex flex-col items-center text-center sm:col-span-2 lg:col-span-1" style="transition-delay:0.24s">
+            {{-- Card 3: Sahil Sethi --}}
+            <div class="team-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center sm:col-span-2 lg:col-span-1" style="transition-delay:0.24s">
                 {{-- Avatar --}}
-                <div class="team-avatar-ring mb-5" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8,#22d3ee);">
+                <div class="team-avatar-ring mb-4" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8,#22d3ee);">
                     <img src="{{ asset('images/profile/vansh.jpeg') }}" alt="Vansh Sethi" class="w-[84px] h-[84px] rounded-full object-cover">
                 </div>
                 {{-- Name & Role --}}
-                <h3 class="text-lg font-extrabold text-gray-900 mb-1">Vansh Sethi</h3>
-                <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-700 mb-4 uppercase tracking-wide">Testing &amp; Quality Assurance</span>
+                <h3 class="text-base font-extrabold text-gray-900 mb-1">Sahil Sethi</h3>
+                <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-700 mb-3 uppercase tracking-wide">Testing &amp; Quality Assurance</span>
                 {{-- Description --}}
-                <p class="text-sm text-gray-500 leading-relaxed mb-6">
+                <p class="text-xs text-gray-500 leading-relaxed mb-4">
                  <strong class="text-gray-700">Intern</strong> at <strong class="text-gray-700">UBXTY Unboxing Technology</strong>  . Focuses on testing and quality assurance to ensure the platform works smoothly and delivers a reliable, bug-free user experience.
                 </p>
-                {{-- No LinkedIn on request — keep consistent placeholder --}}
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-sky-600 bg-sky-50 border border-sky-100 mt-auto">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    QA &amp; Testing
-                </span>
+                <a href="https://www.linkedin.com/in/sahil-sethi-3b8a14374" target="_blank" rel="noopener noreferrer" class="team-linkedin mt-auto" style="color:#0ea5e9; border-color:rgba(14,165,233,0.25);">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    LinkedIn
+                </a>
             </div>
 
         </div>
@@ -1788,11 +1859,11 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 {{-- ═══════════ FOOTER ═══════════ --}}
-<footer style="background:linear-gradient(to right,rgba(124,58,237,0.08),rgba(59,130,246,0.08)); border-top:1px solid rgba(255,255,255,0.15); padding:48px 0 40px;">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+<footer style="background:linear-gradient(to right,rgba(124,58,237,0.08),rgba(59,130,246,0.08)); border-top:1px solid rgba(255,255,255,0.15); padding:48px 0;">
+    <div class="max-w-[1200px] mx-auto px-6">
 
         {{-- Three-column grid --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-12 mb-12">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
 
             {{-- Left: brand + description --}}
             <div>
@@ -1872,6 +1943,359 @@ document.addEventListener('DOMContentLoaded', () => {
 
     </div>
 </footer>
+
+{{-- ═══════════════════════════════════════════════════════════
+     ANVI — AI HEALTH CHATBOT WIDGET
+═══════════════════════════════════════════════════════════ --}}
+<style>
+/* ── Chat bubble ── */
+#anvi-bubble {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    outline: none;
+}
+#anvi-bubble:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(99,102,241,0.5); }
+#anvi-bubble svg { width: 24px; height: 24px; color: #fff; }
+
+/* ── Chat window ── */
+#anvi-window {
+    position: fixed;
+    bottom: 84px;
+    right: 24px;
+    z-index: 9998;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.15), 0 2px 8px rgba(99,102,241,0.12);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(99,102,241,0.15);
+    transform: translateY(12px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    max-height: 520px;
+}
+#anvi-window.anvi-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+/* ── Header ── */
+#anvi-header {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.anvi-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.anvi-header-info { flex: 1; min-width: 0; }
+.anvi-header-info strong { display: block; color: #fff; font-size: 13.5px; font-weight: 700; line-height: 1.2; }
+.anvi-header-info span { color: rgba(255,255,255,0.78); font-size: 11px; }
+#anvi-close {
+    background: rgba(255,255,255,0.18);
+    border: none;
+    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+#anvi-close:hover { background: rgba(255,255,255,0.3); }
+
+/* ── Messages ── */
+#anvi-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 14px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+}
+#anvi-messages::-webkit-scrollbar { width: 4px; }
+#anvi-messages::-webkit-scrollbar-track { background: transparent; }
+#anvi-messages::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.2); border-radius: 4px; }
+
+.anvi-msg {
+    max-width: 88%;
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 9px 13px;
+    border-radius: 14px;
+    word-break: break-word;
+}
+.anvi-msg.bot {
+    background: #f3f4ff;
+    color: #1e1b4b;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+.anvi-msg.user {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+/* ── Typing dots ── */
+.anvi-typing {
+    display: flex;
+    gap: 4px;
+    padding: 10px 13px;
+    background: #f3f4ff;
+    border-radius: 14px;
+    border-bottom-left-radius: 4px;
+    align-self: flex-start;
+    align-items: center;
+}
+.anvi-typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6366f1;
+    animation: anvi-bounce 1.2s infinite;
+    display: block;
+}
+.anvi-typing span:nth-child(2) { animation-delay: 0.2s; }
+.anvi-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes anvi-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ── Input area ── */
+#anvi-footer {
+    padding: 10px 12px 12px;
+    border-top: 1px solid #f0f0f5;
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    background: #fff;
+}
+#anvi-input {
+    flex: 1;
+    border: 1.5px solid #e0e0ee;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+    color: #1e1b4b;
+    background: #fafaff;
+    resize: none;
+    min-height: 38px;
+    max-height: 80px;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+    font-family: inherit;
+}
+#anvi-input:focus { border-color: #6366f1; background: #fff; }
+#anvi-input::placeholder { color: #a5a5bd; }
+#anvi-send {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    align-self: flex-end;
+}
+#anvi-send:hover { opacity: 0.88; transform: scale(1.05); }
+#anvi-send:disabled { opacity: 0.45; cursor: default; transform: none; }
+#anvi-send svg { width: 16px; height: 16px; color: #fff; }
+</style>
+
+{{-- Bubble button --}}
+<button id="anvi-bubble" aria-label="Chat with Anvi">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+    </svg>
+</button>
+
+{{-- Chat window --}}
+<div id="anvi-window" role="dialog" aria-label="Anvi AI Health Assistant">
+    <div id="anvi-header">
+        <div class="anvi-avatar">🌸</div>
+        <div class="anvi-header-info">
+            <strong>Anvi</strong>
+            <span>HormoneLens AI · Health Assistant</span>
+        </div>
+        <button id="anvi-close" aria-label="Close chat">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M1 1l12 12M13 1L1 13"/>
+            </svg>
+        </button>
+    </div>
+
+    <div id="anvi-messages" aria-live="polite"></div>
+
+    <div id="anvi-footer">
+        <textarea id="anvi-input" rows="1" placeholder="Ask about hormones, PCOS, sleep…" maxlength="1000"></textarea>
+        <button id="anvi-send" aria-label="Send message">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+(function () {
+    var bubble   = document.getElementById('anvi-bubble');
+    var win      = document.getElementById('anvi-window');
+    var closeBtn = document.getElementById('anvi-close');
+    var msgs     = document.getElementById('anvi-messages');
+    var input    = document.getElementById('anvi-input');
+    var sendBtn  = document.getElementById('anvi-send');
+    var isOpen   = false;
+    var busy     = false;
+    var greeted  = false;
+
+    var INTRO = "Hi, I'm **Anvi**, the AI assistant for HormoneLens 👋\n\nYou can ask me questions about hormones, PCOS, insulin resistance, metabolism, sleep, stress, or lifestyle health.\n\nI'll do my best to explain things in simple and helpful ways.";
+
+    /* ── helpers ── */
+    function md(text) {
+        // minimal markdown: **bold** and newlines
+        return text
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+    }
+
+    function appendMsg(text, role) {
+        var div = document.createElement('div');
+        div.className = 'anvi-msg ' + role;
+        div.innerHTML = md(text);
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+        return div;
+    }
+
+    function showTyping() {
+        var t = document.createElement('div');
+        t.className = 'anvi-typing';
+        t.innerHTML = '<span></span><span></span><span></span>';
+        t.id = 'anvi-typing-indicator';
+        msgs.appendChild(t);
+        msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function removeTyping() {
+        var t = document.getElementById('anvi-typing-indicator');
+        if (t) t.remove();
+    }
+
+    /* ── open / close ── */
+    function openChat() {
+        isOpen = true;
+        win.classList.add('anvi-open');
+        if (!greeted) {
+            greeted = true;
+            appendMsg(INTRO, 'bot');
+        }
+        setTimeout(function () { input.focus(); }, 250);
+    }
+
+    function closeChat() {
+        isOpen = false;
+        win.classList.remove('anvi-open');
+    }
+
+    bubble.addEventListener('click', function () {
+        isOpen ? closeChat() : openChat();
+    });
+    closeBtn.addEventListener('click', closeChat);
+
+    /* ── auto-resize textarea ── */
+    input.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+    });
+
+    /* ── send message ── */
+    function sendMessage() {
+        var text = input.value.trim();
+        if (!text || busy) return;
+
+        appendMsg(text, 'user');
+        input.value = '';
+        input.style.height = 'auto';
+        busy = true;
+        sendBtn.disabled = true;
+        showTyping();
+
+        fetch('/api/anvi/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({ message: text }),
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            removeTyping();
+            appendMsg(data.reply || "Sorry, I couldn't get a response. Please try again!", 'bot');
+        })
+        .catch(function () {
+            removeTyping();
+            appendMsg("Something went wrong. Please check your connection and try again 🙏", 'bot');
+        })
+        .finally(function () {
+            busy = false;
+            sendBtn.disabled = false;
+            input.focus();
+        });
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+})();
+</script>
 
 </body>
 </html>
