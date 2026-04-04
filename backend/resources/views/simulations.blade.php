@@ -290,6 +290,14 @@
                                        (<span class="capitalize" x-text="s.risk_category_before"></span>)
                                        → <strong class="text-gray-700">After:</strong> <span x-text="s.simulated_risk_score?.toFixed(2)"></span>
                                        (<span class="capitalize" x-text="s.risk_category_after"></span>)</p>
+                                    <div x-show="s.results?.scores" class="grid grid-cols-3 gap-1 mt-1">
+                                        <template x-for="sc in [{k:'stress_score',l:'Stress'},{k:'sleep_score',l:'Sleep'},{k:'insulin_resistance_score',l:'Insulin'},{k:'metabolic_health_score',l:'Metabolic'},{k:'diet_score',l:'Diet'}]" :key="sc.k">
+                                            <div class="bg-white/50 rounded p-1 text-center">
+                                                <p class="text-[8px] text-gray-400" x-text="sc.l"></p>
+                                                <p class="text-[11px] font-bold text-gray-700" x-text="(s.results?.scores?.[sc.k]||0).toFixed(1)"></p>
+                                            </div>
+                                        </template>
+                                    </div>
                                     <div x-show="s.rag_explanation" class="bg-white/50 p-1.5 rounded-lg text-gray-500 text-[9px]">
                                         💡 <span x-text="s.rag_explanation"></span>
                                     </div>
@@ -318,6 +326,35 @@
                             <span class="text-gray-300 font-bold">→</span>
                             <span class="px-2 py-0.5 rounded-full capitalize font-bold"
                                   :class="catColor(result?.risk_category_after)" x-text="result?.risk_category_after"></span>
+                        </div>
+                    </div>
+
+                    {{-- Simulated Score Cards --}}
+                    <div x-show="result?.results?.scores" class="result-card border-purple-200">
+                        <div class="result-header">
+                            <div class="result-icon bg-purple-100 text-purple-600">🧬</div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Simulated Scores</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <template x-for="sc in [
+                                {key:'stress_score',       label:'Stress Level',      icon:'🧠', from:'#f59e0b', to:'#ef4444'},
+                                {key:'sleep_score',        label:'Sleep Recovery',     icon:'😴', from:'#3b82f6', to:'#8b5cf6'},
+                                {key:'insulin_resistance_score', label:'Insulin Resist.', icon:'🩸', from:'#c24dff', to:'#ff6ec7'},
+                                {key:'metabolic_health_score',   label:'Metabolic Health', icon:'⚡', from:'#5f6fff', to:'#c24dff'},
+                                {key:'diet_score',         label:'Diet Quality',       icon:'🥗', from:'#10b981', to:'#06b6d4'},
+                            ]" :key="sc.key">
+                                <div class="p-2 rounded-lg bg-gray-50/80 border border-gray-100">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-sm" x-text="sc.icon"></span>
+                                        <span class="text-[9px] font-bold text-gray-500 uppercase" x-text="sc.label"></span>
+                                    </div>
+                                    <div class="relative h-1 rounded-full mb-1" style="background:rgba(0,0,0,.06)">
+                                        <div class="h-full rounded-full transition-all"
+                                             :style="'width:'+Math.min((result?.results?.scores?.[sc.key]||0)*10,100)+'%;background:linear-gradient(90deg,'+sc.from+','+sc.to+')'"></div>
+                                    </div>
+                                    <p class="text-sm font-black" :style="'background:linear-gradient(135deg,'+sc.from+','+sc.to+');-webkit-background-clip:text;-webkit-text-fill-color:transparent'" x-text="(result?.results?.scores?.[sc.key]||0).toFixed(1)"></p>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
@@ -409,6 +446,7 @@ function simulationsPage() {
                 const payload = {
                     food_item: this.form.favourite_food,
                     quantity: '1 serving',
+                    meal_time: this.form.meal_timing || null,
                 };
                 const r = await api.post('/food-impact', payload);
                 if (r.success) {

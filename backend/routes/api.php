@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AlertController;
+use App\Http\Controllers\AnviChatController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -26,6 +27,9 @@ Route::middleware('throttle:auth')->group(function () {
     Route::post('/register', RegisterController::class);
     Route::post('/login', LoginController::class);
 });
+
+// ── Anvi public chatbot (landing page) ───────────────
+Route::middleware('throttle:30,1')->post('/anvi/chat', AnviChatController::class);
 
 /*
 |--------------------------------------------------------------------------

@@ -144,9 +144,9 @@ return [
     |
     */
     'aliases' => [
-        'default' => 'anthropic.claude-sonnet-4-6',
-        'smart'   => 'anthropic.claude-sonnet-4-6',
-        'fast'    => 'anthropic.claude-3-5-haiku-20241022-v1:0',
+        'default' => env('BEDROCK_MODEL_DEFAULT', 'amazon.nova-pro-v1:0'),
+        'smart'   => env('BEDROCK_MODEL_SMART', 'amazon.nova-pro-v1:0'),
+        'fast'    => env('BEDROCK_MODEL_FAST', 'amazon.nova-lite-v1:0'),
     ],
 
     /*

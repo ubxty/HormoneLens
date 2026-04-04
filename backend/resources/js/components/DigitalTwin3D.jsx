@@ -152,7 +152,8 @@ export default function DigitalTwin3D() {
     <div style={{
       display: 'flex',
       flexDirection: isMobile ? 'column' : 'row',
-      height: isMobile ? 'auto' : 'calc(100vh - 56px)',
+      height: isMobile ? 'auto' : '100%',
+      minHeight: isMobile ? 580 : '100%',
       background: 'linear-gradient(135deg, rgba(109,40,217,.07) 0%, rgba(139,92,246,.06) 40%, rgba(236,72,153,.06) 100%)',
       position: 'relative',
       overflow: isMobile ? 'visible' : 'hidden',
@@ -282,17 +283,14 @@ export default function DigitalTwin3D() {
           );
         })}
 
-        {!loading && !twin && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .5, duration: .6 }}
-            style={{ textAlign: 'center', padding: '28px 20px', background: 'linear-gradient(135deg, rgba(124,58,237,0.06), rgba(236,72,153,0.06))', borderRadius: 20, border: '2px solid rgba(139,92,246,.2)', marginTop: 4, position: 'relative', overflow: 'hidden' }}
+        {!loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: .5, duration: .5 }}
+            style={{ marginTop: 6 }}
           >
-            {/* Animated glow background */}
-            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 80%, rgba(124,58,237,0.08), transparent 70%)', pointerEvents: 'none', animation: 'ctaGlow 3s ease-in-out infinite' }} />
-            <div style={{ fontSize: 40, marginBottom: 10, position: 'relative' }}>🧬</div>
-            <p style={{ fontSize: 14, fontWeight: 800, color: '#4c1d95', marginBottom: 6, position: 'relative' }}>Your Health Twin Awaits</p>
-            <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 16, lineHeight: 1.6, position: 'relative' }}>Create your personal digital twin to see your hormone health insights come alive.</p>
             {genError && (
-              <p style={{ fontSize: 11, color: '#ef4444', marginBottom: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '7px 12px', position: 'relative' }}>
+              <p style={{ fontSize: 11, color: '#ef4444', marginBottom: 8, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '7px 12px' }}>
                 ⚠ {genError}
               </p>
             )}
@@ -300,37 +298,31 @@ export default function DigitalTwin3D() {
               onClick={generateTwin}
               disabled={generating}
               style={{
-                display: 'inline-block', padding: '14px 36px',
+                position: 'relative', overflow: 'hidden',
+                width: '100%', padding: '13px 16px',
                 background: generating
                   ? 'linear-gradient(135deg, #9ca3af, #6b7280)'
                   : 'linear-gradient(135deg, #7c3aed, #a855f7, #ec4899)',
-                color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 800,
+                color: '#fff', borderRadius: 14, fontSize: 14, fontWeight: 800,
                 border: 'none', cursor: generating ? 'not-allowed' : 'pointer',
-                position: 'relative',
-                boxShadow: generating
-                  ? 'none'
-                  : '0 6px 24px rgba(124,58,237,0.35), 0 2px 8px rgba(236,72,153,0.2)',
+                boxShadow: generating ? 'none' : '0 6px 24px rgba(124,58,237,0.35), 0 2px 8px rgba(236,72,153,0.2)',
                 animation: generating ? 'none' : 'ctaPulse 2.5s ease-in-out infinite',
                 transition: 'transform 0.2s, box-shadow 0.2s',
                 letterSpacing: '0.02em',
               }}
+              onMouseEnter={e => { if (!generating) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 32px rgba(124,58,237,0.48), 0 4px 14px rgba(236,72,153,0.32)'; } }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = generating ? 'none' : '0 6px 24px rgba(124,58,237,0.35), 0 2px 8px rgba(236,72,153,0.2)'; }}
             >
-              {generating ? '⏳ Generating…' : '✨ Generate My Twin'}
+              {!generating && (
+                <span style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)', animation: 'genBtnShimmer 2.4s ease-in-out infinite', pointerEvents: 'none' }} />
+              )}
+              <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                {generating
+                  ? <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'dt3Spin .7s linear infinite' }} /> Generating…</>
+                  : twin ? '🔄 Regenerate Twin' : '✨ Generate Twin'
+                }
+              </span>
             </button>
-          </motion.div>
-        )}
-
-        {twin && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'rgba(255,255,255,.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,.4)', borderRadius: 12, fontSize: 11, marginTop: 2 }}
-          >
-            <span style={{ color: '#6b7280' }}>Overall Risk</span>
-            <span style={{ fontWeight: 900, background: 'linear-gradient(135deg,#7c3aed,#ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              {twin.overall_risk_score?.toFixed(1)}
-            </span>
-            <span style={{ fontSize: 9, fontWeight: 700, color: riskHex((twin.overall_risk_score || 0) / 10), background: `${riskHex((twin.overall_risk_score || 0) / 10)}1a`, borderRadius: 6, padding: '2px 7px' }}>
-              {(twin.risk_category || '').toUpperCase()}
-            </span>
           </motion.div>
         )}
       </div>
@@ -398,12 +390,13 @@ export default function DigitalTwin3D() {
       </div>
 
       <style>{`
-        @keyframes dt3Spin   { to { transform: rotate(360deg); } }
-        @keyframes dt3Blob   { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(25px,-18px) scale(1.04)} 66%{transform:translate(-18px,12px) scale(.96)} }
-        @keyframes dt3Status { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
-        @keyframes dt3Dash   { to { stroke-dashoffset: -1.5; } }
-        @keyframes ctaPulse  { 0%,100%{box-shadow:0 6px 24px rgba(124,58,237,0.35),0 2px 8px rgba(236,72,153,0.2)} 50%{box-shadow:0 8px 32px rgba(124,58,237,0.5),0 4px 16px rgba(236,72,153,0.3)} }
-        @keyframes ctaGlow   { 0%,100%{opacity:0.5} 50%{opacity:1} }
+        @keyframes dt3Spin      { to { transform: rotate(360deg); } }
+        @keyframes dt3Blob      { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(25px,-18px) scale(1.04)} 66%{transform:translate(-18px,12px) scale(.96)} }
+        @keyframes dt3Status    { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
+        @keyframes dt3Dash      { to { stroke-dashoffset: -1.5; } }
+        @keyframes ctaPulse     { 0%,100%{box-shadow:0 6px 24px rgba(124,58,237,0.35),0 2px 8px rgba(236,72,153,0.2)} 50%{box-shadow:0 8px 32px rgba(124,58,237,0.5),0 4px 16px rgba(236,72,153,0.3)} }
+        @keyframes ctaGlow      { 0%,100%{opacity:0.5} 50%{opacity:1} }
+        @keyframes genBtnShimmer{ 0%{left:-100%} 60%,100%{left:160%} }
       `}</style>
     </div>
   );
