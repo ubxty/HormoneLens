@@ -161,7 +161,7 @@ Make sure the script is executable (`chmod +x artisan`).
 
 ## Credits & Acknowledgements
 
-- **[Amazon Web Services (AWS)](https://aws.amazon.com/)** — Amazon Bedrock, EC2, RDS, API Gateway, and Bedrock Guardrails power the entire AI and infrastructure layer
+- **[Amazon Web Services (AWS)](https://aws.amazon.com/)** — Amazon Bedrock, EC2 and Bedrock Guardrails power the entire AI and infrastructure layer
 - **[CloudPanzer](https://cloudpanzer.com/app)** — Used to deploy and manage the solution on cloud infrastructure
 - **[Laravel](https://laravel.com/)** — Backend framework
  
